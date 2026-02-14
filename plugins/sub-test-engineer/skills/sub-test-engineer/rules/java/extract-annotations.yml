@@ -1,0 +1,15 @@
+id: java-extract-annotations
+language: Java
+severity: info
+message: "annotation on method"
+note: "Extracts annotations on methods for layer classification and test strategy"
+rule:
+  any:
+    - kind: marker_annotation
+    - kind: annotation
+  inside:
+    kind: modifiers
+    inside:
+      kind: method_declaration
+      stopBy: neighbor
+    stopBy: neighbor

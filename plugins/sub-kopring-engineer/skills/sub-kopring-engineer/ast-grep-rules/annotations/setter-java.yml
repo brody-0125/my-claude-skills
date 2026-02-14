@@ -1,0 +1,9 @@
+id: setter-annotation-java
+language: java
+severity: info
+message: "@Setter annotation detected"
+rule:
+  kind: marker_annotation
+  has:
+    kind: identifier
+    regex: '^Setter$'

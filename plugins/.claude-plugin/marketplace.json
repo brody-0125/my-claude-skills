@@ -1,0 +1,34 @@
+{
+  "name": "personal-plugins",
+  "description": "Personal Claude Code plugins",
+  "owner": {
+    "name": "hyeon"
+  },
+  "plugins": [
+    {
+      "name": "sub-kopring-engineer",
+      "description": "Kotlin/Java Spring Boot workflow agent with convention verification",
+      "source": "./sub-kopring-engineer"
+    },
+    {
+      "name": "sub-test-engineer",
+      "description": "Type-aware testing workflow agent for Java/Kotlin/TypeScript backends",
+      "source": "./sub-test-engineer"
+    },
+    {
+      "name": "plugin-introspector",
+      "description": "White-box monitoring and self-improvement meta-plugin for Claude Code workflow plugins",
+      "source": "./plugin-introspector"
+    },
+    {
+      "name": "numerical",
+      "description": "Numerical computing verification and optimization agent for Python/Dart ndarray, tensor, and scientific computing codebases",
+      "source": "./numerical"
+    },
+    {
+      "name": "engineering-workflow",
+      "description": "Micro-agent system for engineering architecture decisions across DB, BE, IF, SE domains",
+      "source": "./engineering-workflow"
+    }
+  ]
+}

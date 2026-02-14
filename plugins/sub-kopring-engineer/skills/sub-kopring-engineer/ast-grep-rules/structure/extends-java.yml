@@ -1,0 +1,9 @@
+id: extends-class-java
+language: java
+severity: info
+message: "Class inheritance detected"
+rule:
+  kind: class_declaration
+  has:
+    kind: superclass
+    stopBy: end

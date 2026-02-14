@@ -1,0 +1,11 @@
+id: dynamic-update-kotlin
+language: kotlin
+severity: info
+message: "@DynamicUpdate annotation detected"
+rule:
+  kind: annotation
+  has:
+    kind: user_type
+    has:
+      kind: type_identifier
+      regex: '^DynamicUpdate$'

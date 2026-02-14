@@ -1,0 +1,67 @@
+id: go-extract-validation
+valid:
+  # Struct with validate tags
+  - |
+    package main
+
+    type CreateUserRequest struct {
+        Email    string `json:"email" validate:"required,email"`
+        Password string `json:"password" validate:"required,min=8,max=72"`
+        Age      int    `json:"age" validate:"gte=18,lte=120"`
+    }
+
+  # Struct with binding tags (Gin framework)
+  - |
+    package main
+
+    type LoginRequest struct {
+        Username string `json:"username" binding:"required"`
+        Password string `json:"password" binding:"required,min=6"`
+    }
+
+  # Struct with multiple tag types
+  - |
+    package main
+
+    type Order struct {
+        ID        string    `json:"id" db:"order_id" validate:"required,uuid"`
+        Amount    float64   `json:"amount" validate:"required,gt=0"`
+        Currency  string    `json:"currency" validate:"required,len=3"`
+        Status    string    `json:"status" validate:"required,oneof=pending confirmed shipped"`
+    }
+
+  # Struct with omitempty
+  - |
+    package main
+
+    type UpdateUserRequest struct {
+        Name     *string `json:"name,omitempty" validate:"omitempty,min=1,max=100"`
+        Email    *string `json:"email,omitempty" validate:"omitempty,email"`
+        Phone    *string `json:"phone,omitempty" validate:"omitempty,e164"`
+    }
+
+invalid:
+  # Struct without tags
+  - |
+    package main
+
+    type SimpleOrder struct {
+        ID     string
+        Amount float64
+    }
+
+  # Interface (no fields)
+  - |
+    package main
+
+    type Repository interface {
+        Find(id string) error
+    }
+
+  # Function
+  - |
+    package main
+
+    func Validate(o *Order) error {
+        return nil
+    }

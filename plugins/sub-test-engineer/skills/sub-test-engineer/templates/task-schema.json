@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sub-test-engineer-task-schema",
+  "title": "Sub Test Engineer Agent Teams Task Schema",
+  "description": "Schema for shared task list entries when using Agent Teams for parallel test generation.",
+
+  "definitions": {
+    "taskStatus": {
+      "type": "string",
+      "enum": ["pending", "in_progress", "completed", "failed", "blocked"]
+    },
+    "taskType": {
+      "type": "string",
+      "enum": [
+        "unit-test-generation",
+        "integration-test-generation",
+        "property-test-generation",
+        "contract-test-generation",
+        "coverage-analysis",
+        "mutation-testing",
+        "quality-review",
+        "gap-analysis"
+      ]
+    },
+    "targetInfo": {
+      "type": "object",
+      "properties": {
+        "className": { "type": "string" },
+        "packagePath": { "type": "string" },
+        "modulePath": { "type": "string" },
+        "language": { "type": "string", "enum": ["kotlin", "java", "typescript"] },
+        "layer": { "type": "string", "enum": ["Domain", "Service", "Infrastructure", "API", "Event"] }
+      },
+      "required": ["className", "packagePath", "language"]
+    }
+  },
+
+  "type": "object",
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "description": "Unique task identifier (UUID)"
+    },
+    "teamName": {
+      "type": "string",
+      "description": "Team name for this generation session"
+    },
+    "taskType": {
+      "$ref": "#/definitions/taskType"
+    },
+    "status": {
+      "$ref": "#/definitions/taskStatus"
+    },
+    "owner": {
+      "type": "string",
+      "description": "Agent ID that claimed this task (null if unclaimed)"
+    },
+    "target": {
+      "$ref": "#/definitions/targetInfo"
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Task-specific input data",
+      "properties": {
+        "strategyDocument": { "type": "string", "description": "Path to strategy document" },
+        "analysisReport": { "type": "string", "description": "Path to analysis report" },
+        "testProfile": { "type": "string", "description": "Path to test-profile.json" },
+        "gapReport": { "type": "string", "description": "Path to gap report (loop 2+)" },
+        "coverageTarget": { "type": "number", "minimum": 0, "maximum": 100 },
+        "mutationTarget": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "description": "Task outputs (filled on completion)",
+      "properties": {
+        "generatedFiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Paths to generated test files"
+        },
+        "compileSuccess": { "type": "boolean" },
+        "testsTotal": { "type": "integer" },
+        "testsPassed": { "type": "integer" },
+        "coverageLinePct": { "type": "number" },
+        "coverageBranchPct": { "type": "number" },
+        "mutationKillPct": { "type": "number" },
+        "qualityIssues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file": { "type": "string" },
+              "line": { "type": "integer" },
+              "issue": { "type": "string" },
+              "severity": { "type": "string", "enum": ["ERROR", "WARN", "INFO"] }
+            }
+          }
+        },
+        "errorMessage": { "type": "string", "description": "Error message if status=failed" }
+      }
+    },
+    "blockedBy": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Task IDs that must complete before this task can start"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["taskId", "teamName", "taskType", "status", "target", "createdAt"]
+}

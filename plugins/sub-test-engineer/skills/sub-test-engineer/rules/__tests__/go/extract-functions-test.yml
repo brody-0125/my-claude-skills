@@ -1,0 +1,80 @@
+id: go-extract-functions
+valid:
+  # Regular function
+  - |
+    package main
+
+    func ProcessOrder(order *Order) error {
+        return nil
+    }
+
+  # Method with pointer receiver
+  - |
+    package main
+
+    func (s *OrderService) ProcessOrder(ctx context.Context, order *Order) (*Order, error) {
+        return order, nil
+    }
+
+  # Method with value receiver
+  - |
+    package main
+
+    func (o Order) Total() float64 {
+        return o.subtotal + o.tax
+    }
+
+  # Multiple return values
+  - |
+    package main
+
+    func FindByID(id string) (*User, bool, error) {
+        return nil, false, nil
+    }
+
+  # Variadic function
+  - |
+    package main
+
+    func Sum(values ...int) int {
+        total := 0
+        for _, v := range values {
+            total += v
+        }
+        return total
+    }
+
+  # Generic function (Go 1.18+)
+  - |
+    package main
+
+    func Map[T, U any](items []T, fn func(T) U) []U {
+        result := make([]U, len(items))
+        for i, item := range items {
+            result[i] = fn(item)
+        }
+        return result
+    }
+
+invalid:
+  # Type declaration (not a function)
+  - |
+    package main
+
+    type Order struct {
+        ID string
+    }
+
+  # Interface (not a function)
+  - |
+    package main
+
+    type Repository interface {
+        Find(id string) error
+    }
+
+  # Variable declaration
+  - |
+    package main
+
+    var globalCounter int = 0

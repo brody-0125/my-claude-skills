@@ -1,0 +1,86 @@
+# OTel Collector Configuration for Plugin Introspector v1.0
+#
+# PURPOSE: Docker Compose deployment (standalone collector profile)
+# NOTE: For native installation via setup-otel-collector.sh, use scripts/otel-config.yaml instead.
+#
+# This config is used by the standalone OTel Collector profile in docker-compose.otel.yml.
+# Receives OTLP from Claude Code and exports to:
+#   - Prometheus (metrics)
+#   - File exporter (for PI local analysis)
+#
+# For HyperDX or LGTM stack, use the respective Docker images instead.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 100
+
+  # Memory limiter to prevent OOM
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+    spike_limit_mib: 100
+
+  # Filter to security-relevant events (optional)
+  filter/security:
+    logs:
+      include:
+        match_type: regexp
+        record_attributes:
+          - key: tool_name
+            value: "Bash|Write|Edit"
+
+  # Add resource attributes
+  resource:
+    attributes:
+      - key: service.name
+        value: claude-code
+        action: upsert
+      - key: service.version
+        value: plugin-introspector-v1.0.0
+        action: upsert
+
+exporters:
+  # Prometheus endpoint for metrics
+  prometheus:
+    endpoint: 0.0.0.0:9090
+    namespace: claude_code
+    send_timestamps: true
+
+  # File exporter for PI local analysis
+  file/pi:
+    path: /var/otel-export/traces.jsonl
+    format: json
+
+  # Debug logging (optional, for troubleshooting)
+  debug:
+    verbosity: basic
+
+service:
+  telemetry:
+    logs:
+      level: info
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [file/pi]
+
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [file/pi]

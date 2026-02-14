@@ -1,0 +1,7 @@
+id: star-import-kotlin
+language: kotlin
+severity: info
+message: "Star import detected"
+rule:
+  kind: import_header
+  regex: '\.\*$'

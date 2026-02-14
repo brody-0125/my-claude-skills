@@ -1,0 +1,10 @@
+id: abstract-class-java
+language: java
+severity: info
+message: "Abstract class detected"
+rule:
+  kind: class_declaration
+  has:
+    kind: modifiers
+    regex: 'abstract'
+    stopBy: end

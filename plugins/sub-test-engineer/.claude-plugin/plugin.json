@@ -1,0 +1,29 @@
+{
+  "name": "sub-test-engineer",
+  "description": "Type-aware testing workflow agent for Java/Kotlin/TypeScript backends",
+  "version": "0.1.0",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qE '(Test|Spec)\\.(kt|java|ts|tsx)$'; then echo \"[Hook] Compile-checking test: $file\"; cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && if echo \"$file\" | grep -qE '\\.(kt|kts)$'; then ./gradlew compileTestKotlin --quiet 2>&1 | tail -10 || true; elif echo \"$file\" | grep -qE '\\.java$'; then ./gradlew compileTestJava --quiet 2>&1 | tail -10 || true; elif echo \"$file\" | grep -qE '\\.(ts|tsx)$'; then npx tsc --noEmit 2>&1 | tail -10 || true; fi; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "root=$(git rev-parse --show-toplevel 2>/dev/null); if [ -n \"$root\" ]; then changed=$(git -C \"$root\" diff --name-only HEAD -- '*Test.kt' '*Test.java' '*Spec.kt' '*.test.ts' '*.spec.ts' 2>/dev/null); if [ -z \"$changed\" ]; then echo '[Hook] No test changes — skipping'; exit 0; fi; cd \"$root\" && if [ -f gradlew ]; then ./gradlew test --quiet 2>&1 | tail -5; elif [ -f package.json ]; then npm test -- --silent 2>&1 | tail -10; fi; result=$?; if [ $result -ne 0 ]; then echo 'Generated tests failed. Fix before ending.'; exit 2; fi; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

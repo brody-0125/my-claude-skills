@@ -1,0 +1,10 @@
+id: di-field-java
+language: java
+severity: info
+message: "private final field DI detected"
+rule:
+  kind: field_declaration
+  has:
+    kind: modifiers
+    regex: 'private.*final|final.*private'
+    stopBy: end

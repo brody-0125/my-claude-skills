@@ -1,0 +1,15 @@
+id: kotlin-extract-validation
+language: Kotlin
+severity: info
+message: "kotlin-validation"
+note: "Extracts validation annotations with values for boundary value analysis test generation. Matches @field:Min, @Min, @Size, etc."
+rule:
+  all:
+    - kind: annotation
+    - has:
+        kind: user_type
+        has:
+          kind: type_identifier
+          regex: "^(Min|Max|Size|NotNull|NotBlank|NotEmpty|Pattern|Positive|PositiveOrZero|Negative|NegativeOrZero|DecimalMin|DecimalMax|Digits|Email|Past|Future|Valid|Range|field)$"
+        stopBy: end
+      stopBy: end

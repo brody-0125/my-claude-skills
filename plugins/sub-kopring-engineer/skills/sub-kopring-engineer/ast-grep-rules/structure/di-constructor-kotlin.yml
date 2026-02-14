@@ -1,0 +1,12 @@
+id: di-constructor-kotlin
+language: kotlin
+severity: info
+message: "Constructor DI parameter detected"
+rule:
+  kind: class_parameter
+  inside:
+    kind: primary_constructor
+    stopBy: end
+  has:
+    kind: user_type
+    stopBy: end

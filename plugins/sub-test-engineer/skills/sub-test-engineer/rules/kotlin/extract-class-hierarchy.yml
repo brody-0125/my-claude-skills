@@ -1,0 +1,7 @@
+id: kotlin-extract-class-hierarchy
+language: Kotlin
+severity: info
+message: "class declaration"
+note: "Extracts class declarations with modifiers (sealed, data, enum), superclass, and interfaces"
+rule:
+  kind: class_declaration

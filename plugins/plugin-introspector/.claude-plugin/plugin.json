@@ -1,0 +1,99 @@
+{
+  "name": "plugin-introspector",
+  "description": "White-box monitoring and self-improvement meta-plugin for Claude Code workflow plugins",
+  "version": "1.0.0",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/session-start.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; if [ \"${PI_ENABLE_SECURITY:-0}\" = \"1\" ]; then bash \"$PI_S/security-check.sh\" 2>/dev/null; fi"
+          },
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/pre-tool-trace.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/post-tool-trace.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/tool-failure-trace.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/api-trace.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/session-end.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/session-stop.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PI_S=\"${INTROSPECTOR_SCRIPTS:-${CLAUDE_PROJECT_DIR:-.}/plugins/plugin-introspector/skills/plugin-introspector/scripts}\"; bash \"$PI_S/subagent-trace.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "session_id": "",
+  "query": "",
+  "classification": {
+    "systems": [],
+    "domains": [],
+    "confidence": 0,
+    "classifier": ""
+  },
+  "constraints": [],
+  "conflicts": [],
+  "resolved_set": [],
+  "metadata": {
+    "created_at": "",
+    "resolved_at": "",
+    "total_declared": 0,
+    "total_accepted": 0,
+    "total_rejected": 0,
+    "total_conflicts": 0,
+    "total_resolved": 0
+  }
+}

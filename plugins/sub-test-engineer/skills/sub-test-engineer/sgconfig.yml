@@ -1,0 +1,10 @@
+ruleDirs:
+  - rules/java
+  - rules/kotlin
+  - rules/typescript
+  - rules/go
+testConfigs:
+  - testDir: rules/__tests__/java
+  - testDir: rules/__tests__/kotlin
+  - testDir: rules/__tests__/typescript
+  - testDir: rules/__tests__/go

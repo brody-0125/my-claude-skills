@@ -1,0 +1,25 @@
+id: ts-extract-methods
+valid:
+  - |
+    class OrderService {
+        createOrder(request: CreateOrderRequest): Order {
+            return new Order();
+        }
+
+        async cancelOrder(orderId: string): Promise<void> {
+        }
+
+        private validate(order: Order): boolean {
+            return true;
+        }
+    }
+  - |
+    function processOrder(order: Order): Result {
+        return { success: true };
+    }
+invalid:
+  - |
+    class EmptyClass {}
+  - |
+    const x = 42;
+    type Foo = { bar: string };

@@ -1,0 +1,24 @@
+project:
+  name: petclinic-java
+  repo: https://github.com/spring-projects/spring-petclinic
+  commit: main  # IMPORTANT: Replace with specific SHA before running benchmarks
+  language: java
+  build-tool: maven
+
+targets:
+  - class: OwnerController
+    package: org.springframework.samples.petclinic.owner
+    expected-layer: API
+  - class: PetValidator
+    package: org.springframework.samples.petclinic.owner
+    expected-layer: Domain
+  - class: OwnerRepository
+    package: org.springframework.samples.petclinic.owner
+    expected-layer: Infrastructure
+
+run-config:
+  mode: "loop 3"
+  coverage-tool: jacoco
+  mutation-tool: pitest
+  mutation-targets:
+    - "org.springframework.samples.petclinic.owner.*"

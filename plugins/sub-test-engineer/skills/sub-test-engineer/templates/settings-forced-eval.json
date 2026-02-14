@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Claude Code settings with Forced Eval Hook for sub-test-engineer skill activation. Copy relevant sections to ~/.claude/settings.json or project .claude/settings.json",
+
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/forced-eval-hook.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(dirname \"$0\")/../../scripts/hook-post-edit.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(dirname \"$0\")/../../scripts/hook-stop-gate.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+id: java-extract-class-hierarchy
+language: Java
+severity: info
+message: "class declaration"
+note: "Extracts class declarations with type, modifiers, superclass, and interfaces for hierarchy analysis"
+rule:
+  any:
+    - kind: class_declaration
+    - kind: interface_declaration
+    - kind: enum_declaration
+    - kind: record_declaration

@@ -1,0 +1,16 @@
+id: entity-class-kotlin
+language: kotlin
+severity: info
+message: "@Entity class detected"
+rule:
+  kind: class_declaration
+  has:
+    kind: modifiers
+    has:
+      kind: annotation
+      has:
+        kind: user_type
+        has:
+          kind: type_identifier
+          regex: '^Entity$'
+    stopBy: end

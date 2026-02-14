@@ -1,0 +1,59 @@
+# OTel Collector Contrib Configuration for Plugin Introspector
+#
+# PURPOSE: Local (native) OTel Collector installation via setup-otel-collector.sh
+# NOTE: For Docker Compose deployment, use resources/otel-collector-config.yaml instead.
+#
+# Tier 1: Receives native Claude Code telemetry via OTLP and exports to file.
+# The File Exporter writes OTLP JSON that merge-otel-data.sh processes.
+#
+# Prerequisites:
+#   - CLAUDE_CODE_ENABLE_TELEMETRY=1 (enables Claude Code native OTel)
+#   - OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 (default OTLP endpoint)
+#
+# Usage:
+#   otelcol-contrib --config otel-config.yaml
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "localhost:4317"
+      http:
+        endpoint: "localhost:4318"
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 100
+
+  # Filter to only keep gen_ai spans (reduces noise)
+  filter/genai:
+    error_mode: ignore
+    traces:
+      span:
+        - 'attributes["gen_ai.operation.name"] != ""'
+
+exporters:
+  # File exporter: writes OTLP JSON to disk for merge-otel-data.sh
+  file/traces:
+    path: "${HOME}/.claude/plugin-introspector/otel-export/traces.jsonl"
+    rotation:
+      max_megabytes: 50
+      max_days: 7
+      max_backups: 3
+
+  # Debug exporter (optional, for troubleshooting)
+  # Uncomment to see spans in collector logs
+  # debug:
+  #   verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, filter/genai]
+      exporters: [file/traces]
+
+  telemetry:
+    logs:
+      level: warn

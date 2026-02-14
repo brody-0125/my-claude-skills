@@ -1,0 +1,16 @@
+id: ts-extract-constructors
+language: TypeScript
+severity: info
+message: "ts-constructor-param"
+note: "Extracts constructor parameters for DI mock target identification. Each match is one required_parameter inside a constructor method."
+rule:
+  kind: required_parameter
+  inside:
+    kind: formal_parameters
+    inside:
+      kind: method_definition
+      has:
+        kind: property_identifier
+        regex: "^constructor$"
+      stopBy: neighbor
+    stopBy: neighbor

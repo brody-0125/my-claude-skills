@@ -1,0 +1,14 @@
+id: rest-controller-class-java
+language: java
+severity: info
+message: "@RestController class detected"
+rule:
+  kind: class_declaration
+  has:
+    kind: modifiers
+    has:
+      kind: marker_annotation
+      has:
+        kind: identifier
+        regex: '^RestController$'
+    stopBy: end

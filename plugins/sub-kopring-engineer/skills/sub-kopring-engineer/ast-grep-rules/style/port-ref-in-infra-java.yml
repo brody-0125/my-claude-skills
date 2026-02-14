@@ -1,0 +1,10 @@
+id: port-ref-in-infra-java
+language: java
+severity: warning
+message: "Port interface (Reader/Appender/Updater) referenced in infrastructure — use JPA Repository directly"
+rule:
+  kind: formal_parameter
+  has:
+    kind: type_identifier
+    regex: '(Reader|Appender|Updater)$'
+    stopBy: end

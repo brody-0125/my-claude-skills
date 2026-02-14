@@ -1,0 +1,13 @@
+id: kotlin-extract-annotations
+language: Kotlin
+severity: info
+message: "annotation on function"
+note: "Extracts annotations on functions for layer classification and test strategy"
+rule:
+  kind: annotation
+  inside:
+    kind: modifiers
+    inside:
+      kind: function_declaration
+      stopBy: neighbor
+    stopBy: neighbor

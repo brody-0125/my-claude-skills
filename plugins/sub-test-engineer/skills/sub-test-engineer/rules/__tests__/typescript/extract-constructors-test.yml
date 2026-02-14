@@ -1,0 +1,22 @@
+id: ts-extract-constructors
+valid:
+  - |
+    class OrderService {
+        constructor(
+            private readonly orderRepository: OrderRepository,
+            private readonly paymentGateway: PaymentGateway
+        ) {}
+    }
+  - |
+    class OrderService {
+        constructor(private readonly orderRepository: OrderRepository) {}
+    }
+invalid:
+  - |
+    class NoConstructor {
+        doWork(): void {}
+    }
+  - |
+    function factory(): OrderService {
+        return new OrderService();
+    }

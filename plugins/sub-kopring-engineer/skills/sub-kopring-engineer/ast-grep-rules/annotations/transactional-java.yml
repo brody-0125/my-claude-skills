@@ -1,0 +1,14 @@
+id: transactional-usage-java
+language: java
+severity: info
+message: "@Transactional usage detected"
+rule:
+  any:
+    - kind: marker_annotation
+      has:
+        kind: identifier
+        regex: '^Transactional$'
+    - kind: annotation
+      has:
+        kind: identifier
+        regex: '^Transactional$'

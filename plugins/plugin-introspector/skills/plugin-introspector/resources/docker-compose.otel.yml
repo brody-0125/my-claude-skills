@@ -1,0 +1,110 @@
+# Plugin Introspector v1.0.0 — OTel Stack Docker Compose
+#
+# Usage:
+#   docker compose -f docker-compose.otel.yml up -d
+#   docker compose -f docker-compose.otel.yml down
+#
+# Choose a profile:
+#   --profile hyperdx    ClickStack/HyperDX (recommended, 4GB+ RAM)
+#   --profile lgtm       grafana/otel-lgtm (lightweight, 1-2GB RAM)
+#
+# Example:
+#   docker compose -f docker-compose.otel.yml --profile hyperdx up -d
+#
+# After starting, configure Claude Code:
+#   export CLAUDE_CODE_ENABLE_TELEMETRY=1
+#   export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+#   export OTEL_LOG_TOOL_DETAILS=1
+
+version: "3.9"
+
+services:
+  # ──────────────────────────────────────────────────────────────
+  # Option 1: ClickStack/HyperDX (Recommended)
+  # ──────────────────────────────────────────────────────────────
+  hyperdx:
+    image: docker.hyperdx.io/hyperdx/hyperdx-all-in-one
+    container_name: pi-hyperdx
+    profiles:
+      - hyperdx
+    ports:
+      - "8080:8080"    # HyperDX UI
+      - "4317:4317"    # OTel gRPC
+      - "4318:4318"    # OTel HTTP
+    volumes:
+      - hyperdx-data:/var/lib/clickhouse
+    environment:
+      - HYPERDX_LOG_LEVEL=info
+      # Optional: Custom ClickHouse settings
+      # - CLICKHOUSE_MAX_SERVER_MEMORY_USAGE_TO_RAM_RATIO=0.8
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+        reservations:
+          memory: 4G
+
+  # ──────────────────────────────────────────────────────────────
+  # Option 2: grafana/otel-lgtm (Lightweight)
+  # ──────────────────────────────────────────────────────────────
+  otel-lgtm:
+    image: grafana/otel-lgtm
+    container_name: pi-otel-lgtm
+    profiles:
+      - lgtm
+    ports:
+      - "3000:3000"    # Grafana UI
+      - "4317:4317"    # OTel gRPC
+      - "4318:4318"    # OTel HTTP
+    volumes:
+      - lgtm-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+        reservations:
+          memory: 1G
+
+  # ──────────────────────────────────────────────────────────────
+  # Option 3: Standalone OTel Collector (for custom backends)
+  # ──────────────────────────────────────────────────────────────
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: pi-otel-collector
+    profiles:
+      - collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - "4317:4317"    # OTel gRPC
+      - "4318:4318"    # OTel HTTP
+      - "9090:9090"    # Prometheus metrics
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+      - otel-export:/var/otel-export
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+volumes:
+  hyperdx-data:
+    driver: local
+  lgtm-data:
+    driver: local
+  otel-export:
+    driver: local
+
+# See otel-collector-guide.md for Quick Reference, UI URLs, and environment setup.

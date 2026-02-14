@@ -1,0 +1,13 @@
+id: kotlin-extract-constructors
+language: Kotlin
+severity: info
+message: "kotlin-constructor-param"
+note: "Extracts primary constructor parameters (class_parameter) for DI mock target identification. Each match is one parameter with type and modifiers (val/var, visibility)."
+rule:
+  kind: class_parameter
+  inside:
+    kind: primary_constructor
+    inside:
+      kind: class_declaration
+      stopBy: neighbor
+    stopBy: neighbor

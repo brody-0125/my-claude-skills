@@ -1,0 +1,13 @@
+id: kotlin-extract-functions
+language: Kotlin
+severity: info
+message: "kotlin-function"
+note: "Extracts function declarations inside class bodies for test target identification. The matched text includes full signature with parameters, return type, and body."
+rule:
+  kind: function_declaration
+  inside:
+    kind: class_body
+    inside:
+      kind: class_declaration
+      stopBy: neighbor
+    stopBy: neighbor

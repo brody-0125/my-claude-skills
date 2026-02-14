@@ -1,0 +1,14 @@
+id: java-extract-validation
+language: Java
+severity: info
+message: "java-validation"
+note: "Extracts validation annotations (@Min, @Max, @Size, @NotNull, etc.) with values for boundary value analysis test generation."
+rule:
+  all:
+    - any:
+        - kind: marker_annotation
+        - kind: annotation
+    - has:
+        kind: identifier
+        regex: "^(Min|Max|Size|NotNull|NotBlank|NotEmpty|Pattern|Positive|PositiveOrZero|Negative|NegativeOrZero|DecimalMin|DecimalMax|Digits|Email|Past|Future|Valid|Range)$"
+      stopBy: end

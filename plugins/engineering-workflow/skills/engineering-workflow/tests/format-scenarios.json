@@ -1,0 +1,134 @@
+[
+  {
+    "id": "FS-001",
+    "description": "single-domain normal output with confidence and rationale",
+    "output_type": "single-domain",
+    "input": {
+      "rationale": "Use InnoDB for ACID compliance with B-Tree indexes",
+      "confidence": 0.88,
+      "constraints": [
+        {
+          "target": "Domain E",
+          "priority": "hard",
+          "value": "Buffer pool tuning required for InnoDB"
+        }
+      ]
+    },
+    "expected": {
+      "contains": ["## Analysis Result", "**Confidence**: High (0.88)", "### Recommendation", "InnoDB", "### Constraints"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-002",
+    "description": "single-domain minimal input with rationale only",
+    "output_type": "single-domain",
+    "input": {
+      "rationale": "Consider read replicas for read-heavy workloads"
+    },
+    "expected": {
+      "contains": ["## Analysis Result", "**Confidence**: Low (0)", "### Recommendation", "read replicas"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-003",
+    "description": "multi-domain array input",
+    "output_type": "multi-domain",
+    "input": [
+      {
+        "domain": "A",
+        "confidence": 0.85,
+        "rationale": "InnoDB is optimal for this workload"
+      },
+      {
+        "domain": "B",
+        "confidence": 0.72,
+        "rationale": "Composite index on (user_id, created_at) recommended"
+      }
+    ],
+    "expected": {
+      "contains": ["## Multi-Domain Analysis", "### Domain A", "### Domain B", "InnoDB", "Composite index"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-004",
+    "description": "cross-system normal output",
+    "output_type": "cross-system",
+    "input": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Migrate to connection pooling with HikariCP",
+      "cross_dependencies": [
+        {
+          "from": "DB",
+          "to": "BE",
+          "description": "Schema change requires repository updates"
+        }
+      ],
+      "conflicts": [
+        {
+          "type": "performance vs consistency",
+          "rationale": "Chose consistency over read latency"
+        }
+      ],
+      "implementation_order": [
+        "Apply DB schema migration",
+        "Update BE repository layer",
+        "Configure connection pool"
+      ]
+    },
+    "expected": {
+      "contains": ["## Cross-System Analysis", "**Systems Analyzed**: DB, BE", "### Unified Recommendation", "HikariCP", "### Cross-System Dependencies", "### Resolved Conflicts", "### Implementation Order"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-005",
+    "description": "cross-system minimal input",
+    "output_type": "cross-system",
+    "input": {
+      "systems_analyzed": ["DB"],
+      "unified_recommendation": "Single system — no cross-system action needed"
+    },
+    "expected": {
+      "contains": ["## Cross-System Analysis", "**Systems Analyzed**: DB", "### Unified Recommendation"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-006",
+    "description": "error format",
+    "output_type": "error",
+    "input": {
+      "error": "Agent a1-engine-selector timed out after 60s",
+      "error_type": "timeout"
+    },
+    "expected": {
+      "contains": ["## Analysis Error", "**Error Type**: timeout", "timed out", "error-playbook.md"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-007",
+    "description": "empty input produces error message",
+    "output_type": "single-domain",
+    "input_raw": "",
+    "expected": {
+      "contains": ["Error"],
+      "not_empty": true,
+      "exit_nonzero": true
+    }
+  },
+  {
+    "id": "FS-008",
+    "description": "unknown output-type produces error",
+    "output_type": "invalid-type",
+    "input": {"rationale": "test"},
+    "expected": {
+      "contains": ["Unknown output type"],
+      "not_empty": true,
+      "exit_nonzero": true
+    }
+  }
+]

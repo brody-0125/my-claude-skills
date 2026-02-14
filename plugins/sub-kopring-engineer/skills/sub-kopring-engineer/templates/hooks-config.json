@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qE '\\.(kt|kts|java)$'; then echo \"[Hook] Lint: $file\"; cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && relfile=$(echo \"$file\" | sed \"s|^$(pwd)/||\" ) && if echo \"$file\" | grep -qE '\\.java$'; then ./gradlew checkstyleMain -PcheckstyleIncludes=\"**/${relfile##*/}\" --quiet 2>&1 | tail -20 || true; else ./gradlew ktlintCheck --include \"**/${relfile##*/}\" --quiet 2>&1 | tail -20 || true; fi; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qiE '(application-prod|secrets|credentials|private-key)'; then echo '{\"decision\":\"block\",\"reason\":\"Blocking production secret file modification\"}'; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "root=$(git rev-parse --show-toplevel 2>/dev/null); if [ -n \"$root\" ] && [ -f \"$root/gradlew\" ]; then changed=$(git -C \"$root\" diff --name-only HEAD -- '*.kt' '*.kts' '*.java' 2>/dev/null); if [ -z \"$changed\" ]; then echo '[Hook] No source changes — skipping test gate'; exit 0; fi; cd \"$root\" && ./gradlew test --quiet 2>&1 | tail -5; result=$?; if [ $result -ne 0 ]; then echo 'Tests failed. Please fix and try again.'; exit 2; fi; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

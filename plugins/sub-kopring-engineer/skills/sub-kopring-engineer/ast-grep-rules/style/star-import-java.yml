@@ -1,0 +1,9 @@
+id: star-import-java
+language: java
+severity: info
+message: "Star import detected"
+rule:
+  kind: import_declaration
+  has:
+    kind: asterisk
+    stopBy: end

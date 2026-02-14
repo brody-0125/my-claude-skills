@@ -1,0 +1,12 @@
+id: abstract-class-kotlin
+language: kotlin
+severity: info
+message: "Abstract/open class detected"
+rule:
+  kind: class_declaration
+  has:
+    kind: modifiers
+    has:
+      kind: inheritance_modifier
+      regex: '^(abstract|open)$'
+    stopBy: end

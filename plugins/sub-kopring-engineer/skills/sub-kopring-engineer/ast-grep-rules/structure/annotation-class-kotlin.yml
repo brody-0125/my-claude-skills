@@ -1,0 +1,12 @@
+id: annotation-class-kotlin
+language: kotlin
+severity: info
+message: "Custom annotation class detected"
+rule:
+  kind: class_declaration
+  has:
+    kind: modifiers
+    has:
+      kind: class_modifier
+      regex: '^annotation$'
+    stopBy: end

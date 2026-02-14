@@ -1,0 +1,14 @@
+id: autowired-usage-java
+language: java
+severity: info
+message: "@Autowired usage detected"
+rule:
+  any:
+    - kind: marker_annotation
+      has:
+        kind: identifier
+        regex: '^Autowired$'
+    - kind: annotation
+      has:
+        kind: identifier
+        regex: '^Autowired$'

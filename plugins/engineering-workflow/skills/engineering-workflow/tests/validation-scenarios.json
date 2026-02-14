@@ -1,0 +1,132 @@
+[
+  {
+    "id": "VS-001",
+    "description": "Valid domain-agent output",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "LSM-tree is optimal for write-heavy workloads",
+      "recommendation": "Use RocksDB with level compaction",
+      "confidence": 0.85
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-002",
+    "description": "Domain-agent missing required rationale field",
+    "agent_type": "domain-agent",
+    "input": {
+      "recommendation": "Use B-tree index",
+      "confidence": 0.80
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 1
+    }
+  },
+  {
+    "id": "VS-003",
+    "description": "Valid orchestrator output",
+    "agent_type": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "completed",
+      "guidance": "Use LSM with sorted keys",
+      "confidence": 0.85
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-004",
+    "description": "Orchestrator with invalid status value",
+    "agent_type": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "invalid_status",
+      "confidence": 0.85
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 1
+    }
+  },
+  {
+    "id": "VS-005",
+    "description": "Orchestrator missing system and status fields",
+    "agent_type": "orchestrator",
+    "input": {
+      "guidance": "Some guidance",
+      "confidence": 0.50
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 2
+    }
+  },
+  {
+    "id": "VS-006",
+    "description": "Valid synthesizer output",
+    "agent_type": "synthesizer",
+    "input": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Use sharding with connection pool update",
+      "implementation_order": [1, 2],
+      "cross_dependencies": [{"from": "DB", "to": "BE", "description": "Schema change requires repository updates"}],
+      "confidence": 0.80
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-007",
+    "description": "Synthesizer missing required fields",
+    "agent_type": "synthesizer",
+    "input": {
+      "confidence": 0.50
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 2
+    }
+  },
+  {
+    "id": "VS-008",
+    "description": "Empty input — should fail validation",
+    "agent_type": "domain-agent",
+    "input_raw": "",
+    "expected": {
+      "valid": false,
+      "error_count": 1
+    }
+  },
+  {
+    "id": "VS-009",
+    "description": "Invalid JSON input",
+    "agent_type": "domain-agent",
+    "input_raw": "{not valid json",
+    "expected": {
+      "valid": false,
+      "error_count": 1
+    }
+  },
+  {
+    "id": "VS-010",
+    "description": "Unknown agent type",
+    "agent_type": "unknown-type",
+    "input": {
+      "rationale": "test",
+      "confidence": 0.50
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 1
+    }
+  }
+]

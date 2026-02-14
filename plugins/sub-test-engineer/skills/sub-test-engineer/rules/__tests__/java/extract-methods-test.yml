@@ -1,0 +1,38 @@
+id: java-extract-methods
+valid:
+  - |
+    public class OrderService {
+        public Order createOrder(CreateOrderRequest request) {
+            return new Order();
+        }
+
+        private void validateOrder(Order order) {
+            // validation
+        }
+
+        protected List<OrderItem> getOrderItems(Long orderId) {
+            return List.of();
+        }
+    }
+  - |
+    public interface OrderRepository {
+        Optional<Order> findById(Long id);
+        List<Order> findByStatus(OrderStatus status);
+    }
+  - |
+    public enum OrderStatus {
+        PENDING, CONFIRMED, CANCELLED;
+
+        public boolean isTerminal() {
+            return this == CANCELLED;
+        }
+    }
+invalid:
+  - |
+    public class EmptyClass {
+    }
+  - |
+    public class FieldsOnly {
+        private String name;
+        private int age;
+    }

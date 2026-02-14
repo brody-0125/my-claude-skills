@@ -1,0 +1,23 @@
+# Benchmark Regression Thresholds
+# Used by check-regression.sh to detect quality regressions between benchmark runs.
+
+regression-thresholds:
+  compile-success-rate:
+    min-absolute: 70        # Absolute minimum (%) — fail if below regardless
+    max-regression: 5       # Max allowed decrease (%) from previous run
+
+  test-pass-rate:
+    min-absolute: 60        # Absolute minimum (%)
+    max-regression: 5       # Max allowed decrease (%)
+
+  coverage-delta:
+    min-absolute: 10        # Minimum coverage improvement (%p) over baseline
+    max-regression: 3       # Max allowed decrease (%p) from previous run
+
+  mutation-kill-rate:
+    min-absolute: 40        # Absolute minimum (%) — only checked if mutation enabled
+    max-regression: 5       # Max allowed decrease (%)
+
+  loop-count-to-convergence:
+    max-absolute: 5         # Maximum loops allowed
+    max-increase: 1         # Max allowed increase from previous run

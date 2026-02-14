@@ -1,0 +1,14 @@
+id: entity-class-java
+language: java
+severity: info
+message: "@Entity class detected"
+rule:
+  kind: class_declaration
+  has:
+    kind: modifiers
+    has:
+      kind: marker_annotation
+      has:
+        kind: identifier
+        regex: '^Entity$'
+    stopBy: end

@@ -1,0 +1,81 @@
+id: go-extract-struct-hierarchy
+valid:
+  # Simple struct
+  - |
+    package main
+
+    type Order struct {
+        ID     string
+        Amount float64
+    }
+
+  # Struct with tags
+  - |
+    package main
+
+    type User struct {
+        ID       string    `json:"id" db:"user_id"`
+        Email    string    `json:"email" validate:"required,email"`
+        Name     string    `json:"name" validate:"required,min=1,max=100"`
+        Age      int       `json:"age" validate:"gte=0,lte=120"`
+    }
+
+  # Struct with embedding (composition)
+  - |
+    package main
+
+    type PremiumOrder struct {
+        Order                     // embedded
+        DiscountPercent float64   `json:"discount_percent"`
+        LoyaltyPoints   int       `json:"loyalty_points"`
+    }
+
+  # Struct with multiple embeddings
+  - |
+    package main
+
+    type AuditedOrder struct {
+        Order
+        Timestamps
+        CreatedBy string
+    }
+
+  # Struct with pointer fields
+  - |
+    package main
+
+    type OrderWithRefs struct {
+        ID       string
+        Customer *Customer
+        Items    []*OrderItem
+        Metadata map[string]interface{}
+    }
+
+  # Empty struct (often used for signaling)
+  - |
+    package main
+
+    type Done struct{}
+
+invalid:
+  # Interface (not a struct)
+  - |
+    package main
+
+    type Repository interface {
+        Find(id string) error
+    }
+
+  # Function (not a struct)
+  - |
+    package main
+
+    func ProcessOrder(o *Order) error {
+        return nil
+    }
+
+  # Type alias (not a struct definition)
+  - |
+    package main
+
+    type OrderID = string

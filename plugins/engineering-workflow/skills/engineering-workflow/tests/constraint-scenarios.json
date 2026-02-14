@@ -1,0 +1,151 @@
+[
+  {
+    "id": "CS-001",
+    "description": "No constraints — empty array input",
+    "input": {
+      "constraints": []
+    },
+    "expected": {
+      "conflicts_count": 0,
+      "resolved_set_count": 0,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-002",
+    "description": "Single constraint — no conflicts possible",
+    "input": {
+      "constraints": [
+        {
+          "id": "c-a1-1",
+          "source_agent": "db/a1-engine-selector",
+          "target": "schema-design",
+          "value": "sorted-key",
+          "priority": "hard"
+        }
+      ]
+    },
+    "expected": {
+      "conflicts_count": 0,
+      "resolved_set_count": 1,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-003",
+    "description": "Hard vs soft conflict — hard wins automatically",
+    "input": {
+      "constraints": [
+        {
+          "id": "c-a1-1",
+          "source_agent": "db/a1-engine-selector",
+          "target": "write-strategy",
+          "value": "sequential",
+          "priority": "hard"
+        },
+        {
+          "id": "c-d1-1",
+          "source_agent": "db/d1-schema-expert",
+          "target": "write-strategy",
+          "value": "random",
+          "priority": "soft"
+        }
+      ]
+    },
+    "expected": {
+      "conflicts_count": 1,
+      "resolved_set_count": 1,
+      "has_error": false,
+      "auto_resolved": true
+    }
+  },
+  {
+    "id": "CS-004",
+    "description": "Hard vs hard conflict — cannot auto-resolve",
+    "input": {
+      "constraints": [
+        {
+          "id": "c-a1-1",
+          "source_agent": "db/a1-engine-selector",
+          "target": "consistency-model",
+          "value": "eventual",
+          "priority": "hard"
+        },
+        {
+          "id": "c-c1-1",
+          "source_agent": "db/c1-isolation-advisor",
+          "target": "consistency-model",
+          "value": "strong",
+          "priority": "hard"
+        }
+      ]
+    },
+    "expected": {
+      "conflicts_count": 1,
+      "resolved_set_count": 2,
+      "has_error": false,
+      "auto_resolved": false
+    }
+  },
+  {
+    "id": "CS-005",
+    "description": "Invalid JSON input",
+    "input_raw": "not valid json {{{",
+    "expected": {
+      "has_error": true
+    }
+  },
+  {
+    "id": "CS-006",
+    "description": "Legacy flat array format — backward compatibility",
+    "input_flat": [
+      {
+        "id": "c-a1-1",
+        "source_agent": "db/a1-engine-selector",
+        "target": "io-mode",
+        "value": "direct",
+        "priority": "soft"
+      },
+      {
+        "id": "c-e1-1",
+        "source_agent": "db/e1-page-optimizer",
+        "target": "io-mode",
+        "value": "buffered",
+        "priority": "soft"
+      }
+    ],
+    "expected": {
+      "conflicts_count": 1,
+      "resolved_set_count": 2,
+      "has_error": false,
+      "auto_resolved": false
+    }
+  },
+  {
+    "id": "CS-007",
+    "description": "No conflict — same target but same value",
+    "input": {
+      "constraints": [
+        {
+          "id": "c-a1-1",
+          "source_agent": "db/a1-engine-selector",
+          "target": "storage-type",
+          "value": "ssd",
+          "priority": "hard"
+        },
+        {
+          "id": "c-e1-1",
+          "source_agent": "db/e1-page-optimizer",
+          "target": "storage-type",
+          "value": "ssd",
+          "priority": "soft"
+        }
+      ]
+    },
+    "expected": {
+      "conflicts_count": 0,
+      "resolved_set_count": 2,
+      "has_error": false
+    }
+  }
+]

@@ -1,0 +1,14 @@
+id: java-extract-methods
+language: Java
+severity: info
+message: "java-method"
+note: "Extracts method declarations with full signature for test target identification. The matched text contains the complete method including body, parameters, return type, and modifiers."
+rule:
+  kind: method_declaration
+  inside:
+    any:
+      - kind: class_declaration
+      - kind: interface_declaration
+      - kind: enum_declaration
+      - kind: record_declaration
+    stopBy: end

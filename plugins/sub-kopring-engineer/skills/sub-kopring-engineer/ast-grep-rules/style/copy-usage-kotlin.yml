@@ -1,0 +1,12 @@
+id: copy-usage-kotlin
+language: kotlin
+severity: info
+message: ".copy() usage detected"
+rule:
+  kind: call_expression
+  has:
+    kind: navigation_expression
+    has:
+      kind: simple_identifier
+      regex: '^copy$'
+    stopBy: end

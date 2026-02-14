@@ -1,0 +1,21 @@
+id: kotlin-extract-constructors
+valid:
+  - |
+    class OrderService(
+        private val orderRepository: OrderRepository,
+        private val paymentGateway: PaymentGateway
+    )
+  - |
+    data class CreateOrderRequest(
+        val productId: Long,
+        val quantity: Int
+    )
+invalid:
+  - |
+    class NoConstructor {
+        fun doWork() {}
+    }
+  - |
+    object SingletonService {
+        fun doWork() {}
+    }

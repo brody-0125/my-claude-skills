@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Agent Teams configuration template for sub-test-engineer parallel test generation",
+
+  "name": "sub-test-gen-{timestamp}",
+  "created_at": "{iso-timestamp}",
+  "skill": "sub-test-engineer",
+  "phase": "generate",
+
+  "lead_agent_id": "team-lead@sub-test-gen-{timestamp}",
+
+  "members": [
+    {
+      "agent_id": "team-lead@sub-test-gen-{timestamp}",
+      "name": "team-lead",
+      "agent_type": "team-lead",
+      "status": "active",
+      "role": "Coordinates work, spawns teammates, synthesizes results"
+    },
+    {
+      "agent_id": "unit-tester@sub-test-gen-{timestamp}",
+      "name": "unit-tester",
+      "agent_type": "general-purpose",
+      "status": "pending",
+      "role": "Generates unit tests with mock-based isolation",
+      "prompt_template": "templates/prompts/unit-tester.md",
+      "assigned_targets": []
+    },
+    {
+      "agent_id": "integration-tester@sub-test-gen-{timestamp}",
+      "name": "integration-tester",
+      "agent_type": "general-purpose",
+      "status": "pending",
+      "role": "Generates integration tests with real dependencies",
+      "prompt_template": "templates/prompts/integration-tester.md",
+      "assigned_targets": []
+    },
+    {
+      "agent_id": "property-tester@sub-test-gen-{timestamp}",
+      "name": "property-tester",
+      "agent_type": "general-purpose",
+      "status": "pending",
+      "role": "Generates property-based tests for domain logic",
+      "prompt_template": "templates/prompts/property-tester.md",
+      "assigned_targets": []
+    }
+  ],
+
+  "shared_context": {
+    "strategy_document": "{path-to-strategy-document}",
+    "analysis_report": "{path-to-analysis-report}",
+    "test_profile": "{path-to-test-profile.json}",
+    "project_root": "{project-root-path}"
+  },
+
+  "settings": {
+    "timeout_seconds": 300,
+    "max_retries": 2,
+    "fallback_to_sequential": true,
+    "collect_metrics": true
+  },
+
+  "status": "initialized",
+  "initialized_at": null,
+  "completed_at": null,
+
+  "metrics": {
+    "total_targets": 0,
+    "unit_targets": 0,
+    "integration_targets": 0,
+    "property_targets": 0,
+    "generated_files": [],
+    "compile_success_count": 0,
+    "compile_failure_count": 0,
+    "elapsed_seconds": 0
+  }
+}

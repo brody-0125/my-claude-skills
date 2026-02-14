@@ -1,0 +1,12 @@
+id: ts-extract-decorators
+language: TypeScript
+severity: info
+message: "decorator on method or class"
+note: "Extracts decorators for layer classification (NestJS @Controller, @Injectable, etc.)"
+rule:
+  kind: decorator
+  inside:
+    any:
+      - kind: method_definition
+      - kind: class_declaration
+    stopBy: end

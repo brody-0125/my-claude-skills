@@ -1,0 +1,13 @@
+id: java-extract-constructors
+language: Java
+severity: info
+message: "java-constructor-param"
+note: "Extracts constructor parameters for DI mock target identification. Each match is one formal_parameter inside a constructor."
+rule:
+  kind: formal_parameter
+  inside:
+    kind: formal_parameters
+    inside:
+      kind: constructor_declaration
+      stopBy: neighbor
+    stopBy: neighbor

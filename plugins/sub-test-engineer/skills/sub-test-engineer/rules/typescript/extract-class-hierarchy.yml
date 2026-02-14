@@ -1,0 +1,11 @@
+id: ts-extract-class-hierarchy
+language: TypeScript
+severity: info
+message: "class or interface declaration"
+note: "Extracts class/interface/enum declarations with heritage clauses for hierarchy analysis"
+rule:
+  any:
+    - kind: class_declaration
+    - kind: interface_declaration
+    - kind: enum_declaration
+    - kind: type_alias_declaration

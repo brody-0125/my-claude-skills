@@ -1,0 +1,22 @@
+id: go-extract-interface
+language: Go
+severity: info
+message: "interface declaration"
+note: |
+  Extracts interface type definitions for mock generation.
+  Captures:
+  - Interface name
+  - Method signatures (name, parameters, return types)
+  - Embedded interfaces
+  Interfaces in Go are implicitly implemented (no "implements" keyword).
+  Example:
+    type OrderRepository interface {
+        FindByID(ctx context.Context, id string) (*Order, error)
+        Save(ctx context.Context, order *Order) error
+    }
+rule:
+  kind: type_declaration
+  has:
+    kind: type_spec
+    has:
+      kind: interface_type

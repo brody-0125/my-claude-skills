@@ -1,0 +1,19 @@
+id: kotlin-extract-functions
+valid:
+  - |
+    class OrderService(private val repo: OrderRepository) {
+        fun createOrder(request: CreateOrderRequest): Order {
+            return Order()
+        }
+
+        suspend fun cancelOrder(orderId: Long): Result<Unit> {
+            return Result.success(Unit)
+        }
+
+        private fun validate(order: Order) {}
+    }
+invalid:
+  - |
+    class EmptyClass
+  - |
+    fun topLevelFunction(): String = "hello"

@@ -1,0 +1,211 @@
+[
+  {
+    "id": "TC-001",
+    "query": "B-tree vs LSM storage engine comparison",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["A", "B"],
+      "be_clusters": [],
+      "min_confidence": 0.85
+    },
+    "description": "Single-system DB query matching domains A and B"
+  },
+  {
+    "id": "TC-002",
+    "query": "kubernetes deployment monitoring",
+    "expected": {
+      "systems": ["IF"],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.70
+    },
+    "description": "Infrastructure system detection"
+  },
+  {
+    "id": "TC-003",
+    "query": "OAuth JWT token management",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.70
+    },
+    "description": "Security system detection"
+  },
+  {
+    "id": "TC-004",
+    "query": "implement saga pattern with circuit breaker and tests",
+    "expected": {
+      "systems": ["BE"],
+      "domains": [],
+      "be_clusters": ["B", "R"],
+      "min_confidence": 0.85
+    },
+    "description": "Multi-cluster BE query matching Boundary and Resilience"
+  },
+  {
+    "id": "TC-005",
+    "query": "shard database and update backend connection pool",
+    "expected": {
+      "systems": ["DB", "BE"],
+      "domains": ["F"],
+      "be_clusters": [],
+      "min_confidence": 0.60
+    },
+    "description": "Cross-system DB+BE query"
+  },
+  {
+    "id": "TC-006",
+    "query": "React component state management",
+    "expected": {
+      "systems": [],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.0
+    },
+    "description": "No match — frontend query not in any domain"
+  },
+  {
+    "id": "TC-007",
+    "query": "database transaction isolation level with deadlock prevention",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["C"],
+      "be_clusters": [],
+      "min_confidence": 0.85
+    },
+    "description": "DB concurrency domain with domain sub-detection"
+  },
+  {
+    "id": "TC-008",
+    "query": "terraform infrastructure as code with CI/CD pipeline",
+    "expected": {
+      "systems": ["IF"],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.70
+    },
+    "description": "Infrastructure system with multiple IF keywords"
+  },
+  {
+    "id": "TC-009",
+    "query": "fixture monkey test generation with coverage mutation analysis",
+    "expected": {
+      "systems": ["BE"],
+      "domains": [],
+      "be_clusters": ["T"],
+      "min_confidence": 0.85
+    },
+    "description": "BE Test cluster detection"
+  },
+  {
+    "id": "TC-010",
+    "query": "design multi-tenant schema with RBAC and API rate limiting",
+    "expected": {
+      "systems": ["DB", "BE", "SE"],
+      "domains": ["D"],
+      "be_clusters": [],
+      "min_confidence": 0.60
+    },
+    "description": "3-system cross-system query (DB+BE+SE)"
+  },
+  {
+    "id": "TC-011",
+    "query": "hello world foo bar",
+    "expected": {
+      "systems": [],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.0
+    },
+    "description": "Edge case — no domain keywords match"
+  },
+  {
+    "id": "TC-012",
+    "query": "   ",
+    "expected": {
+      "systems": [],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.0
+    },
+    "description": "Edge case — whitespace-only input"
+  },
+  {
+    "id": "TC-013",
+    "query": "ISOLATION LEVEL MVCC",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["C"],
+      "be_clusters": [],
+      "min_confidence": 0.85
+    },
+    "description": "Case insensitivity — uppercase keywords should match DB domain C"
+  },
+  {
+    "id": "TC-014",
+    "query": "security monitoring database api",
+    "expected": {
+      "systems": ["DB", "BE", "IF", "SE"],
+      "domains": [],
+      "be_clusters": ["R"],
+      "min_confidence": 0.60
+    },
+    "description": "4-system ambiguous query matching all systems (monitoring triggers BE R-cluster)"
+  },
+  {
+    "id": "TC-015",
+    "query": "the database engine crashed",
+    "expected": {
+      "systems": ["DB"],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.70
+    },
+    "description": "False positive guard — engine should NOT match BE gin keyword"
+  },
+  {
+    "id": "TC-016",
+    "query": "capital investment strategy",
+    "expected": {
+      "systems": [],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.0
+    },
+    "description": "False positive guard — capital should NOT match BE api keyword"
+  },
+  {
+    "id": "TC-017",
+    "query": "crypto wallet implementation",
+    "expected": {
+      "systems": [],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.0
+    },
+    "description": "False positive guard — wallet should NOT match DB WAL keyword"
+  },
+  {
+    "id": "TC-018",
+    "query": "connect to the db",
+    "expected": {
+      "systems": ["DB"],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.70
+    },
+    "description": "Trailing keyword — db at end of string should still match"
+  },
+  {
+    "id": "TC-019",
+    "query": "indexing strategy for large tables",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["A"],
+      "be_clusters": [],
+      "min_confidence": 0.70
+    },
+    "description": "Derivative keyword — indexing (derivative of index) should match DB domain A"
+  }
+]

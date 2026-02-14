@@ -1,0 +1,5 @@
+ruleDirs:
+  - annotations
+  - structure
+  - style
+  - custom

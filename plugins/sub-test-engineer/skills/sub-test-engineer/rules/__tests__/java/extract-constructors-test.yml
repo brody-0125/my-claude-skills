@@ -1,0 +1,21 @@
+id: java-extract-constructors
+valid:
+  - |
+    public class OrderService {
+        public OrderService(OrderRepository orderRepository, PaymentGateway paymentGateway) {
+        }
+    }
+  - |
+    public class OrderService {
+        public OrderService(OrderRepository orderRepository) {
+        }
+    }
+invalid:
+  - |
+    public class NoConstructor {
+        public void doWork() {}
+    }
+  - |
+    public class StaticOnly {
+        public static OrderService create() { return new OrderService(); }
+    }

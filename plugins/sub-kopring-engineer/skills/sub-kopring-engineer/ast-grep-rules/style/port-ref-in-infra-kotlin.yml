@@ -1,0 +1,12 @@
+id: port-ref-in-infra-kotlin
+language: kotlin
+severity: warning
+message: "Port interface (Reader/Appender/Updater) referenced in infrastructure — use JPA Repository directly"
+rule:
+  kind: class_parameter
+  has:
+    kind: user_type
+    has:
+      kind: type_identifier
+      regex: '(Reader|Appender|Updater)$'
+    stopBy: end

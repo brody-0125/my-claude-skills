@@ -1,0 +1,15 @@
+id: ts-extract-validation
+language: TypeScript
+severity: info
+message: "ts-validation-decorator"
+note: "Extracts class-validator decorators with values for boundary value analysis test generation."
+rule:
+  all:
+    - kind: decorator
+    - has:
+        kind: call_expression
+        has:
+          kind: identifier
+          regex: "^(IsNotEmpty|IsString|IsNumber|IsInt|IsEmail|IsOptional|Min|Max|MinLength|MaxLength|IsPositive|IsNegative|IsEnum|IsArray|ArrayMinSize|ArrayMaxSize|ValidateNested|IsDate|IsDefined|IsBoolean|Matches)$"
+        stopBy: end
+      stopBy: end

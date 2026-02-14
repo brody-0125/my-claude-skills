@@ -1,0 +1,28 @@
+{
+  "_comment": "Project-level hooks configuration for engineering-workflow. Copy to project root and customize.",
+  "engineering_workflow": {
+    "enabled": true,
+    "cache_dir": "~/.claude/cache/engineering-workflow",
+    "token_budgets": {
+      "single_domain": 6000,
+      "multi_domain": 10000,
+      "cross_system": 14000,
+      "full_system": 16000
+    },
+    "sister_skills": {
+      "sub-kopring-engineer": {
+        "enabled": true,
+        "timeout_seconds": 300,
+        "auto_delegate": true
+      }
+    },
+    "agent_defaults": {
+      "timeout_seconds": 60,
+      "retry_on_failure": false
+    },
+    "reference_loading": {
+      "max_excerpt_lines": 100,
+      "prefer_decision_matrix": true
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(dirname \"$0\")/../../scripts/hook-post-edit.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(dirname \"$0\")/../../scripts/hook-stop-gate.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

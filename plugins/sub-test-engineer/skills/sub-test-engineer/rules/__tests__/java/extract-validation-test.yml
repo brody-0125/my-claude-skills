@@ -1,0 +1,27 @@
+id: java-extract-validation
+valid:
+  - |
+    public class OrderController {
+        public void create(@Min(0) int quantity) {}
+    }
+  - |
+    public class OrderController {
+        public void create(@NotNull String name) {}
+    }
+  - |
+    public class OrderController {
+        public void create(@Size(min = 1, max = 100) String name) {}
+    }
+  - |
+    public class OrderController {
+        public void create(@Max(1000) @Positive int price) {}
+    }
+invalid:
+  - |
+    public class OrderController {
+        public void create(@Override String name) {}
+    }
+  - |
+    public class OrderController {
+        public void create(@Transactional String name) {}
+    }

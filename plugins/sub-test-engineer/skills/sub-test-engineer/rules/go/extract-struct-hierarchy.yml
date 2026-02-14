@@ -1,0 +1,22 @@
+id: go-extract-struct-hierarchy
+language: Go
+severity: info
+message: "struct declaration"
+note: |
+  Extracts struct type definitions with embedded types (Go composition pattern).
+  Captures:
+  - Struct name and fields
+  - Embedded types (anonymous fields for composition)
+  - Field tags (json, validate, db, etc.)
+  Struct embedding is Go's approach to composition, similar to inheritance in OOP.
+  Example:
+    type PremiumOrder struct {
+        Order              // embedded (composition)
+        DiscountPercent float64 `json:"discount"`
+    }
+rule:
+  kind: type_declaration
+  has:
+    kind: type_spec
+    has:
+      kind: struct_type

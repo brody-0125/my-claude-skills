@@ -1,0 +1,13 @@
+id: go-extract-functions
+language: Go
+severity: info
+message: "go-function"
+note: |
+  Extracts function and method declarations for test target identification.
+  Captures:
+  - Regular functions: func FunctionName(params) returnType
+  - Methods with receivers: func (r *ReceiverType) MethodName(params) returnType
+  - Exported functions (capitalized) and unexported (lowercase)
+  The matched text includes full signature with parameters, return type, and body.
+rule:
+  kind: function_declaration

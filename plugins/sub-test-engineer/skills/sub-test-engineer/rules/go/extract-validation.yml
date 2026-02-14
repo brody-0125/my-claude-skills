@@ -1,0 +1,24 @@
+id: go-extract-validation
+language: Go
+severity: info
+message: "struct-field-with-tag"
+note: |
+  Extracts struct fields with validation tags for edge case test generation.
+  Common tag patterns:
+  - validate:"required,min=1,max=100" (go-playground/validator)
+  - binding:"required" (gin)
+  - json:"field_name,omitempty"
+  - db:"column_name"
+  These tags inform test boundary conditions:
+  - required → null/empty tests
+  - min/max → boundary value tests
+  - email/url/uuid → format validation tests
+rule:
+  kind: field_declaration
+  has:
+    kind: interpreted_string_literal
+    pattern: $TAG
+  inside:
+    kind: field_declaration_list
+    inside:
+      kind: struct_type

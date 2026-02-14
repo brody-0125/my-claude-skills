@@ -1,0 +1,40 @@
+{
+  "name": "engineering-workflow",
+  "description": "Micro-agent system for engineering architecture decisions — DB, BE, IF, SE domains",
+  "version": "1.0.0",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qiE '(application-prod|secrets|credentials|private-key)'; then echo '{\"decision\":\"block\",\"reason\":\"Production secret file edit blocked\"}'; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qE 'constraints\\.json$'; then jq empty \"$file\" 2>/dev/null || { echo '{\"decision\":\"block\",\"reason\":\"constraints.json is not valid JSON\"}'; exit 2; }; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cache_dir=\"$HOME/.claude/cache/engineering-workflow\"; constraints=\"$cache_dir/constraints.json\"; if [ -f \"$constraints\" ]; then session_id=$(jq -r '.session_id // empty' \"$constraints\" 2>/dev/null); if [ -n \"$session_id\" ]; then mkdir -p \"$cache_dir/history\" && cp \"$constraints\" \"$cache_dir/history/${session_id}-constraints.json\"; fi; fi; history_dir=\"$cache_dir/history\"; if [ -d \"$history_dir\" ]; then ls -1t \"$history_dir\"/*-constraints.json 2>/dev/null | tail -n +21 | xargs rm -f 2>/dev/null; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

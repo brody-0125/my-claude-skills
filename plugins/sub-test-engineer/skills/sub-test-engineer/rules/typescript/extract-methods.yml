@@ -1,0 +1,12 @@
+id: ts-extract-methods
+language: TypeScript
+severity: info
+message: "ts-method"
+note: "Extracts method definitions inside classes and standalone function declarations for test target identification."
+rule:
+  any:
+    - kind: method_definition
+      inside:
+        kind: class_body
+        stopBy: neighbor
+    - kind: function_declaration

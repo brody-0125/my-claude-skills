@@ -1,0 +1,9 @@
+id: dynamic-update-java
+language: java
+severity: info
+message: "@DynamicUpdate annotation detected"
+rule:
+  kind: marker_annotation
+  has:
+    kind: identifier
+    regex: '^DynamicUpdate$'

@@ -1,0 +1,74 @@
+project:
+  name: petclinic-kotlin
+  repo: https://github.com/spring-petclinic/spring-petclinic-kotlin
+  commit: main  # Pin to specific SHA before benchmarks
+  language: kotlin
+  build-tool: gradle
+
+# Project stats (as of 2026-02-06)
+stats:
+  main-files: 24
+  test-files: 14
+  test-framework: junit5
+  mock-library: mockito
+  coverage-tool: jacoco
+
+# Targets for M4 Gate validation (7 untested classes)
+targets:
+  # Controllers
+  - class: WelcomeController
+    package: org.springframework.samples.petclinic.system
+    expected-layer: API
+    technique: unit-test
+
+  # Domain Entities (Property-Based Testing)
+  - class: Visit
+    package: org.springframework.samples.petclinic.visit
+    expected-layer: Domain
+    technique: property-test
+
+  - class: Owner
+    package: org.springframework.samples.petclinic.owner
+    expected-layer: Domain
+    technique: property-test
+
+  - class: Pet
+    package: org.springframework.samples.petclinic.owner
+    expected-layer: Domain
+    technique: property-test
+
+  - class: PetType
+    package: org.springframework.samples.petclinic.owner
+    expected-layer: Domain
+    technique: unit-test
+
+  - class: Specialty
+    package: org.springframework.samples.petclinic.vet
+    expected-layer: Domain
+    technique: unit-test
+
+  - class: Vets
+    package: org.springframework.samples.petclinic.vet
+    expected-layer: Domain
+    technique: unit-test
+
+run-config:
+  mode: "loop 3"
+  coverage-tool: jacoco
+  mutation-tool: pitest
+  mutation-targets:
+    - "org.springframework.samples.petclinic.owner.*"
+    - "org.springframework.samples.petclinic.visit.*"
+    - "org.springframework.samples.petclinic.vet.*"
+    - "org.springframework.samples.petclinic.system.*"
+
+# Agent Teams benchmark config
+agent-teams:
+  enabled: true
+  partition-mode: technique  # technique | module
+  teammates:
+    - unit-tester
+    - property-tester
+  # No integration-tester needed (entities don't require integration tests)
+  timeout-seconds: 300
+

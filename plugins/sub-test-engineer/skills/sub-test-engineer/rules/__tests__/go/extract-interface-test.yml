@@ -1,0 +1,77 @@
+id: go-extract-interface
+valid:
+  # Simple interface
+  - |
+    package main
+
+    type OrderRepository interface {
+        FindByID(ctx context.Context, id string) (*Order, error)
+        Save(ctx context.Context, order *Order) error
+        Delete(ctx context.Context, id string) error
+    }
+
+  # Interface with embedded interface
+  - |
+    package main
+
+    type ReadWriter interface {
+        io.Reader
+        io.Writer
+    }
+
+  # Single method interface
+  - |
+    package main
+
+    type Closer interface {
+        Close() error
+    }
+
+  # Interface with generic method (Go 1.18+)
+  - |
+    package main
+
+    type Container[T any] interface {
+        Add(item T)
+        Get(index int) T
+        Size() int
+    }
+
+  # Empty interface (any)
+  - |
+    package main
+
+    type Any interface{}
+
+  # Interface with multiple embedded interfaces
+  - |
+    package main
+
+    type OrderService interface {
+        OrderRepository
+        OrderValidator
+        Process(ctx context.Context, order *Order) error
+    }
+
+invalid:
+  # Struct (not an interface)
+  - |
+    package main
+
+    type Order struct {
+        ID string
+    }
+
+  # Function (not an interface)
+  - |
+    package main
+
+    func Process(o *Order) error {
+        return nil
+    }
+
+  # Type alias
+  - |
+    package main
+
+    type Handler = func(w http.ResponseWriter, r *http.Request)

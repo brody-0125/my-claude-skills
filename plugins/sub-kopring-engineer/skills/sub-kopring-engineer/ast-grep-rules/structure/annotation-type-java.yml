@@ -1,0 +1,6 @@
+id: annotation-type-java
+language: java
+severity: info
+message: "Custom annotation type detected"
+rule:
+  kind: annotation_type_declaration

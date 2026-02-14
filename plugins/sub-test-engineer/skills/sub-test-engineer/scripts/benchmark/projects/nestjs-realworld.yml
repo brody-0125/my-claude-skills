@@ -1,0 +1,24 @@
+project:
+  name: nestjs-realworld
+  repo: https://github.com/lujakob/nestjs-realworld-example-app
+  commit: main  # IMPORTANT: Replace with specific SHA before running benchmarks
+  language: typescript
+  build-tool: npm
+
+targets:
+  - class: ArticleService
+    package: src/article
+    expected-layer: Application
+  - class: UserService
+    package: src/user
+    expected-layer: Application
+  - class: ProfileService
+    package: src/profile
+    expected-layer: Application
+
+run-config:
+  mode: "loop 3"
+  coverage-tool: jest
+  mutation-tool: stryker
+  mutation-targets:
+    - "src/article/**/*.ts"
