@@ -175,7 +175,7 @@ Each domain has a reference file at `references/db/domain-{X}.md`.
    a. If fields overlap and values differ → add to conflicts[]
    b. If fields overlap and values agree → merge and note agreement
 4. Compute aggregate_confidence as weighted average
-5. Generate cross_notes from dependency relationships
+5. Generate cross_notes as structured objects: `{from_agent, target_system, constraint}`
 ```
 
 ### Conflict Detection Rules

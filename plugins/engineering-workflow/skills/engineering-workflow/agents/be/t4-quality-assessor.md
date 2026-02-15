@@ -76,9 +76,9 @@ Execute stages sequentially; stop on blocking failure:
 
 | Tier | Coverage Target | Mutation Target | Max Loops |
 |------|----------------|-----------------|-----------|
-| LIGHT | Line 60% | Skipped | 2 |
-| STANDARD | Line 80%, Branch 70% | Mutation score 70% | 3 |
-| THOROUGH | Line 90%, Branch 85% | Mutation score 80% | 4 |
+| LIGHT | Line 60% | Skipped | 1 |
+| STANDARD | Line 70%, Branch 50% | Mutation score 50% | 2 |
+| THOROUGH | Line 90%, Branch 85% | Mutation score 80% | 2 |
 
 ### 3. Check Termination Conditions
 
@@ -87,8 +87,6 @@ Evaluate in order; first matching condition terminates the loop:
 | Condition | Result | Action |
 |-----------|--------|--------|
 | All targets met | Success | Produce final quality report |
-| Convergence plateau | Partial success | Coverage/mutation improved < 2% over last iteration |
-| 3-Strike rule | Escalate | Same gap persists for 3 consecutive iterations |
 | Max loops reached | Timeout | Report current state as final |
 
 ### 4. Generate Gap Report (If Not Terminating)

@@ -495,25 +495,20 @@ All tier targets satisfied AND zero ERROR-severity quality violations.
 | STANDARD | >= 70% | >= 50% | >= 50% |
 | THOROUGH | >= 80% | >= 60% | >= 60% |
 
-**2. Convergence Plateau (PARTIAL_SUCCESS)**
+**2. Max Loops (TIMEOUT)**
 
-Coverage improvement < 2 percentage points between consecutive loops: `abs(coverage[n] - coverage[n-1]) < 2.0`. Applies to line coverage and kill rate independently.
+Default: 2 loops. Override via `.claude/test-config.yml`:
 
-**3. 3-Strike Rule (BLOCKED)**
-
-Same error (type + location) in 3 consecutive loops. Examples: same compilation error after 3 fixes, same assertion failure 3 times, same quality violation unremediated.
-
-**4. Max Loops (TIMEOUT)**
-
-Default: 3 loops. Override: `validation.max_loops: 5`
+```yaml
+validation:
+  max_loops: 3  # Override for complex projects
+```
 
 ### Decision Tree
 
 ```
 Loop complete
   +-- All targets met?       YES --> EXIT "SUCCESS"
-  +-- Convergence plateau?   YES --> EXIT "PARTIAL_SUCCESS" (report gaps)
-  +-- Same error 3x?         YES --> EXIT "BLOCKED" (escalate to user)
   +-- Loop >= max_loops?      YES --> EXIT "TIMEOUT" (report gaps)
   +-- None                        --> Gap report -> T3 -> next loop
 ```
@@ -527,12 +522,6 @@ Loop complete
       "kill_rate": null, "errors": ["compilation failure"], "gaps": 4 },
     { "loop": 2, "line_coverage": 72.5, "branch_coverage": 58.3,
       "kill_rate": 62.2, "errors": [], "gaps": 2 }
-  ],
-  "strike_tracker": {
-    "OrderServiceTest:45:AssertionError": 1,
-    "Thread.sleep:OrderServiceTest:78": 0
-  }
+  ]
 }
 ```
-
-The `strike_tracker` maps unique error identifiers to consecutive occurrence counts. Resets to 0 when the error does not recur. Triggers 3-Strike condition when any count reaches 3.

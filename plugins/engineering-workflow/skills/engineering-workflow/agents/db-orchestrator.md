@@ -239,7 +239,11 @@ If any agent confidence < 0.5, flag as low-confidence and recommend human review
     }
   ],
   "cross_notes": [
-    "Storage engine choice (InnoDB) constrains buffer pool tuning recommendations"
+    {
+      "from_agent": "a1-engine-selector",
+      "target_system": "BE",
+      "constraint": "Storage engine choice (InnoDB) constrains buffer pool tuning recommendations"
+    }
   ],
   "metadata": {
     "confidence": 0.82,

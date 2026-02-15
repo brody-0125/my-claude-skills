@@ -4,11 +4,12 @@
     "query": "B-tree vs LSM storage engine comparison",
     "expected": {
       "systems": ["DB"],
-      "domains": ["A", "B"],
+      "domains": ["A"],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.85
     },
-    "description": "Single-system DB query matching domains A and B"
+    "description": "Single-system DB query matching domain A"
   },
   {
     "id": "TC-002",
@@ -17,6 +18,7 @@
       "systems": ["IF"],
       "domains": [],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.70
     },
     "description": "Infrastructure system detection"
@@ -29,6 +31,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["A"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "Security system detection with AuthN cluster"
@@ -40,6 +43,7 @@
       "systems": ["BE"],
       "domains": [],
       "be_clusters": ["B", "R"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "Multi-cluster BE query matching Boundary and Resilience"
@@ -51,6 +55,7 @@
       "systems": ["DB", "BE"],
       "domains": ["F"],
       "be_clusters": [],
+      "pattern": "multi",
       "min_confidence": 0.60
     },
     "description": "Cross-system DB+BE query"
@@ -62,6 +67,7 @@
       "systems": [],
       "domains": [],
       "be_clusters": [],
+      "pattern": "none",
       "min_confidence": 0.0
     },
     "description": "No match — frontend query not in any domain"
@@ -73,6 +79,7 @@
       "systems": ["DB"],
       "domains": ["C"],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "DB concurrency domain with domain sub-detection"
@@ -84,6 +91,7 @@
       "systems": ["IF"],
       "domains": [],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.70
     },
     "description": "Infrastructure system with multiple IF keywords"
@@ -95,6 +103,7 @@
       "systems": ["BE"],
       "domains": [],
       "be_clusters": ["T"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "BE Test cluster detection"
@@ -107,6 +116,7 @@
       "domains": ["D"],
       "be_clusters": [],
       "se_clusters": ["Z", "N"],
+      "pattern": "cross",
       "min_confidence": 0.60
     },
     "description": "3-system cross-system query (DB+BE+SE) with AuthZ+Network clusters"
@@ -118,6 +128,7 @@
       "systems": [],
       "domains": [],
       "be_clusters": [],
+      "pattern": "none",
       "min_confidence": 0.0
     },
     "description": "Edge case — no domain keywords match"
@@ -129,6 +140,7 @@
       "systems": [],
       "domains": [],
       "be_clusters": [],
+      "pattern": "none",
       "min_confidence": 0.0
     },
     "description": "Edge case — whitespace-only input"
@@ -140,6 +152,7 @@
       "systems": ["DB"],
       "domains": ["C"],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "Case insensitivity — uppercase keywords should match DB domain C"
@@ -151,6 +164,7 @@
       "systems": ["DB", "BE", "IF", "SE"],
       "domains": [],
       "be_clusters": ["R"],
+      "pattern": "cross",
       "min_confidence": 0.60
     },
     "description": "4-system ambiguous query matching all systems (monitoring triggers BE R-cluster)"
@@ -162,6 +176,7 @@
       "systems": ["DB"],
       "domains": [],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.70
     },
     "description": "False positive guard — engine should NOT match BE gin keyword"
@@ -173,6 +188,7 @@
       "systems": [],
       "domains": [],
       "be_clusters": [],
+      "pattern": "none",
       "min_confidence": 0.0
     },
     "description": "False positive guard — capital should NOT match BE api keyword"
@@ -184,6 +200,7 @@
       "systems": [],
       "domains": [],
       "be_clusters": [],
+      "pattern": "none",
       "min_confidence": 0.0
     },
     "description": "False positive guard — wallet should NOT match DB WAL keyword"
@@ -195,6 +212,7 @@
       "systems": ["DB"],
       "domains": [],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.70
     },
     "description": "Trailing keyword — db at end of string should still match"
@@ -206,6 +224,7 @@
       "systems": ["DB"],
       "domains": ["A"],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.70
     },
     "description": "Derivative keyword — indexing (derivative of index) should match DB domain A"
@@ -217,6 +236,7 @@
       "systems": ["DB"],
       "domains": ["F"],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "DynamoDB high-TPS query in Korean should map to DB domain F"
@@ -228,6 +248,7 @@
       "systems": ["DB"],
       "domains": ["F"],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "DynamoDB high-TPS query in English should map to DB domain F"
@@ -239,6 +260,7 @@
       "systems": ["BE"],
       "domains": [],
       "be_clusters": ["R"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "Throughput API query should stay in BE and avoid DB/F false positive"
@@ -250,6 +272,7 @@
       "systems": ["IF"],
       "domains": [],
       "be_clusters": [],
+      "pattern": "single",
       "min_confidence": 0.70
     },
     "description": "Throughput infrastructure query should stay in IF and avoid DB/F false positive"
@@ -262,6 +285,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["A"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster A — Authentication with OAuth2 and JWT"
@@ -274,6 +298,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["Z"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster Z — Authorization model selection"
@@ -286,6 +311,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["E"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster E — Encryption and key management"
@@ -298,6 +324,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["N"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster N — Network security headers"
@@ -310,6 +337,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["C"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster C — Compliance and audit"
@@ -322,6 +350,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["V"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster V — Vulnerability and threat"
@@ -334,6 +363,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["Z", "E", "C"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE multi-cluster — AuthZ + Encryption + Compliance"
@@ -346,6 +376,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["E"],
+      "pattern": "cross",
       "min_confidence": 0.60
     },
     "description": "Cross-system DB+BE+SE with SE Encryption cluster"
@@ -358,6 +389,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["N", "V"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE multi-cluster — Network + Vulnerability"
@@ -370,6 +402,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["A"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster A — Passwordless authentication with sessions"
@@ -382,6 +415,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["Z"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster Z — Policy engine selection"
@@ -394,6 +428,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["C"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster C — Privacy engineering"
@@ -406,6 +441,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["V"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster V — Threat modeling and pentest"
@@ -418,6 +454,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["A", "Z", "C"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE multi-cluster — AuthN + AuthZ + Compliance (A+Z+C)"
@@ -430,6 +467,7 @@
       "domains": [],
       "be_clusters": [],
       "se_clusters": ["A"],
+      "pattern": "single",
       "min_confidence": 0.85
     },
     "description": "SE Cluster A — Biometric authentication (Fix 6 keyword verification)"

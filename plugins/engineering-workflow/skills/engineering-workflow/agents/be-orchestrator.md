@@ -295,6 +295,13 @@ If any agent confidence < 0.5, flag as low-confidence and recommend human review
   "resolved_constraints": [],
   "unresolved_constraints": [],
   "conflicts": [],
+  "cross_notes": [
+    {
+      "from_agent": "s1-dependency-auditor",
+      "target_system": "DB",
+      "constraint": "Cross-system constraint description"
+    }
+  ],
   "metadata": {
     "confidence": 0.88,
     "analysis_duration_ms": 0

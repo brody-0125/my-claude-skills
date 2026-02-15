@@ -46,8 +46,9 @@ get_budget() {
     agent) echo "${agent}" ;;
     audit) echo "${audit}" ;;
     total) echo "${total}" ;;
+    test-loop) echo $(( agent / 2 )) ;;
     *)
-      echo '{"error":"Unknown phase: '"${phase}"'. Use: agent, audit, total"}' | jq .
+      echo '{"error":"Unknown phase: '"${phase}"'. Use: agent, audit, total, test-loop"}' | jq .
       exit 1
       ;;
   esac
