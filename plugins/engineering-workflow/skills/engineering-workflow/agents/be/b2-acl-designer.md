@@ -138,9 +138,19 @@ testFixtures Stub serves as the test double for the external integration:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with complete module layout, component specs for the appropriate ACL tier, stub design with all required features, and wiring dependencies. If domain operations are not specified, return with lower confidence and request the list of Port methods.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] module_name present and non-empty
+- [ ] acl_tier present and specifies Tier 1, Tier 2, or Tier 3
+- [ ] components present and includes: adapter, client, translator, dto, config
+- [ ] components.error_mapper present if acl_tier is Tier 3
+- [ ] components.dto contains at least 1 entry
+- [ ] stub present and includes: class, features, configuration
+- [ ] stub.features contains at least 3 entries (shouldFail flag, call history, reset())
+- [ ] wiring present and includes: runtime_dependency, test_dependency
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If domain operations not specified: confidence < 0.5 with missing_info requesting list of Port methods
 
 For in-depth analysis, refer to `references/be/cluster-b-boundary-context.md`.
 

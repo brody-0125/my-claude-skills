@@ -140,9 +140,17 @@ Decision flow:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with event type classification, naming convention validation, and transport specification. If the event scope is ambiguous, return with lower confidence and request clarification on consumer location.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] event_type present and non-empty (domain, integration, or both)
+- [ ] domain_event present if event_type includes domain: includes name, publisher, listener, transaction_phase
+- [ ] domain_event.name follows {AggregateRoot}{PastTenseVerb}Event pattern
+- [ ] integration_event present if event_type includes integration: includes name, version, producer, transport, idempotency_strategy
+- [ ] integration_event.name follows {BoundedContext}{PastTenseVerb}Message pattern
+- [ ] naming_validation present and includes: publisher_listener, producer_consumer booleans
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If event scope is ambiguous: confidence < 0.5 with missing_info requesting consumer location clarification
 
 For in-depth analysis, refer to `references/be/cluster-b-event-saga.md`.
 

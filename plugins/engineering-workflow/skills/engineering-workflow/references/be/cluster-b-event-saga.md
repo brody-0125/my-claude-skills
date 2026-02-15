@@ -3,6 +3,20 @@
 > Static reference for B-3 (Event Architect) and B-4 (Saga Coordinator).
 > Covers Domain/Integration Event architecture, Spring ApplicationEvent patterns, AWS SQS integration, naming conventions, saga step classification, orchestrator patterns, and testing strategies.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. Domain Event vs Integration Event Architecture | ~23 |
+| 2. Internal Event System (Spring ApplicationEvent) | ~55 |
+| 3. External Event System (AWS SQS) | ~138 |
+| 4. Naming Convention Table | ~276 |
+| 5. Saga Step Classification Table | ~287 |
+| 6. Payment Flow Saga Scenario | ~299 |
+| 7. Orchestrator UseCase Code | ~323 |
+| 8. Saga Testing Code | ~422 |
+| 9. Saga Test Scenarios Checklist | ~578 |
+
 ---
 
 ## 1. Domain Event vs Integration Event Architecture

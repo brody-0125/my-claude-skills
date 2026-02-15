@@ -39,9 +39,17 @@ while IFS= read -r scenario; do
     input_data=$(echo "${scenario}" | jq -c '.input')
   fi
 
+  # Build format arguments
+  use_summary=$(echo "${scenario}" | jq -r '.summary // false')
+  format_args=()
+  if [ "${use_summary}" = "true" ]; then
+    format_args+=("--summary")
+  fi
+  format_args+=("${output_type}")
+
   # Run formatter — capture output and exit code
   set +e
-  result=$(echo "${input_data}" | bash "${FORMAT}" "${output_type}" 2>&1)
+  result=$(echo "${input_data}" | bash "${FORMAT}" "${format_args[@]}" 2>&1)
   format_exit=$?
   set -e
 

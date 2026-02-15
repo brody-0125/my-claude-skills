@@ -151,9 +151,18 @@ Evaluate each candidate against query patterns:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with sharding_strategy, partition_key selection with alternatives considered, shard_count plan, rebalancing_plan, and hotspot_mitigation. If data volume and query patterns are insufficient, provide a framework-level recommendation with lower confidence.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] sharding_strategy present and includes: type, rationale
+- [ ] partition_key present and includes: key, type, cardinality, query_coverage_pct, skew_risk
+- [ ] partition_key.alternatives_considered contains at least 1 entry with key and rejected_reason
+- [ ] shard_count present and includes: initial, target_per_shard_gb, growth_headroom_years, rationale
+- [ ] rebalancing_plan present and includes: strategy, trigger, procedure
+- [ ] hotspot_mitigation present and includes: monitoring strategy
+- [ ] cross_shard_queries present and includes: percentage, mitigation
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If insufficient input: confidence < 0.5 with framework-level recommendation only
 
 For in-depth analysis, refer to `references/db/domain-f-sharding.md`.
 

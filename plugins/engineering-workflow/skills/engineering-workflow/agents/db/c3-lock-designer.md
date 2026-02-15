@@ -94,9 +94,17 @@ Engine defaults:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with lock_strategy, granularity selection, deadlock_prevention mechanism, and timeout_config. If concurrent patterns are unclear, provide a general strategy with lower confidence.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] lock_strategy present and non-empty
+- [ ] granularity present and includes: default lock level
+- [ ] granularity.exceptions contains at least 1 entry with table, strategy, and reason
+- [ ] deadlock_prevention present and includes: approach, resource_order, retry_policy
+- [ ] deadlock_prevention.retry_policy includes: max_retries, backoff, initial_delay_ms
+- [ ] timeout_config present and includes: lock_wait_timeout_s, statement_timeout_s
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If concurrent patterns are unclear: confidence < 0.5 with general strategy provided
 
 For in-depth analysis, refer to `references/db/domain-c-locking.md`.
 

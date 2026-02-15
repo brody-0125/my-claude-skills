@@ -48,12 +48,12 @@ Validate `classification.domains` contains one or more of: A, B, C, D, E, F.
 | C | Concurrency | c1-isolation-advisor, c2-mvcc-specialist, c3-lock-designer |
 | D | Normalization | d1-schema-expert, d2-document-modeler, d3-access-pattern-modeler |
 | E | I/O & Pages | e1-page-optimizer, e2-wal-engineer, e3-buffer-tuner |
-| F | Distributed | f1-replication-designer, f2-consistency-selector, f3-sharding-architect |
+| F | Distributed | f1-replication-designer, f2-consistency-selector, f3-sharding-architect, f4-dynamodb-throughput-optimizer |
 
 ### 2. Select Agents Using Selection Matrix
 
 **Domain A — Storage Engine**
-- Always dispatch `a1-engine-selector`
+- MUST dispatch `a1-engine-selector`
 - Additionally dispatch `a2-compaction-strategist` if any of: LSM, compaction, write amplification, RocksDB, LevelDB, WiredTiger appear in keywords
 
 **Domain B — Index & Scan**
@@ -84,6 +84,7 @@ Validate `classification.domains` contains one or more of: A, B, C, D, E, F.
 - `f1-replication-designer`: keywords contain replication, replica, failover, leader, follower, standby
 - `f2-consistency-selector`: keywords contain consistency, CAP, PACELC, linearizable, eventual
 - `f3-sharding-architect`: keywords contain shard, partition, hash ring, range partition, rebalance
+- `f4-dynamodb-throughput-optimizer`: keywords contain dynamodb, rcu, wcu, hot partition, adaptive capacity, throttling, provisioned throughput, on-demand, tps
 - If sub_topic is ambiguous, dispatch `f1` as default
 
 ### 3. Load Reference Excerpts
@@ -109,6 +110,7 @@ Each agent has a dedicated per-agent reference file:
 | f1-replication-designer | `references/db/domain-f-replication.md` |
 | f2-consistency-selector | `references/db/domain-f-consistency.md` |
 | f3-sharding-architect | `references/db/domain-f-sharding.md` |
+| f4-dynamodb-throughput-optimizer | `references/db/domain-f-dynamodb-throughput.md` |
 
 For each selected agent:
 - Read the agent's dedicated reference file
@@ -173,7 +175,7 @@ If any agent results contain contradictory recommendations:
 3. If script unavailable, apply priority rules:
    - Correctness constraints (C domain) override performance constraints (B, E)
    - Durability constraints (E domain) override throughput constraints (A, B)
-   - User-specified constraints override all agent recommendations
+   - User-specified constraints MUST override all agent recommendations
 4. Document resolution rationale in `conflicts[]`
 
 ### 8. Compute Aggregate Confidence

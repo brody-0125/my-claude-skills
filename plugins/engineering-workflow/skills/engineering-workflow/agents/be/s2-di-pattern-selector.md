@@ -127,9 +127,19 @@ Follow this tree to select the correct pattern:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with selected pattern, port/adapter/stub structure, wiring configuration, and rationale. If the boundary description is ambiguous, return with lower confidence and request clarification on whether the dependency is external or internal.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] pattern present and non-empty
+- [ ] boundary present and describes the integration boundary
+- [ ] port present and includes: name, location, methods
+- [ ] port.methods contains at least 1 entry
+- [ ] adapter present and includes: name, location
+- [ ] stub present and includes: name, location, configuration
+- [ ] wiring present and includes: app_runtime, app_test dependency declarations
+- [ ] rationale present and non-empty
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If boundary description is ambiguous: confidence < 0.5 with missing_info requesting external/internal clarification
 
 Code examples for all patterns: `references/be/cluster-s-structure.md`
 

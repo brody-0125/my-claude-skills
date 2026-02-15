@@ -207,5 +207,49 @@
       "min_confidence": 0.70
     },
     "description": "Derivative keyword — indexing (derivative of index) should match DB domain A"
+  },
+  {
+    "id": "TC-020",
+    "query": "DynamoDB에서 TPS 5000+ 처리량 최적화",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["F"],
+      "be_clusters": [],
+      "min_confidence": 0.85
+    },
+    "description": "DynamoDB high-TPS query in Korean should map to DB domain F"
+  },
+  {
+    "id": "TC-021",
+    "query": "Optimize DynamoDB throughput at 7000 TPS with RCU WCU and hot partition mitigation",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["F"],
+      "be_clusters": [],
+      "min_confidence": 0.85
+    },
+    "description": "DynamoDB high-TPS query in English should map to DB domain F"
+  },
+  {
+    "id": "TC-022",
+    "query": "API TPS 5000 rate limiting with retry and circuit breaker",
+    "expected": {
+      "systems": ["BE"],
+      "domains": [],
+      "be_clusters": ["R"],
+      "min_confidence": 0.85
+    },
+    "description": "Throughput API query should stay in BE and avoid DB/F false positive"
+  },
+  {
+    "id": "TC-023",
+    "query": "Kubernetes HPA autoscaling for 5000 TPS service throughput",
+    "expected": {
+      "systems": ["IF"],
+      "domains": [],
+      "be_clusters": [],
+      "min_confidence": 0.70
+    },
+    "description": "Throughput infrastructure query should stay in IF and avoid DB/F false positive"
   }
 ]

@@ -3,6 +3,21 @@
 > Code idioms and conventions for agents S5 (Convention Verifier) and B5 (Implementation Guide).
 > Defines canonical Kotlin/Spring Boot patterns for code generation and verification.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. Kotlin Idioms | ~22 |
+| 2. Code Style Rules | ~98 |
+| 3. Spring DI Patterns | ~134 |
+| 4. Naming Conventions | ~209 |
+| 5. Immutability Patterns | ~256 |
+| 6. Error Handling | ~332 |
+| 7. Spring Event Patterns | ~391 |
+| 8. Transaction Management | ~449 |
+| 9. Spring Security Patterns | ~498 |
+| 10. Annotation Composition | ~544 |
+
 ---
 
 ## 1. Kotlin Idioms

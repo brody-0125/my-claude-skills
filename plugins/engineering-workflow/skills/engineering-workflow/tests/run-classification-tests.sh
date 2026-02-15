@@ -57,7 +57,7 @@ while IFS= read -r scenario; do
     fi
   fi
 
-  if $systems_ok && $domains_ok && $clusters_ok; then
+  if $systems_ok && $domains_ok && $clusters_ok && $confidence_ok; then
     echo "  PASS  ${id}: ${desc}"
     PASSED=$((PASSED + 1))
   else

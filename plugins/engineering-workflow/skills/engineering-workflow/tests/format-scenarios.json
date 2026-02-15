@@ -130,5 +130,47 @@
       "not_empty": true,
       "exit_nonzero": true
     }
+  },
+  {
+    "id": "FS-009",
+    "description": "--summary single-domain compact output",
+    "output_type": "single-domain",
+    "summary": true,
+    "input": {
+      "rationale": "LSM-tree is optimal for write-heavy workloads",
+      "recommendation": "Use RocksDB with level compaction for optimal write performance in the target scenario",
+      "confidence": 0.85,
+      "trade_offs": [
+        {"option": "LSM-tree", "pros": ["Write-optimized"], "cons": ["Read amplification"]},
+        {"option": "B-tree", "pros": ["Read-optimized"], "cons": ["Write amplification"]}
+      ],
+      "constraints": [{"id": "c1", "target": "storage-engine", "value": "lsm", "priority": "hard"}]
+    },
+    "expected": {
+      "contains": ["**Single-Domain**", "Confidence: 0.85", "Constraints: 1", "Trade-offs: 2", "**Recommendation**", "Run without --summary"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-010",
+    "description": "--summary cross-system compact output",
+    "output_type": "cross-system",
+    "summary": true,
+    "input": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Migrate to connection pooling with HikariCP and update schema",
+      "cross_dependencies": [
+        {"from": "DB", "to": "BE", "description": "Schema change requires repository updates"}
+      ],
+      "implementation_order": [
+        "Apply DB schema migration",
+        "Update BE repository layer"
+      ],
+      "confidence": 0.80
+    },
+    "expected": {
+      "contains": ["**Cross-System**", "DB, BE", "Dependencies: 1", "Phases: 2", "**Recommendation**", "Run without --summary"],
+      "not_empty": true
+    }
   }
 ]

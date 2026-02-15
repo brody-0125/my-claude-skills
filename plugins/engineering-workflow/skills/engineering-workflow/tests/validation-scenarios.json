@@ -128,5 +128,181 @@
       "valid": false,
       "error_count": 1
     }
+  },
+  {
+    "id": "VS-011",
+    "description": "Valid f4-style domain-agent output with full contract",
+    "agent_type": "domain-agent",
+    "input": {
+      "analysis": {
+        "workload_summary": "DynamoDB workload with 6000 TPS bursts",
+        "hotspot_findings": ["Hot partition risk on tenant key"]
+      },
+      "rationale": "Need to improve partition distribution and capacity policy",
+      "recommendation": "Apply write sharding and tune capacity mode",
+      "constraints": [
+        {
+          "id": "c-f4-1",
+          "target": "partition-key-distribution",
+          "value": "high-cardinality-write-sharding-required",
+          "priority": "hard",
+          "source_agent": "f4-dynamodb-throughput-optimizer"
+        }
+      ],
+      "trade_offs": [
+        {
+          "option": "On-demand",
+          "pros": ["Simple ops"],
+          "cons": ["Higher variable cost"],
+          "recommended_when": "Unpredictable spikes"
+        },
+        {
+          "option": "Provisioned + Auto Scaling",
+          "pros": ["Cost control"],
+          "cons": ["Requires tuning"],
+          "recommended_when": "Stable high baseline"
+        }
+      ],
+      "confidence": 0.84
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-012",
+    "description": "Invalid f4-style output missing rationale",
+    "agent_type": "domain-agent",
+    "input": {
+      "analysis": {
+        "workload_summary": "DynamoDB workload with 6000 TPS bursts"
+      },
+      "recommendation": "Apply write sharding and tune capacity mode",
+      "constraints": [
+        {
+          "id": "c-f4-1",
+          "target": "partition-key-distribution",
+          "value": "high-cardinality-write-sharding-required",
+          "priority": "hard",
+          "source_agent": "f4-dynamodb-throughput-optimizer"
+        }
+      ],
+      "trade_offs": [
+        {
+          "option": "On-demand",
+          "pros": ["Simple ops"],
+          "cons": ["Higher variable cost"],
+          "recommended_when": "Unpredictable spikes"
+        },
+        {
+          "option": "Provisioned + Auto Scaling",
+          "pros": ["Cost control"],
+          "cons": ["Requires tuning"],
+          "recommended_when": "Stable high baseline"
+        }
+      ],
+      "confidence": 0.78
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 1
+    }
+  },
+  {
+    "id": "VS-013",
+    "description": "Anti-gaming: degenerate repeated character rationale",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "recommendation": "Use this approach for the best results in your use case and workload patterns",
+      "confidence": 0.75
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0,
+      "max_quality_score": 60
+    }
+  },
+  {
+    "id": "VS-014",
+    "description": "Anti-gaming: confidence 1.0 triggers warning",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "LSM-tree provides excellent write throughput for append-heavy workloads",
+      "recommendation": "Use RocksDB with level compaction for optimal write performance in your scenario",
+      "confidence": 1.0
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0,
+      "has_confidence_warning": true
+    }
+  },
+  {
+    "id": "VS-015",
+    "description": "Anti-gaming: strict mode — empty constraints + multi-domain",
+    "agent_type": "domain-agent",
+    "strict": true,
+    "input": {
+      "rationale": "B-tree indexes provide efficient point lookups and range scans",
+      "recommendation": "Use",
+      "confidence": 0.80
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 3
+    }
+  },
+  {
+    "id": "VS-016",
+    "description": "Anti-gaming: strict mode valid output passes",
+    "agent_type": "domain-agent",
+    "strict": true,
+    "input": {
+      "rationale": "LSM-tree is optimal for write-heavy workloads with sequential access patterns",
+      "recommendation": "Use RocksDB with level compaction for optimal write throughput in this scenario",
+      "constraints": [
+        {
+          "id": "c-a1-1",
+          "target": "storage-engine",
+          "value": "lsm-tree",
+          "priority": "hard"
+        }
+      ],
+      "trade_offs": [
+        {
+          "option": "LSM-tree",
+          "pros": ["Write-optimized"],
+          "cons": ["Read amplification"],
+          "recommended_when": "Write-heavy workloads"
+        },
+        {
+          "option": "B-tree",
+          "pros": ["Read-optimized"],
+          "cons": ["Write amplification"],
+          "recommended_when": "Read-heavy workloads"
+        }
+      ],
+      "confidence": 0.85
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-017",
+    "description": "Confidence boundary value 0.70 exactly — no out-of-range warning",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "B-tree provides balanced read and write performance for mixed workloads",
+      "recommendation": "Use PostgreSQL B-tree index with fillfactor tuning for balanced read-write performance",
+      "confidence": 0.70
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
   }
 ]

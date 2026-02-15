@@ -118,9 +118,17 @@ ALL fitness functions are build-breaking tests. There are no exceptions:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with fitness function specification including tool, test location, rule description, and confirmation that it is build-breaking. If the architecture rule is ambiguous, return with lower confidence and request clarification from the originating agent (S-1, S-2, or S-3).
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] fitness_function present and includes: name, category, tool, test_location, rule_description
+- [ ] fitness_function.build_breaking is true (warnings-only functions are prohibited)
+- [ ] fitness_function.tool specifies ArchUnit, Konsist, or custom Gradle task
+- [ ] fitness_function.ci_command present and non-empty
+- [ ] source_rule present and includes: agent, severity, description
+- [ ] implementation_notes present and non-empty
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If architecture rule is ambiguous: confidence < 0.5 with missing_info requesting clarification from originating agent (S-1, S-2, or S-3)
 
 Code examples for all fitness function categories: `references/be/cluster-s-structure.md`
 

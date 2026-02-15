@@ -398,7 +398,7 @@ Present the trade-off summary and ask:
 ### Step 4: NEVER Silently Choose
 
 - Do NOT apply priority rules to resolve design preference conflicts without user input
-- Priority rules apply ONLY to correctness/safety conflicts (e.g., missing isolation = always fix)
+- Priority rules apply ONLY to correctness/safety conflicts (e.g., missing isolation = MUST fix)
 - For design preference conflicts, ALWAYS surface to user
 - Record resolution method: `"user_preference"` or `"priority_rule"` (for safety-only)
 

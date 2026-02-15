@@ -33,6 +33,7 @@ while IFS= read -r scenario; do
 
   # Prepare input
   has_raw=$(echo "${scenario}" | jq 'has("input_raw")')
+  is_strict=$(echo "${scenario}" | jq -r '.strict // false')
 
   if [ "${has_raw}" = "true" ]; then
     input_data=$(echo "${scenario}" | jq -r '.input_raw')
@@ -40,10 +41,17 @@ while IFS= read -r scenario; do
     input_data=$(echo "${scenario}" | jq -c '.input')
   fi
 
+  # Build validator args
+  validate_args=()
+  if [ "${is_strict}" = "true" ]; then
+    validate_args+=("--strict")
+  fi
+  validate_args+=("${agent_type}")
+
   # Run validator (pipe input via stdin) — capture output and exit code separately
   # to avoid double-JSON when script outputs to stdout AND exits non-zero
   set +e
-  result=$(echo "${input_data}" | bash "${VALIDATE}" "${agent_type}" 2>/dev/null)
+  result=$(echo "${input_data}" | bash "${VALIDATE}" "${validate_args[@]}" 2>/dev/null)
   validate_exit=$?
   set -e
   if [ ${validate_exit} -ne 0 ] && [ -z "${result}" ]; then
@@ -66,6 +74,28 @@ while IFS= read -r scenario; do
     echo "  FAIL  ${id}: ${desc}"
     echo "         error_count: expected=${expected_errors} actual=${actual_error_count}"
     test_ok=false
+  fi
+
+  # Check max_quality_score if specified
+  max_quality=$(echo "${scenario}" | jq -r '.expected.max_quality_score // "null"')
+  if [ "${max_quality}" != "null" ]; then
+    actual_quality=$(echo "${result}" | jq -r '.quality_score // 100' 2>/dev/null || echo "100")
+    if [ "${actual_quality}" -gt "${max_quality}" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         quality_score: expected<=${max_quality} actual=${actual_quality}"
+      test_ok=false
+    fi
+  fi
+
+  # Check has_confidence_warning if specified
+  expect_conf_warn=$(echo "${scenario}" | jq -r '.expected.has_confidence_warning // "null"')
+  if [ "${expect_conf_warn}" = "true" ]; then
+    has_conf_warn=$(echo "${result}" | jq '[.warnings[] | select(test("confidence.*1\\.0|1\\.0.*cache"))] | length > 0' 2>/dev/null || echo "false")
+    if [ "${has_conf_warn}" != "true" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         expected confidence=1.0 warning but not found"
+      test_ok=false
+    fi
   fi
 
   if $test_ok; then

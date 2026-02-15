@@ -147,5 +147,61 @@
       "resolved_set_count": 2,
       "has_error": false
     }
+  },
+  {
+    "id": "CS-008",
+    "description": "f4 hard vs soft conflict on capacity policy — hard wins",
+    "input": {
+      "constraints": [
+        {
+          "id": "c-f4-1",
+          "source_agent": "f4-dynamodb-throughput-optimizer",
+          "target": "capacity-policy",
+          "value": "provisioned-with-autoscaling-and-headroom",
+          "priority": "hard"
+        },
+        {
+          "id": "c-f2-1",
+          "source_agent": "f2-consistency-selector",
+          "target": "capacity-policy",
+          "value": "on-demand-default",
+          "priority": "soft"
+        }
+      ]
+    },
+    "expected": {
+      "conflicts_count": 1,
+      "resolved_set_count": 1,
+      "has_error": false,
+      "auto_resolved": true
+    }
+  },
+  {
+    "id": "CS-009",
+    "description": "f4 hard vs hard conflict on partition key strategy — unresolved",
+    "input": {
+      "constraints": [
+        {
+          "id": "c-f4-2",
+          "source_agent": "f4-dynamodb-throughput-optimizer",
+          "target": "partition-key-distribution",
+          "value": "write-sharded",
+          "priority": "hard"
+        },
+        {
+          "id": "c-f3-1",
+          "source_agent": "f3-sharding-architect",
+          "target": "partition-key-distribution",
+          "value": "single-hash-key",
+          "priority": "hard"
+        }
+      ]
+    },
+    "expected": {
+      "conflicts_count": 1,
+      "resolved_set_count": 2,
+      "has_error": false,
+      "auto_resolved": false
+    }
   }
 ]

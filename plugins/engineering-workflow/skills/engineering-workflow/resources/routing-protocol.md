@@ -98,7 +98,7 @@ Each keyword is assigned to one or more systems with a weight.
 
 ```
 total_matches = count of systems with at least 1 keyword hit
-domain_count  = count of DB sub-domains matched (A-F)
+domain_count  = count of DB sub-domains matched (A-F, including DynamoDB throughput triggers in F)
 cluster_count = count of BE clusters matched (S/B/R/T)
 
 IF total_matches == 0:
@@ -137,7 +137,7 @@ After system(s) are identified, detect specific sub-domains within each system.
 | Concurrency & Locking | C | isolation level, MVCC, deadlock | optimistic locking, pessimistic locking, serializable, phantom read |
 | Schema & Normalization | D | schema design, normalization, data model | migration, column type, constraint, partition strategy, ERD |
 | I/O & Buffer Management | E | page, buffer pool, WAL, checkpoint | dirty page, flush, IO optimization, sequential IO, random IO |
-| Distributed & Replication | F | replication, failover, sharding, shard key | consensus, raft, paxos, distributed transaction, resharding |
+| Distributed & Replication | F | replication, failover, sharding, shard key, dynamodb, rcu, wcu, hot partition, adaptive capacity, throttling | consensus, raft, paxos, distributed transaction, resharding, provisioned throughput, on-demand, tps |
 
 ### BE Sub-Domain Keywords
 
@@ -255,7 +255,7 @@ Merge all detection results into the final classification object.
 
 ```
 1. Start with keyword-based detection (Step 2)
-2. Overlay explicit flags (Step 1) — flags always win
+2. Overlay explicit flags (Step 1) — flags MUST win
 3. Apply LLM correction if triggered (Step 4)
 4. Determine depth:
    - Default: "deep"

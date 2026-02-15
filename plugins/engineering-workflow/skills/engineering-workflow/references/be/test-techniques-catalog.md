@@ -2,6 +2,20 @@
 
 > Consolidated reference of 7 testing technique categories with code examples for T2 (Test Strategist). Kotlin-first, with Java alternatives where noted.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. Unit Testing | ~21 |
+| 2. Property-Based Testing | ~108 |
+| 3. Integration Testing | ~159 |
+| 4. Contract Testing | ~240 |
+| 5. Architecture Testing | ~321 |
+| 6. Event Testing | ~379 |
+| 7. Parameterized Testing | ~467 |
+| 8. Test Quality Checklist | ~549 |
+| 9. Framework Selection Guide | ~586 |
+
 ---
 
 ## 1. Unit Testing

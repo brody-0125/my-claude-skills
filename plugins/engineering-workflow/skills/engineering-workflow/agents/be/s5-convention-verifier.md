@@ -126,9 +126,16 @@ A single file may be subject to multiple categories.
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with all applicable categories checked, violations listed with severity and fix guidance, and summary counts. If file content is insufficient for full verification, return with lower confidence and specify what additional context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] violations present (may be empty array if no violations found)
+- [ ] Every violation includes: category, rule, file, severity (ERROR/WARNING/INFO), message, fix_guidance
+- [ ] summary present and includes: error_count, warning_count, info_count
+- [ ] summary counts match actual violations array contents
+- [ ] categories_checked contains at least 1 entry from: Architecture, Code Style, Naming, JPA, Testing, Git
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If file content is insufficient: confidence < 0.5 with missing_info specifying what additional context is needed
 
 Convention rule details and examples: `references/be/kotlin-spring-idioms.md`, `references/be/jpa-data-patterns.md`
 

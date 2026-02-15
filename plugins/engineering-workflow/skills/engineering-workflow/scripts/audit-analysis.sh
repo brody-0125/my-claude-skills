@@ -74,6 +74,20 @@ audit_confidence() {
   local confidence action
   confidence=$(echo "${input}" | jq -r '.confidence // 0' 2>/dev/null || echo "0")
 
+  # Pre-validate confidence range [0, 1]
+  local out_of_range
+  out_of_range=$(awk -v c="${confidence}" 'BEGIN { print (c < 0 || c > 1) ? 1 : 0 }')
+  if [ "${out_of_range}" -eq 1 ]; then
+    jq -n \
+      --arg action "WARN" \
+      --arg confidence "${confidence}" \
+      --arg detail "Confidence ${confidence} is outside valid range [0.0, 1.0] — treating as unreliable" \
+      --arg calibration "OUT_OF_RANGE" \
+      --arg calibration_detail "Confidence value ${confidence} is outside the valid [0.0, 1.0] range" \
+      '{action: $action, confidence: ($confidence | tonumber), detail: $detail, calibration: $calibration, calibration_detail: $calibration_detail}'
+    return
+  fi
+
   # Use awk for floating-point comparison
   action=$(awk -v c="${confidence}" 'BEGIN {
     if (c >= 0.70) print "PASS"
@@ -90,11 +104,52 @@ audit_confidence() {
     REJECT) detail="Confidence ${confidence} < 0.30 — reject, use orchestrator fallback" ;;
   esac
 
-  jq -n \
-    --arg action "${action}" \
-    --arg confidence "${confidence}" \
-    --arg detail "${detail}" \
-    '{action: $action, confidence: ($confidence | tonumber), detail: $detail}'
+  # Calibration check: high confidence with low quality signals
+  local calibration_flag=""
+  local calibration_detail=""
+  if echo "${input}" | jq -e '.' >/dev/null 2>&1; then
+    local trade_offs_count rec_length constraints_count
+    trade_offs_count=$(echo "${input}" | jq '.trade_offs | length // 0' 2>/dev/null || echo "0")
+    rec_length=$(echo "${input}" | jq -r '.recommendation // "" | length' 2>/dev/null || echo "0")
+    constraints_count=$(echo "${input}" | jq '.constraints | length // 0' 2>/dev/null || echo "0")
+
+    # confidence == 1.0 → unconditional WARN
+    if [ "$(awk -v c="${confidence}" 'BEGIN { print (c == 1.0) ? 1 : 0 }')" -eq 1 ]; then
+      action="WARN"
+      calibration_flag="CALIBRATION"
+      calibration_detail="confidence=1.0 is reserved for cache hits — agent output should not report 1.0"
+    # confidence >= 0.90 with low quality signals → WARN + CALIBRATION
+    elif [ "$(awk -v c="${confidence}" 'BEGIN { print (c >= 0.90) ? 1 : 0 }')" -eq 1 ]; then
+      local low_signals=0
+      [ "${trade_offs_count}" -lt 2 ] && low_signals=$((low_signals + 1))
+      [ "${rec_length}" -lt 100 ] && low_signals=$((low_signals + 1))
+      [ "${constraints_count}" -lt 1 ] && low_signals=$((low_signals + 1))
+      if [ "${low_signals}" -ge 2 ]; then
+        calibration_flag="CALIBRATION"
+        calibration_detail="High confidence (${confidence}) with ${low_signals} low-quality signals — may be miscalibrated"
+        if [ "${action}" = "PASS" ]; then
+          action="WARN"
+          detail="Confidence ${confidence} >= 0.90 but quality signals are low — calibration warning"
+        fi
+      fi
+    fi
+  fi
+
+  if [ -n "${calibration_flag}" ]; then
+    jq -n \
+      --arg action "${action}" \
+      --arg confidence "${confidence}" \
+      --arg detail "${detail}" \
+      --arg calibration "${calibration_flag}" \
+      --arg calibration_detail "${calibration_detail}" \
+      '{action: $action, confidence: ($confidence | tonumber), detail: $detail, calibration: $calibration, calibration_detail: $calibration_detail}'
+  else
+    jq -n \
+      --arg action "${action}" \
+      --arg confidence "${confidence}" \
+      --arg detail "${detail}" \
+      '{action: $action, confidence: ($confidence | tonumber), detail: $detail}'
+  fi
 }
 
 # ── Orchestrator Schema Validation ────────────────────────

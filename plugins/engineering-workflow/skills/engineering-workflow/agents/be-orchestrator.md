@@ -219,7 +219,7 @@ If any agent results contain contradictory recommendations:
 
 **Priority rules (when user does not express preference):**
 ```
-Priority 1: User-specified constraints (always win)
+Priority 1: User-specified constraints MUST win
 Priority 2: Correctness (Cluster S -- structural integrity)
 Priority 3: Resilience (Cluster R -- fault tolerance)
 Priority 4: Boundary clarity (Cluster B -- context separation)
