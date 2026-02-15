@@ -68,6 +68,35 @@ major systems: **DB** (Database), **BE** (Backend), **IF** (Infrastructure), and
 | **IF** | infrastructure, deployment, container, kubernetes, CI/CD, load balancer, CDN, monitoring, observability, scaling, network topology, DNS, TLS | `agents/if-orchestrator.md` |
 | **SE** | security, authentication, authorization, encryption, key management, RBAC, ABAC, OAuth, JWT, zero-trust, penetration, vulnerability, compliance | `agents/se-orchestrator.md` |
 
+### SE Sub-Domain Detection (6 Clusters: A/Z/E/N/C/V)
+
+| Cluster | Sub-Domain | Code | Keywords | Agent |
+|---------|------------|------|----------|-------|
+| **A** Authentication | AuthN Flow Design | A1 | authentication, OAuth2, OIDC, SAML, SSO, login flow, protocol selection | `agents/se/a1-authn-flow-designer.md` |
+| **A** Authentication | Token Strategy | A2 | JWT, refresh token, access token, token rotation, token storage, claims | `agents/se/a2-token-strategist.md` |
+| **A** Authentication | Session Architecture | A3 | session management, MFA, SSO federation, stateless, session fixation | `agents/se/a3-session-architect.md` |
+| **A** Authentication | Credential Management | A4 | bcrypt, argon2, passkey, WebAuthn, passwordless, credential rotation | `agents/se/a4-credential-manager.md` |
+| **Z** Authorization | Access Model Selection | Z1 | RBAC, ABAC, ReBAC, access control model, multi-tenant, permission model | `agents/se/z1-access-model-selector.md` |
+| **Z** Authorization | Policy Design | Z2 | OPA, Cedar, Casbin, policy engine, policy rule, policy test | `agents/se/z2-policy-designer.md` |
+| **Z** Authorization | Permission Audit | Z3 | least privilege, over-privilege, permission matrix, role explosion | `agents/se/z3-permission-auditor.md` |
+| **Z** Authorization | Scope Architecture | Z4 | OAuth scope, API permission, dynamic scope, consent, token-permission | `agents/se/z4-scope-architect.md` |
+| **E** Encryption | Encryption Strategy | E1 | encryption at-rest, in-transit, field-level, AES-256, ChaCha20 | `agents/se/e1-encryption-advisor.md` |
+| **E** Encryption | Key Lifecycle | E2 | key rotation, HSM, Vault, KMS, key escrow, key distribution | `agents/se/e2-key-lifecycle-planner.md` |
+| **E** Encryption | TLS Configuration | E3 | TLS, mTLS, cipher suite, certificate chain, OCSP, certificate pinning | `agents/se/e3-tls-configurator.md` |
+| **E** Encryption | Secret Management | E4 | HashiCorp Vault, AWS Secrets Manager, secret rotation, dynamic secret | `agents/se/e4-secret-manager.md` |
+| **N** Network Security | Header Hardening | N1 | CORS, CSP, HSTS, X-Frame-Options, Referrer-Policy, security headers | `agents/se/n1-header-hardener.md` |
+| **N** Network Security | WAF/Rate-Limiting | N2 | WAF, rate limiting, IP filtering, DDoS, geo-blocking, ModSecurity | `agents/se/n2-waf-rule-designer.md` |
+| **N** Network Security | API Gateway Security | N3 | API gateway, auth delegation, request validation, throttling, API key | `agents/se/n3-api-gateway-security.md` |
+| **N** Network Security | Input Sanitization | N4 | SQL injection, XSS, path traversal, content-type validation, sanitization | `agents/se/n4-input-sanitizer.md` |
+| **C** Compliance | Compliance Mapping | C1 | SOC2, ISO27001, GDPR, PCI-DSS, compliance framework, cross-mapping | `agents/se/c1-compliance-mapper.md` |
+| **C** Compliance | Audit Trail Design | C2 | audit logging, event schema, append-only, WORM, tamper detection | `agents/se/c2-audit-trail-designer.md` |
+| **C** Compliance | Zero-Trust Planning | C3 | zero-trust, microsegmentation, device trust, BeyondCorp, continuous verification | `agents/se/c3-zero-trust-planner.md` |
+| **C** Compliance | Privacy Engineering | C4 | GDPR data subject, consent management, PII, data masking, DPIA | `agents/se/c4-privacy-engineer.md` |
+| **V** Vulnerability | Threat Modeling | V1 | STRIDE, PASTA, attack tree, threat scenario, attack surface | `agents/se/v1-threat-modeler.md` |
+| **V** Vulnerability | OWASP Audit | V2 | OWASP Top 10, injection, XSS, auth flaw, SSRF, deserialization | `agents/se/v2-owasp-auditor.md` |
+| **V** Vulnerability | Pentest Strategy | V3 | penetration test, black-box, white-box, Burp, ZAP, Nuclei | `agents/se/v3-pentest-strategist.md` |
+| **V** Vulnerability | Supply Chain Audit | V4 | SCA, SBOM, license compliance, CVE, dependency vulnerability, Sigstore | `agents/se/v4-supply-chain-auditor.md` |
+
 ### DB Sub-Domain Detection (A-F)
 
 | Sub-Domain | Code | Keywords | Agents |
@@ -344,6 +373,7 @@ Resources are loaded on-demand per phase. MUST NOT pre-load all resources.
 | Phase 1 | `resources/orchestration-protocol.md` | Always at Phase 1 entry |
 | Phase 1 (DB) | `resources/db-orchestration-protocol.md` | When DB system detected |
 | Phase 1 (BE) | `resources/be-orchestration-protocol.md` | When BE system detected |
+| Phase 1 (SE) | `resources/se-orchestration-protocol.md` | When SE system detected |
 | Phase 2.5 | `resources/analysis-audit-protocol.md` | Always at Phase 2.5 entry (reused in 3.5, 4.5) |
 | Phase 3 | `resources/constraint-propagation.md` | Always at Phase 3 entry |
 | Phase 3 | `resources/priority-matrix.md` | When conflicts detected (reused in Phase 4) |
@@ -482,7 +512,7 @@ Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [co
 | [db-orchestrator](./agents/db-orchestrator.md) | Database system orchestration | sonnet |
 | [be-orchestrator](./agents/be-orchestrator.md) | Backend system orchestration | sonnet |
 | [if-orchestrator](./agents/if-orchestrator.md) | Infrastructure system orchestration (stub) | haiku |
-| [se-orchestrator](./agents/se-orchestrator.md) | Security system orchestration (stub) | haiku |
+| [se-orchestrator](./agents/se-orchestrator.md) | Security system orchestration | sonnet |
 | [synthesizer](./agents/synthesizer.md) | Cross-system synthesis and constraint resolution | sonnet |
 | [audit-reviewer](./agents/audit-reviewer.md) | Analysis quality audit (THOROUGH tier only) | sonnet |
 
@@ -490,6 +520,7 @@ Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [co
 
 - **DB**: 6 domains (A-F), 18 agents — see [db-orchestrator.md](./agents/db-orchestrator.md) § Agent Selection Matrix
 - **BE**: 4 clusters (S/B/R/T), 18 agents — see [be-orchestrator.md](./agents/be-orchestrator.md) § Agent Selection Matrix
+- **SE**: 6 clusters (A/Z/E/N/C/V), 24 agents — see [se-orchestrator.md](./agents/se-orchestrator.md) § Agent Selection Matrix
 
 ---
 
@@ -504,6 +535,7 @@ Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [co
 | [error-playbook.md](./resources/error-playbook.md) | Error handling procedures and fallback strategies |
 | [analysis-audit-protocol.md](./resources/analysis-audit-protocol.md) | Analysis Quality Gate, Contract Enforcement, Synthesis Validation |
 | [db-orchestration-protocol.md](./resources/db-orchestration-protocol.md) | DB agent selection matrix, dispatch protocol, and result merge algorithm |
+| [se-orchestration-protocol.md](./resources/se-orchestration-protocol.md) | SE 6-cluster agent selection, 8 chain rules, and security dispatch protocol |
 | [priority-matrix.md](./resources/priority-matrix.md) | Universal priority hierarchy for conflict resolution across all systems |
 | [synthesis-protocol.md](./resources/synthesis-protocol.md) | Cross-system synthesis procedure and dependency graph construction |
 
@@ -523,3 +555,4 @@ Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [co
 
 - **DB**: `references/db/` — 18 files covering domains A-F (mapped in [db-orchestrator.md § Load Reference Excerpts](./agents/db-orchestrator.md))
 - **BE**: `references/be/` — 11 files covering clusters S/B/R/T (mapped in [be-orchestrator.md § Load Reference Excerpts](./agents/be-orchestrator.md))
+- **SE**: `references/se/` — 7 files covering clusters A/Z/E/N/C/V + best practices (mapped in [se-orchestrator.md § Load Reference Excerpts](./agents/se-orchestrator.md))

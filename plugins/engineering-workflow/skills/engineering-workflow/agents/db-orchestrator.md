@@ -182,7 +182,7 @@ If any agent results contain contradictory recommendations:
 
 ```
 aggregate_confidence = weighted_average(agent_confidences)
-weight = 1.0 for sonnet agents, 0.7 for haiku agents
+weight = 1.0 for sonnet agents, 0.8 for haiku agents
 ```
 
 If any agent confidence < 0.5, flag as low-confidence and recommend human review.

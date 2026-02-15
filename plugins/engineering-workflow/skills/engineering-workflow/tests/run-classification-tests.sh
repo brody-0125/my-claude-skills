@@ -32,32 +32,36 @@ while IFS= read -r scenario; do
   expected_systems=$(echo "${scenario}" | jq -c '.expected.systems')
   expected_domains=$(echo "${scenario}" | jq -c '.expected.domains')
   expected_clusters=$(echo "${scenario}" | jq -c '.expected.be_clusters')
+  expected_se_clusters=$(echo "${scenario}" | jq -c '.expected.se_clusters // []')
   min_confidence=$(echo "${scenario}" | jq -r '.expected.min_confidence')
 
   # Run classifier
-  result=$(bash "${CLASSIFY}" "${query}" 2>/dev/null || echo '{"systems":[],"domains":[],"be_clusters":[],"confidence":0}')
+  result=$(bash "${CLASSIFY}" "${query}" 2>/dev/null || echo '{"systems":[],"domains":[],"be_clusters":[],"se_clusters":[],"confidence":0}')
 
   actual_systems=$(echo "${result}" | jq -c '.systems // []')
   actual_domains=$(echo "${result}" | jq -c '.domains // []')
   actual_clusters=$(echo "${result}" | jq -c '.be_clusters // []')
+  actual_se_clusters=$(echo "${result}" | jq -c '.se_clusters // []')
   actual_confidence=$(echo "${result}" | jq -r '.confidence // 0')
 
   # Compare
   systems_ok=true
   domains_ok=true
   clusters_ok=true
+  se_clusters_ok=true
   confidence_ok=true
 
   if [ "${actual_systems}" != "${expected_systems}" ]; then systems_ok=false; fi
   if [ "${actual_domains}" != "${expected_domains}" ]; then domains_ok=false; fi
   if [ "${actual_clusters}" != "${expected_clusters}" ]; then clusters_ok=false; fi
+  if [ "${expected_se_clusters}" != "[]" ] && [ "${actual_se_clusters}" != "${expected_se_clusters}" ]; then se_clusters_ok=false; fi
   if [ "${min_confidence}" != "0.0" ] && [ "${min_confidence}" != "0" ]; then
     if [ "$(awk "BEGIN { print (${actual_confidence} < ${min_confidence}) }")" = "1" ]; then
       confidence_ok=false
     fi
   fi
 
-  if $systems_ok && $domains_ok && $clusters_ok && $confidence_ok; then
+  if $systems_ok && $domains_ok && $clusters_ok && $se_clusters_ok && $confidence_ok; then
     echo "  PASS  ${id}: ${desc}"
     PASSED=$((PASSED + 1))
   else
@@ -65,7 +69,8 @@ while IFS= read -r scenario; do
     FAILED=$((FAILED + 1))
     if ! $systems_ok; then echo "         systems: expected=${expected_systems} actual=${actual_systems}"; fi
     if ! $domains_ok; then echo "         domains: expected=${expected_domains} actual=${actual_domains}"; fi
-    if ! $clusters_ok; then echo "         clusters: expected=${expected_clusters} actual=${actual_clusters}"; fi
+    if ! $clusters_ok; then echo "         be_clusters: expected=${expected_clusters} actual=${actual_clusters}"; fi
+    if ! $se_clusters_ok; then echo "         se_clusters: expected=${expected_se_clusters} actual=${actual_se_clusters}"; fi
     if ! $confidence_ok; then echo "         confidence: expected>=${min_confidence} actual=${actual_confidence}"; fi
   fi
 done < <(jq -c '.[]' "${SCENARIOS}")

@@ -133,11 +133,19 @@ BE_CLUSTER_B_KEYWORDS="external system|acl|anti-corruption|conformist|semantic g
 BE_CLUSTER_R_KEYWORDS="bulkhead|thread pool bulkhead|semaphore|circuit breaker|failurerate|slowcall|resilience4j|timeout|retry|fallback|idempotencykey|backoff|decorator chain|monitoring|dashboard|alert rule|tracing|grafana|prometheus|pagerduty|observability|micrometer"
 BE_CLUSTER_T_KEYWORDS="fixture monkey|fakerepository|test name byte|integrationtestcontext|stub checklist|spyk|mockk|strikt|testcontainers|test architecture|test strategy|test generation|coverage|mutation|property.based|contract.test|test quality"
 
+# SE cluster keyword lists for fine-grained SE sub-domain classification (A/Z/E/N/C/V)
+SE_CLUSTER_A_KEYWORDS="authentication|oauth|oauth2|jwt|saml|oidc|openid|sso|mfa|login|session management|token management|passkey|webauthn|refresh token|access token|credential|passwordless|bcrypt|argon2|scrypt|authn|single sign-on|multi-factor|2fa|totp|fido|biometric|fingerprint"
+SE_CLUSTER_Z_KEYWORDS="authorization|rbac|abac|rebac|permission|access control|policy engine|role|privilege|scope|grant|opa|cedar|casbin|authz|least privilege|role-based|attribute-based|relationship-based|acl"
+SE_CLUSTER_E_KEYWORDS="encryption|tls|ssl|certificate|key management|pki|hashing|signing|hmac|vault|kms|cipher|aes|chacha20|rsa|ecdsa|at-rest|in-transit|field-level encryption|secret management|secrets manager|key rotation|mtls|mutual tls|ocsp|certificate pinning|hsm"
+SE_CLUSTER_N_KEYWORDS="firewall|cors|csrf|waf|rate limiting|ip filtering|ddos|network policy|csp|hsts|security header|x-frame-options|referrer-policy|permissions-policy|content-security-policy|api gateway security|request signing|input validation|sql injection|xss|path traversal|sanitization|input sanitizer"
+SE_CLUSTER_C_KEYWORDS="compliance|audit|zero-trust|soc2|iso27001|gdpr|pci-dss|audit logging|governance|privacy|dpia|data retention|data subject|consent management|pii|data masking|microsegmentation|beyondcorp|data protection|hipaa"
+SE_CLUSTER_V_KEYWORDS="vulnerability|penetration|owasp|threat model|cve|security testing|sast|dast|sbom|software composition|supply chain|sca|stride|pasta|attack tree|attack surface|pentest|nuclei|burp|zap|exploit|security review|devsecops|secure development|sdl"
+
 # System classification keywords
 DB_KEYWORDS="database|db|sql|nosql|dynamodb|다이나모디비|table scan|join|foreign key|primary key|transaction|schema"
 BE_KEYWORDS="api|apis|rest|restful|grpc|spring|controller|service layer|dto|repository pattern|dependency injection|middleware|hexagonal|archunit|konsist|resilience4j|saga|fixture monkey|acl|bulkhead|circuit breaker|convention|code style|naming rule|jpa pattern|entity model|dynamic update|implementation guide|code pattern|test strategy|test generation|coverage|mutation|property.based|contract.test|test quality|backend|server|endpoint|domain event|integration event|feign|port.*adapter|retry|retries"
 IF_KEYWORDS="infrastructure|kubernetes|k8s|container|docker|ci/cd|pipeline|deployment|load balancer|cdn|dns|monitoring|observability|tracing|terraform|ansible|helm|scaling|auto-scaling|network topology|devops|github actions|jenkins|logging"
-SE_KEYWORDS="authentication|oauth|jwt|authorization|rbac|abac|encryption|tls|ssl|key management|zero-trust|compliance|audit|vulnerability|penetration|security|token management|certificate|firewall|cors|csrf|xss|injection"
+SE_KEYWORDS="authentication|oauth|jwt|authorization|rbac|abac|encryption|tls|ssl|key management|zero-trust|compliance|audit|vulnerability|penetration|security|token management|certificate|firewall|cors|csrf|xss|injection|passkey|webauthn|mfa|sso|saml|oidc|gdpr|pci-dss|soc2|iso27001|dpia|pii|owasp|sbom|sca|sast|dast|waf|threat model|cve|stride|devsecops|secret management|hsts|csp"
 
 # Detect primary system from query text
 detect_system() {
@@ -209,6 +217,26 @@ detect_be_cluster() {
   echo "${query}" | grep -wqE "${BE_CLUSTER_B_KEYWORDS}" && clusters="${clusters}B "
   echo "${query}" | grep -wqE "${BE_CLUSTER_R_KEYWORDS}" && clusters="${clusters}R "
   echo "${query}" | grep -wqE "${BE_CLUSTER_T_KEYWORDS}" && clusters="${clusters}T "
+
+  if [ -z "${clusters}" ]; then
+    echo "UNKNOWN"
+  else
+    echo "${clusters% }"
+  fi
+}
+
+# Detect SE cluster (A/Z/E/N/C/V) from query text
+detect_se_cluster() {
+  local query
+  query=$(printf '%s' "${1}" | tr '[:upper:]' '[:lower:]')
+  local clusters=""
+
+  echo "${query}" | grep -wqE "${SE_CLUSTER_A_KEYWORDS}" && clusters="${clusters}A "
+  echo "${query}" | grep -wqE "${SE_CLUSTER_Z_KEYWORDS}" && clusters="${clusters}Z "
+  echo "${query}" | grep -wqE "${SE_CLUSTER_E_KEYWORDS}" && clusters="${clusters}E "
+  echo "${query}" | grep -wqE "${SE_CLUSTER_N_KEYWORDS}" && clusters="${clusters}N "
+  echo "${query}" | grep -wqE "${SE_CLUSTER_C_KEYWORDS}" && clusters="${clusters}C "
+  echo "${query}" | grep -wqE "${SE_CLUSTER_V_KEYWORDS}" && clusters="${clusters}V "
 
   if [ -z "${clusters}" ]; then
     echo "UNKNOWN"
