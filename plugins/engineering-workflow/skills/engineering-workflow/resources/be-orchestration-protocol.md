@@ -181,7 +181,7 @@ Query: "implement a new external integration with tests"
 | 3 | T-4 quality-assessor | T-3 generated tests | Validation results + gap report |
 | 4 | T-1 test-guard | T-4 validated tests | Final test architecture check |
 
-Note: T-4 may feed gap reports back to T-3 for iterative improvement (max 3 loops).
+Note: T-4 may feed gap reports back to T-3 for iterative improvement (max 2 loops).
 
 ## 4. Cross-Cluster Dependency Rules
 
@@ -437,7 +437,10 @@ Sequential execution with feedback loop:
 1. T2 classifies targets by layer, selects techniques, estimates test count
 2. T3 generates test code using focal context + type-driven derivation
 3. T4 runs 5-stage validation: compile → execute → coverage → mutation → quality
-4. If T4 gap report indicates remaining gaps AND loop count < 3: return to T3
+4. If T4 gap report indicates remaining gaps AND loop count < 2:
+   - Run `scripts/enforce-budget.sh test test-loop <T4-output>` to verify budget for next loop
+   - If within budget: return to T3
+   - If over budget: report current state as final
 5. T1 performs final test architecture guard check
 
 ### Cross-Agent Data Flow

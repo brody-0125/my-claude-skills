@@ -101,12 +101,12 @@ major systems: **DB** (Database), **BE** (Backend), **IF** (Infrastructure), and
 
 | Sub-Domain | Code | Keywords | Agents |
 |------------|------|----------|--------|
-| Storage Engine | A | storage engine, B-tree, LSM-tree, page layout, WAL, buffer pool, compaction, write amplification | `a1-engine-selector`, `a2-compaction-strategist` |
-| Index & Query Plan | B | query plan, explain analyze, index scan, seq scan, join strategy, cost estimation, query rewrite, statistics | `b1-index-architect`, `b2-join-optimizer`, `b3-query-plan-analyst` |
-| Concurrency & Locking | C | concurrency, isolation level, MVCC, locking, deadlock, optimistic, pessimistic, serializable, phantom read | `c1-isolation-advisor`, `c2-mvcc-specialist`, `c3-lock-designer` |
-| Schema & Normalization | D | schema design, normalization, denormalization, document model, embedding, referencing, access pattern | `d1-schema-expert`, `d2-document-modeler`, `d3-access-pattern-modeler` |
-| I/O & Buffer Management | E | page, buffer pool, WAL, write-ahead log, checkpoint, dirty page, flush, I/O optimization | `e1-page-optimizer`, `e2-wal-engineer`, `e3-buffer-tuner` |
-| Distributed & Replication | F | replication, failover, consensus, raft, paxos, sharding, partition, consistency, CAP theorem, dynamodb, rcu, wcu, hot partition, adaptive capacity, throttling, provisioned throughput, on-demand, TPS | `f1-replication-designer`, `f2-consistency-selector`, `f3-sharding-architect`, `f4-dynamodb-throughput-optimizer` |
+| Storage Engine | A | storage engine, B-tree, LSM-tree, page layout, WAL, buffer pool, compaction, write amplification | `agents/db/a1-engine-selector.md`, `agents/db/a2-compaction-strategist.md` |
+| Index & Query Plan | B | query plan, explain analyze, index scan, seq scan, join strategy, cost estimation, query rewrite, statistics | `agents/db/b1-index-architect.md`, `agents/db/b2-join-optimizer.md`, `agents/db/b3-query-plan-analyst.md` |
+| Concurrency & Locking | C | concurrency, isolation level, MVCC, locking, deadlock, optimistic, pessimistic, serializable, phantom read | `agents/db/c1-isolation-advisor.md`, `agents/db/c2-mvcc-specialist.md`, `agents/db/c3-lock-designer.md` |
+| Schema & Normalization | D | schema design, normalization, denormalization, document model, embedding, referencing, access pattern | `agents/db/d1-schema-expert.md`, `agents/db/d2-document-modeler.md`, `agents/db/d3-access-pattern-modeler.md` |
+| I/O & Buffer Management | E | page, buffer pool, WAL, write-ahead log, checkpoint, dirty page, flush, I/O optimization | `agents/db/e1-page-optimizer.md`, `agents/db/e2-wal-engineer.md`, `agents/db/e3-buffer-tuner.md` |
+| Distributed & Replication | F | replication, failover, consensus, raft, paxos, sharding, partition, consistency, CAP theorem, dynamodb, rcu, wcu, hot partition, adaptive capacity, throttling, provisioned throughput, on-demand, TPS | `agents/db/f1-replication-designer.md`, `agents/db/f2-consistency-selector.md`, `agents/db/f3-sharding-architect.md`, `agents/db/f4-dynamodb-throughput-optimizer.md` |
 
 ### BE Sub-Domain Detection (4 Clusters: S/B/R/T)
 
@@ -205,6 +205,11 @@ Return your analysis in the structured format defined in your orchestrator defin
 ```
 
 ### Phase 2: Agent Execution
+
+**BE Test Pipeline Status Display** (when T2-T3-T4 loop is active):
+```
+[engineering-workflow] Phase: Test Pipeline | Loop: {n}/{max} | Coverage: {pct}% (target: {target}%)
+```
 
 Orchestrators handle this phase internally. Each orchestrator:
 

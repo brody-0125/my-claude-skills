@@ -35,7 +35,7 @@ This schema matches the output format defined in `orchestration-protocol.md`.
   "unresolved_constraints": [ "... constraints needing cross-system resolution ..." ],
   "constraints_used": { "key": "value, ... environment constraints used during analysis" },
   "conflicts": [ "... intra-system conflicts detected ..." ],
-  "cross_notes": "Cross-domain or cross-cluster observations",
+  "cross_notes": [{"from_agent": "agent-id", "target_system": "DB|BE|IF|SE", "constraint": "description"}],
   "metadata": {
     "confidence": 0.85,
     "analysis_duration_ms": 1250
@@ -47,7 +47,7 @@ Field notes:
 - `chain_executed`: BE orchestrator only — dependency chain order for sequential dispatch. Omit for other systems.
 - `constraints_used`: Key-value map of environment constraints used during analysis.
 - `conflicts`: Intra-system conflicts detected before resolution.
-- `cross_notes`: Unified field for cross-domain/cross-cluster observations.
+- `cross_notes`: Structured array of cross-system constraint objects (`{from_agent, target_system, constraint}`).
 - `analysis_duration_ms`: Wall-clock time spent in orchestrator execution.
 
 ### 1.1.1 Required Field Enforcement

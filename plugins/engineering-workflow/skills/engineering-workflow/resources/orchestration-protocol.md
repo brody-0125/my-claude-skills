@@ -167,7 +167,7 @@ Return a JSON object matching the orchestrator's defined output schema:
   "unresolved_constraints": [ ... constraints needing cross-system resolution ... ],
   "constraints_used": { "key": "value, ... environment constraints used during analysis" },
   "conflicts": [ ... intra-system conflicts detected ... ],
-  "cross_notes": "Cross-domain or cross-cluster observations (free text)",
+  "cross_notes": [{"from_agent": "agent-id", "target_system": "DB|BE|IF|SE", "constraint": "description"}],
   "metadata": { "confidence": 0.0-1.0, "analysis_duration_ms": 1250 }
 }
 
@@ -175,7 +175,7 @@ Field notes:
 - `chain_executed`: BE orchestrator only — records the dependency chain order used for sequential agent dispatch. Omit for DB/IF/SE orchestrators.
 - `constraints_used`: Key-value map of environment constraints used during analysis (e.g., `{"db_engine": "MySQL 8.0", "scale": "50GB"}`).
 - `conflicts`: Intra-system conflicts detected before resolution (see constraint-propagation.md for schema).
-- `cross_notes`: Free-text field for cross-domain (DB) or cross-cluster (BE) observations. Replaces the per-system `cross_domain_notes` / `cross_cluster_notes` variants.
+- `cross_notes`: Structured array of cross-system constraint objects (`{from_agent, target_system, constraint}`). Each entry declares a constraint that one agent's recommendation imposes on another system.
 ```
 
 ### Agent Task Prompt Template

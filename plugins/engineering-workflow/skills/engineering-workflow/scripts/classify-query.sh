@@ -39,7 +39,8 @@ QUERY_SIG=$(get_query_signature "${QUERY}")
 CACHED=$(read_pattern_cache "${QUERY_SIG}")
 if [ -n "${CACHED}" ]; then
   # Cache hit — return cached classification with confidence 1.0
-  echo "${CACHED}" | jq --arg query "${QUERY}" '. + {query: $query, confidence: 1.0, classifier: "pattern-cache"}'
+  # Compute pattern from cached systems array for backward compatibility
+  echo "${CACHED}" | jq --arg query "${QUERY}" '. + {query: $query, confidence: 1.0, classifier: "pattern-cache", pattern: (if (.systems | length) == 0 then "none" elif (.systems | length) == 1 then "single" elif (.systems | length) == 2 then "multi" else "cross" end)}'
   exit 0
 fi
 
@@ -89,6 +90,19 @@ if [ "${SE_MATCH}" -eq 1 ]; then
       SE_CLUSTERS+=("${c}")
     done
   fi
+fi
+
+# ── Pattern Determination ─────────────────────────────────
+
+SYSTEM_COUNT=${#SYSTEMS[@]}
+if [ "${SYSTEM_COUNT}" -eq 0 ]; then
+  PATTERN="none"
+elif [ "${SYSTEM_COUNT}" -eq 1 ]; then
+  PATTERN="single"
+elif [ "${SYSTEM_COUNT}" -eq 2 ]; then
+  PATTERN="multi"
+else
+  PATTERN="cross"
 fi
 
 # ── Confidence Calculation ────────────────────────────────
@@ -142,12 +156,14 @@ OUTPUT=$(jq -n \
   --argjson se_clusters "${SE_CLUSTERS_JSON}" \
   --arg confidence "${CONFIDENCE}" \
   --arg query "${QUERY}" \
+  --arg pattern "${PATTERN}" \
   '{
     query: $query,
     systems: $systems,
     domains: $domains,
     be_clusters: $be_clusters,
     se_clusters: $se_clusters,
+    pattern: $pattern,
     confidence: ($confidence | tonumber),
     classifier: "keyword-fast-path"
   }')
@@ -157,7 +173,7 @@ echo "${OUTPUT}"
 # ── Session Persistence ──────────────────────────────────
 
 # Write to session history (non-blocking, errors suppressed)
-CLASSIFICATION_JSON=$(echo "${OUTPUT}" | jq '{systems, domains, be_clusters, se_clusters, confidence}' 2>/dev/null || true)
+CLASSIFICATION_JSON=$(echo "${OUTPUT}" | jq '{systems, domains, be_clusters, se_clusters, pattern, confidence}' 2>/dev/null || true)
 if [ -n "${CLASSIFICATION_JSON}" ]; then
   write_session_history "${QUERY}" "${CLASSIFICATION_JSON}" 2>/dev/null || true
   promote_to_cache "${QUERY_SIG}" "${CLASSIFICATION_JSON}" 2>/dev/null || true

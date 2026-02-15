@@ -15,7 +15,7 @@
     },
     "expected": {
       "classification_systems": ["DB"],
-      "tier": "STANDARD",
+      "tier": "LIGHT",
       "validation_valid": true,
       "resolve_conflicts_count": 0,
       "format_not_empty": true

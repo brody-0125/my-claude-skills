@@ -277,7 +277,7 @@ Priority 7: Operational feasibility
 
 SE recommendations may impose constraints on other systems. Declare these in `cross_notes[]`:
 
-> **Format note**: SE `cross_notes` uses structured objects (`{from_agent, target_system, constraint}`); DB uses string arrays. The synthesizer should handle both formats.
+> **Format note**: All systems use structured `cross_notes` objects (`{from_agent, target_system, constraint}`).
 
 | SE Constraint | Target System | Constraint Content |
 |--------------|---------------|-------------------|
