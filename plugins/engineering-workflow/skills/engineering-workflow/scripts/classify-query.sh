@@ -79,15 +79,28 @@ if [ "${BE_MATCH}" -eq 1 ]; then
   fi
 fi
 
+# ── SE Cluster Detection (only if SE matched) ────────────
+
+SE_CLUSTERS=()
+if [ "${SE_MATCH}" -eq 1 ]; then
+  DETECTED_SE_CLUSTERS=$(detect_se_cluster "${QUERY}")
+  if [ "${DETECTED_SE_CLUSTERS}" != "UNKNOWN" ]; then
+    for c in ${DETECTED_SE_CLUSTERS}; do
+      SE_CLUSTERS+=("${c}")
+    done
+  fi
+fi
+
 # ── Confidence Calculation ────────────────────────────────
 
 TOTAL_MATCHES=$(( DB_MATCH + BE_MATCH + IF_MATCH + SE_MATCH ))
 DOMAIN_COUNT=${#DOMAINS[@]}
 BE_CLUSTER_COUNT=${#BE_CLUSTERS[@]}
+SE_CLUSTER_COUNT=${#SE_CLUSTERS[@]}
 
 if [ "${TOTAL_MATCHES}" -eq 0 ]; then
   CONFIDENCE="0.0"
-elif [ "${TOTAL_MATCHES}" -eq 1 ] && { [ "${DOMAIN_COUNT}" -ge 1 ] || [ "${BE_CLUSTER_COUNT}" -ge 1 ]; }; then
+elif [ "${TOTAL_MATCHES}" -eq 1 ] && { [ "${DOMAIN_COUNT}" -ge 1 ] || [ "${BE_CLUSTER_COUNT}" -ge 1 ] || [ "${SE_CLUSTER_COUNT}" -ge 1 ]; }; then
   CONFIDENCE="0.85"
 elif [ "${TOTAL_MATCHES}" -eq 1 ]; then
   CONFIDENCE="0.70"
@@ -116,10 +129,17 @@ else
   BE_CLUSTERS_JSON=$(printf '%s\n' "${BE_CLUSTERS[@]}" | jq -R . | jq -s . 2>/dev/null || echo '[]')
 fi
 
+if [ ${#SE_CLUSTERS[@]} -eq 0 ]; then
+  SE_CLUSTERS_JSON='[]'
+else
+  SE_CLUSTERS_JSON=$(printf '%s\n' "${SE_CLUSTERS[@]}" | jq -R . | jq -s . 2>/dev/null || echo '[]')
+fi
+
 OUTPUT=$(jq -n \
   --argjson systems "${SYSTEMS_JSON}" \
   --argjson domains "${DOMAINS_JSON}" \
   --argjson be_clusters "${BE_CLUSTERS_JSON}" \
+  --argjson se_clusters "${SE_CLUSTERS_JSON}" \
   --arg confidence "${CONFIDENCE}" \
   --arg query "${QUERY}" \
   '{
@@ -127,6 +147,7 @@ OUTPUT=$(jq -n \
     systems: $systems,
     domains: $domains,
     be_clusters: $be_clusters,
+    se_clusters: $se_clusters,
     confidence: ($confidence | tonumber),
     classifier: "keyword-fast-path"
   }')
@@ -136,7 +157,7 @@ echo "${OUTPUT}"
 # ── Session Persistence ──────────────────────────────────
 
 # Write to session history (non-blocking, errors suppressed)
-CLASSIFICATION_JSON=$(echo "${OUTPUT}" | jq '{systems, domains, be_clusters, confidence}' 2>/dev/null || true)
+CLASSIFICATION_JSON=$(echo "${OUTPUT}" | jq '{systems, domains, be_clusters, se_clusters, confidence}' 2>/dev/null || true)
 if [ -n "${CLASSIFICATION_JSON}" ]; then
   write_session_history "${QUERY}" "${CLASSIFICATION_JSON}" 2>/dev/null || true
   promote_to_cache "${QUERY_SIG}" "${CLASSIFICATION_JSON}" 2>/dev/null || true

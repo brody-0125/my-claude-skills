@@ -28,9 +28,10 @@
       "systems": ["SE"],
       "domains": [],
       "be_clusters": [],
-      "min_confidence": 0.70
+      "se_clusters": ["A"],
+      "min_confidence": 0.85
     },
-    "description": "Security system detection"
+    "description": "Security system detection with AuthN cluster"
   },
   {
     "id": "TC-004",
@@ -105,9 +106,10 @@
       "systems": ["DB", "BE", "SE"],
       "domains": ["D"],
       "be_clusters": [],
+      "se_clusters": ["Z", "N"],
       "min_confidence": 0.60
     },
-    "description": "3-system cross-system query (DB+BE+SE)"
+    "description": "3-system cross-system query (DB+BE+SE) with AuthZ+Network clusters"
   },
   {
     "id": "TC-011",
@@ -251,5 +253,185 @@
       "min_confidence": 0.70
     },
     "description": "Throughput infrastructure query should stay in IF and avoid DB/F false positive"
+  },
+  {
+    "id": "TC-024",
+    "query": "how to implement OAuth2 with JWT token rotation",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["A"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster A — Authentication with OAuth2 and JWT"
+  },
+  {
+    "id": "TC-025",
+    "query": "RBAC vs ABAC for multi-tenant SaaS",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["Z"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster Z — Authorization model selection"
+  },
+  {
+    "id": "TC-026",
+    "query": "AES-256 encryption with key rotation using Vault",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["E"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster E — Encryption and key management"
+  },
+  {
+    "id": "TC-027",
+    "query": "configure CSP headers and CORS policy for SPA",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["N"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster N — Network security headers"
+  },
+  {
+    "id": "TC-028",
+    "query": "SOC2 compliance audit with GDPR data protection",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["C"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster C — Compliance and audit"
+  },
+  {
+    "id": "TC-029",
+    "query": "OWASP Top 10 vulnerability assessment with SBOM",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["V"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster V — Vulnerability and threat"
+  },
+  {
+    "id": "TC-030",
+    "query": "implement zero-trust with mTLS and RBAC",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["Z", "E", "C"],
+      "min_confidence": 0.85
+    },
+    "description": "SE multi-cluster — AuthZ + Encryption + Compliance"
+  },
+  {
+    "id": "TC-031",
+    "query": "database encryption at rest with TLS for API",
+    "expected": {
+      "systems": ["DB", "BE", "SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["E"],
+      "min_confidence": 0.60
+    },
+    "description": "Cross-system DB+BE+SE with SE Encryption cluster"
+  },
+  {
+    "id": "TC-032",
+    "query": "WAF rate limiting with XSS prevention and SAST",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["N", "V"],
+      "min_confidence": 0.85
+    },
+    "description": "SE multi-cluster — Network + Vulnerability"
+  },
+  {
+    "id": "TC-033",
+    "query": "passkey WebAuthn implementation with session management",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["A"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster A — Passwordless authentication with sessions"
+  },
+  {
+    "id": "TC-034",
+    "query": "OPA policy engine with Cedar for authorization",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["Z"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster Z — Policy engine selection"
+  },
+  {
+    "id": "TC-035",
+    "query": "GDPR DPIA with PII masking and consent management",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["C"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster C — Privacy engineering"
+  },
+  {
+    "id": "TC-036",
+    "query": "STRIDE threat model with penetration test using Burp",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["V"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster V — Threat modeling and pentest"
+  },
+  {
+    "id": "TC-037",
+    "query": "passkey with ABAC policy and GDPR consent",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["A", "Z", "C"],
+      "min_confidence": 0.85
+    },
+    "description": "SE multi-cluster — AuthN + AuthZ + Compliance (A+Z+C)"
+  },
+  {
+    "id": "TC-038",
+    "query": "biometric fingerprint authentication",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["A"],
+      "min_confidence": 0.85
+    },
+    "description": "SE Cluster A — Biometric authentication (Fix 6 keyword verification)"
   }
 ]
