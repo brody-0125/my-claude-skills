@@ -124,9 +124,19 @@ Testing approach: use testFixtures Stubs (B-2) for all external ports, configure
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with saga steps classified, compensation strategies defined, and test scenarios listed. If workflow steps are unclear, return with lower confidence.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] saga_name present and non-empty
+- [ ] orchestration present and specifies orchestration approach
+- [ ] steps contains at least 2 entries
+- [ ] Every step includes: order, name, classification (Compensable, Pivot, or Retryable)
+- [ ] Steps follow ordering invariant: Compensable -> Pivot -> Retryable
+- [ ] Every Compensable step includes a non-null compensation action
+- [ ] Every Retryable step includes a retry_policy
+- [ ] test_scenarios contains at least 3 entries (happy path, per-step failure, pivot failure)
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If workflow steps are unclear: confidence < 0.5 with missing_info field
 
 For in-depth analysis, refer to `references/be/cluster-b-event-saga.md`.
 

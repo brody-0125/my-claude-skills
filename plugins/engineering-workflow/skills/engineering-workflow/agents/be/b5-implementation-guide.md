@@ -116,9 +116,18 @@ Produce the complete file manifest with:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with complete file list, directory structure, Gradle dependencies, wiring configuration, and property requirements. If upstream analysis is incomplete, return with lower confidence and specify which B-cluster output is missing.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] implementation_type present and non-empty (ACL, Event, or Saga)
+- [ ] files contains at least 1 entry
+- [ ] Every file includes: path, pattern, description
+- [ ] dependencies present and includes: gradle_additions with at least 1 entry
+- [ ] wiring present and includes: configuration_class, bean_definitions, properties
+- [ ] wiring.bean_definitions contains at least 1 entry
+- [ ] wiring.properties contains at least 1 entry
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If upstream analysis is incomplete: confidence < 0.5 with missing_info specifying which B-cluster output is needed
 
 Pattern templates and implementation details: `references/be/cluster-b-boundary-context.md`, `references/be/cluster-b-event-saga.md`, `references/be/kotlin-spring-idioms.md`
 

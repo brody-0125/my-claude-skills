@@ -1,6 +1,6 @@
 # DB Orchestration Protocol
 
-> Detailed routing, dispatch, and merge protocol for the DB orchestrator and its 17 micro agents.
+> Detailed routing, dispatch, and merge protocol for the DB orchestrator and its 18 micro agents.
 
 ## 1. Agent Selection Matrix (Expanded)
 
@@ -56,7 +56,8 @@
 | replication, replica, failover, leader-follower | f1-replication-designer | Replication topology |
 | consistency, CAP theorem, PACELC, linearizable | f2-consistency-selector | Consistency model |
 | sharding, partition, shard key, rebalancing | f3-sharding-architect | Sharding strategy |
-| distributed database design (broad) | f1 + f2 + f3 | Full distributed design |
+| dynamodb, rcu, wcu, hot partition, adaptive capacity, throttling, provisioned throughput, on-demand, tps | f4-dynamodb-throughput-optimizer | DynamoDB high-throughput optimization |
+| distributed database design (broad) | f1 + f2 + f3 + f4 | Full distributed design |
 
 ## 2. Cross-Domain Dependency Rules
 
@@ -90,6 +91,8 @@ B (Index & Scan) ──affects──▶ E (I/O & Pages)
 5. Wave 3: domains that depend on Wave 2 results (rare)
 6. Within each wave, dispatch agents in parallel
 ```
+
+> **Note**: f4-dynamodb-throughput-optimizer has no upstream dependencies; it MUST run in Wave 1 regardless of other requested domains. The C → F dependency applies to f1/f2/f3 (consistency model selection) but not to f4 (DynamoDB throughput is independent of local isolation guarantees).
 
 Example: Query involves domains A, B, E
 - Wave 1: A (no dependencies among requested)
@@ -131,6 +134,7 @@ Each domain has a reference file at `references/db/domain-{X}.md`.
 | replication | domain-F.md § Replication Topologies |
 | consistency | domain-F.md § Consistency Models |
 | sharding | domain-F.md § Sharding Strategies |
+| dynamodb throughput, rcu/wcu, hot partition, adaptive capacity, throttling | domain-F-dynamodb-throughput.md § Throughput Scaling Fundamentals |
 
 ## 4. Parallel Dispatch Rules
 
@@ -260,7 +264,7 @@ Field mapping to `constraint-propagation.md` full schema:
 When DB agents produce conflicting intra-system recommendations:
 
 ```
-Priority 1: User-specified constraints (always win)
+Priority 1: User-specified constraints MUST win
 Priority 2: Correctness (Domain C — isolation/concurrency)
 Priority 3: Durability (Domain E — WAL/checkpoint/flush)
 Priority 4: Performance (Domains A, B — engine/index; Domain E — buffer/I/O tuning)

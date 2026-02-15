@@ -4,6 +4,20 @@
 > Covers JPA entity conventions, repository design, QueryDSL/JOOQ adapters, Gradle multi-module builds,
 > soft delete, and Spring Data auditing.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. Entity-Model Separation Pattern | ~23 |
+| 2. JPA Entity Best Practices | ~96 |
+| 3. Cascade Management | ~166 |
+| 4. Repository Pattern | ~203 |
+| 5. QueryDSL / JOOQ Adapter Pattern | ~269 |
+| 6. Gradle Multi-Module Build | ~356 |
+| 7. Dependency Scope Reference | ~428 |
+| 8. Soft Delete Pattern | ~459 |
+| 9. Spring Data Auditing | ~511 |
+
 ---
 
 ## 1. Entity-Model Separation Pattern

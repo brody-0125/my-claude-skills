@@ -108,9 +108,16 @@ Assess the impact of the workload on version chains:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with mvcc_approach, version_management analysis, cleanup_strategy with specific parameters, and performance_impact assessment. If the DB engine is unknown, provide generic MVCC guidance and note that engine-specific tuning requires engine identification.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] mvcc_approach present and non-empty
+- [ ] version_management present and includes: storage_location, estimated_chain_length, bloat_risk
+- [ ] cleanup_strategy present and includes: method, parameters with at least 2 engine-specific settings
+- [ ] cleanup_strategy.freeze_strategy or equivalent cleanup scheduling present
+- [ ] performance_impact present and includes: read_overhead, write_overhead, cleanup_overhead
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If DB engine is unknown: provide generic MVCC guidance, confidence < 0.5 with note that engine identification is needed
 
 For in-depth analysis, refer to `references/db/domain-c-mvcc.md`.
 

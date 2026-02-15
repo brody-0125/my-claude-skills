@@ -298,7 +298,7 @@ The synthesizer resolves conflicts between different systems.
 
 ```
 Resolution order:
-1. Security hard constraints always win (non-negotiable)
+1. Security hard constraints MUST win (non-negotiable)
 2. Data integrity hard constraints beat performance soft constraints
 3. For soft vs soft: evaluate trade-offs and present both options to user
 4. For hard vs hard (rare): document the conflict and ask user for priority input
@@ -402,3 +402,17 @@ System priority hierarchy (for equal-priority conflicts):
 - Archived history: keep last 20 sessions
 - Pattern cache promotion: if same constraint pattern appears 3+ times, cache it
 ```
+
+### Cross-Session Learning
+
+Storage layout:
+```
+~/.claude/cache/engineering-workflow/
+├── constraints.json          # Current session constraints
+├── session-history.jsonl     # Past query classifications + outcomes
+└── pattern-cache.json        # Learned routing patterns
+```
+
+1. After each query completion, append classification + outcome to `session-history.jsonl`
+2. If the same query pattern appears 3+ times, cache the routing decision in `pattern-cache.json`
+3. On next similar query, use cached routing for instant classification (confidence: 1.0)

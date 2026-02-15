@@ -128,9 +128,17 @@ Flag hot paths that conflict with each other (e.g., one needs normalization, ano
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with access_patterns catalog, model_adaptations, and hot_paths identification. If frequency data is unavailable, use relative ranking (high/medium/low) and note the assumption.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] access_patterns contains at least 1 entry
+- [ ] Every access_pattern includes: id, name, type, entities, filter, frequency_per_sec, latency_target_ms, data_model_implication
+- [ ] model_adaptations contains at least 1 entry
+- [ ] Every model_adaptation includes: adaptation, serves_patterns, type
+- [ ] hot_paths contains at least 1 entry
+- [ ] Every hot_path includes: pattern_id, impact_score, priority, optimization
+- [ ] conflicts present (may be empty array if no conflicts detected)
+- [ ] If frequency data is unavailable: use relative ranking (high/medium/low) and note the assumption
 
 For in-depth analysis, refer to `references/db/domain-d-access-patterns.md`.
 

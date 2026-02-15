@@ -1,0 +1,124 @@
+[
+  {
+    "id": "PL-001",
+    "description": "Single DB query — classify → tier LIGHT → validate → format",
+    "query": "B-tree vs LSM storage engine comparison",
+    "agent_output": {
+      "rationale": "LSM-tree is optimal for write-heavy workloads due to sequential write patterns and efficient compaction",
+      "recommendation": "Use RocksDB with level compaction for write-heavy workloads with acceptable read amplification trade-off",
+      "confidence": 0.85,
+      "trade_offs": [
+        {"option": "LSM-tree", "pros": ["Write-optimized"], "cons": ["Read amplification"]},
+        {"option": "B-tree", "pros": ["Read-optimized"], "cons": ["Write amplification"]}
+      ],
+      "constraints": [{"id": "c1", "target": "storage-engine", "value": "lsm", "priority": "hard"}]
+    },
+    "expected": {
+      "classification_systems": ["DB"],
+      "tier": "STANDARD",
+      "validation_valid": true,
+      "resolve_conflicts_count": 0,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-002",
+    "description": "Cross-system DB+BE query — classify → tier THOROUGH → validate → format",
+    "query": "shard database and update backend connection pool",
+    "agent_output": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Apply DB horizontal sharding using hash partitioning, then reconfigure BE connection pools with per-shard routing logic",
+      "implementation_order": [
+        {"phase": "db-sharding", "risk": "high", "rollback": "Revert to single-shard", "depends_on": []},
+        {"phase": "be-pool-update", "risk": "low", "rollback": "", "depends_on": ["db-sharding"]}
+      ],
+      "cross_dependencies": [{"from": "DB", "to": "BE", "description": "Schema change requires repository updates"}],
+      "confidence": 0.80
+    },
+    "expected": {
+      "classification_systems": ["DB", "BE"],
+      "tier": "THOROUGH",
+      "validation_valid": true,
+      "format_not_empty": true,
+      "format_type": "cross-system"
+    }
+  },
+  {
+    "id": "PL-003",
+    "description": "BE multi-cluster query — classify → tier STANDARD → validate → format",
+    "query": "implement saga pattern with circuit breaker and tests",
+    "agent_output": {
+      "rationale": "Saga pattern with compensating transactions ensures eventual consistency across services, combined with circuit breaker for fault isolation",
+      "recommendation": "Implement orchestration-based saga using Spring with Resilience4j circuit breaker at service boundaries and comprehensive test coverage",
+      "confidence": 0.88,
+      "trade_offs": [
+        {"option": "Orchestration saga", "pros": ["Centralized control"], "cons": ["Single point of failure"]},
+        {"option": "Choreography saga", "pros": ["Decoupled"], "cons": ["Hard to debug"]}
+      ],
+      "constraints": [{"id": "c1", "target": "saga-type", "value": "orchestration", "priority": "soft"}]
+    },
+    "expected": {
+      "classification_systems": ["BE"],
+      "classification_clusters": ["B", "R"],
+      "tier": "STANDARD",
+      "validation_valid": true,
+      "resolve_conflicts_count": 0,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-004",
+    "description": "Invalid agent output — should fail validation",
+    "query": "database isolation level",
+    "agent_output": {
+      "confidence": 0.75
+    },
+    "expected": {
+      "classification_systems": ["DB"],
+      "tier": "LIGHT",
+      "validation_valid": false,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-005",
+    "description": "Security query — tier always THOROUGH",
+    "query": "OAuth JWT token management",
+    "agent_output": {
+      "rationale": "JWT tokens should use RS256 signing with short expiry and refresh token rotation for security",
+      "recommendation": "Implement OAuth 2.0 with JWT access tokens using RS256, 15-minute expiry, and secure refresh token rotation",
+      "confidence": 0.82,
+      "trade_offs": [
+        {"option": "RS256", "pros": ["Asymmetric, verifiable"], "cons": ["Slightly slower"]},
+        {"option": "HS256", "pros": ["Faster"], "cons": ["Shared secret risk"]}
+      ],
+      "constraints": [{"id": "c1", "target": "signing-algorithm", "value": "RS256", "priority": "hard"}]
+    },
+    "expected": {
+      "classification_systems": ["SE"],
+      "tier": "THOROUGH",
+      "validation_valid": true,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-006",
+    "description": "Summary format mode — compact output",
+    "query": "B-tree vs LSM storage engine comparison",
+    "agent_output": {
+      "rationale": "LSM-tree is optimal for write-heavy workloads",
+      "recommendation": "Use RocksDB with level compaction for optimal write performance in your use case scenario",
+      "confidence": 0.85,
+      "trade_offs": [
+        {"option": "LSM-tree", "pros": ["Write-optimized"], "cons": ["Read amplification"]},
+        {"option": "B-tree", "pros": ["Read-optimized"], "cons": ["Write amplification"]}
+      ],
+      "constraints": [{"id": "c1", "target": "storage-engine", "value": "lsm", "priority": "hard"}]
+    },
+    "expected": {
+      "classification_systems": ["DB"],
+      "format_summary": true,
+      "format_contains": ["--summary"]
+    }
+  }
+]

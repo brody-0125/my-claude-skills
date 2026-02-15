@@ -22,12 +22,44 @@ EW_BASE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Ensure cache directory exists
 mkdir -p "${CACHE_DIR}" "${CACHE_DIR}/results" 2>/dev/null || true
 
+# ── File Logging ──────────────────────────────────────────
+
+SESSION_LOG="${CACHE_DIR}/session.log"
+MAX_LOG_LINES=1000
+MAX_LOG_FILES=5
+
+# Write a message to the session log file (no stderr output)
+log_to_file() {
+  local msg
+  msg="$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date +"%Y-%m-%dT%H:%M:%SZ") $*"
+  echo "${msg}" >> "${SESSION_LOG}" 2>/dev/null || true
+}
+
+# Rotate session log if it exceeds MAX_LOG_LINES
+rotate_session_log() {
+  [ ! -f "${SESSION_LOG}" ] && return
+  local line_count
+  line_count=$(wc -l < "${SESSION_LOG}" 2>/dev/null | tr -d ' ')
+  if [ "${line_count}" -gt "${MAX_LOG_LINES}" ]; then
+    local ts
+    ts=$(date -u +"%Y%m%dT%H%M%SZ")
+    cp "${SESSION_LOG}" "${CACHE_DIR}/session-${ts}.log" 2>/dev/null || true
+    tail -n $(( MAX_LOG_LINES * 80 / 100 )) "${SESSION_LOG}" > "${SESSION_LOG}.tmp" 2>/dev/null && \
+      mv "${SESSION_LOG}.tmp" "${SESSION_LOG}" || true
+    # Keep only MAX_LOG_FILES archived logs
+    ls -1t "${CACHE_DIR}"/session-*.log 2>/dev/null | tail -n +$((MAX_LOG_FILES + 1)) | xargs rm -f 2>/dev/null || true
+  fi
+}
+
 # ── Logging ───────────────────────────────────────────────
 
-log_info()  { printf '[EW] %s\n' "$*" >&2; }
-log_warn()  { printf '[EW][WARN] %s\n' "$*" >&2; }
-log_error() { printf '[EW][ERROR] %s\n' "$*" >&2; }
-log_ok()    { printf '[EW][OK] %s\n' "$*" >&2; }
+log_info()  { printf '[EW] %s\n' "$*" >&2; log_to_file "[INFO] $*"; }
+log_warn()  { printf '[EW][WARN] %s\n' "$*" >&2; log_to_file "[WARN] $*"; }
+log_error() { printf '[EW][ERROR] %s\n' "$*" >&2; log_to_file "[ERROR] $*"; }
+log_ok()    { printf '[EW][OK] %s\n' "$*" >&2; log_to_file "[OK] $*"; }
+
+# Log only to file (no stderr output) — for verbose diagnostic info
+log_detail() { log_to_file "[DETAIL] $*"; }
 
 # ── Input helpers ─────────────────────────────────────
 
@@ -55,7 +87,8 @@ require_jq() {
 # Read a JSON file or return default
 read_json() {
   local file="${1}"
-  local default="${2:-{}}"
+  local default="${2}"
+  if [ -z "${default}" ]; then default='{}'; fi
   if [ -f "${file}" ]; then
     cat "${file}"
   else
@@ -91,6 +124,8 @@ DOMAIN_C_KEYWORDS="isolation|read committed|repeatable read|serializable|snapsho
 DOMAIN_D_KEYWORDS="normalization|1nf|2nf|3nf|bcnf|denormalization|schema design|schema|document model|embedding|referencing|access pattern"
 DOMAIN_E_KEYWORDS="page|buffer pool|wal|write-ahead log|checkpoint|dirty page|flush|io optimization|direct io|sequential io|random io"
 DOMAIN_F_KEYWORDS="replication|primary-replica|master-slave|consensus|raft|paxos|consistency|eventual consistency|strong consistency|cap theorem|shard|sharding|partition|partitioned|partitioning|hash partition|range partition"
+DYNAMODB_VENDOR_KEYWORDS="dynamodb|다이나모디비"
+DYNAMODB_THROUGHPUT_INTENT_KEYWORDS="rcu|wcu|hot partition|adaptive capacity|throttling|provisioned throughput|on-demand|ondemand|온디맨드|프로비저닝|처리량|tps|gsi|back pressure|백프레셔"
 
 # BE cluster keyword lists for fine-grained BE sub-domain classification
 BE_CLUSTER_S_KEYWORDS="dependency violation|import direction|runtimeonly|layer rule|port design|adapter injection|constructor injection|dependency injection|stub pattern|new module|naming convention|publisher vs producer|module layout|archunit|konsist|fitness function|checktest|ci automation|hexagonal|port.*adapter|gradle multi-module|convention|code style|naming rule|jpa pattern|entity model|dynamic update"
@@ -99,7 +134,7 @@ BE_CLUSTER_R_KEYWORDS="bulkhead|thread pool bulkhead|semaphore|circuit breaker|f
 BE_CLUSTER_T_KEYWORDS="fixture monkey|fakerepository|test name byte|integrationtestcontext|stub checklist|spyk|mockk|strikt|testcontainers|test architecture|test strategy|test generation|coverage|mutation|property.based|contract.test|test quality"
 
 # System classification keywords
-DB_KEYWORDS="database|db|sql|nosql|table scan|join|foreign key|primary key|transaction|schema"
+DB_KEYWORDS="database|db|sql|nosql|dynamodb|다이나모디비|table scan|join|foreign key|primary key|transaction|schema"
 BE_KEYWORDS="api|apis|rest|restful|grpc|spring|controller|service layer|dto|repository pattern|dependency injection|middleware|hexagonal|archunit|konsist|resilience4j|saga|fixture monkey|acl|bulkhead|circuit breaker|convention|code style|naming rule|jpa pattern|entity model|dynamic update|implementation guide|code pattern|test strategy|test generation|coverage|mutation|property.based|contract.test|test quality|backend|server|endpoint|domain event|integration event|feign|port.*adapter|retry|retries"
 IF_KEYWORDS="infrastructure|kubernetes|k8s|container|docker|ci/cd|pipeline|deployment|load balancer|cdn|dns|monitoring|observability|tracing|terraform|ansible|helm|scaling|auto-scaling|network topology|devops|github actions|jenkins|logging"
 SE_KEYWORDS="authentication|oauth|jwt|authorization|rbac|abac|encryption|tls|ssl|key management|zero-trust|compliance|audit|vulnerability|penetration|security|token management|certificate|firewall|cors|csrf|xss|injection"
@@ -112,6 +147,8 @@ detect_system() {
   local db_score=0 be_score=0 if_score=0 se_score=0
 
   echo "${query}" | grep -wqE "${DB_KEYWORDS}|${DOMAIN_A_KEYWORDS}|${DOMAIN_B_KEYWORDS}|${DOMAIN_C_KEYWORDS}|${DOMAIN_D_KEYWORDS}|${DOMAIN_E_KEYWORDS}|${DOMAIN_F_KEYWORDS}" && db_score=1
+  # DynamoDB vendor anchors should match even with non-Latin suffixes (e.g., "dynamodb에서")
+  echo "${query}" | grep -qE "${DYNAMODB_VENDOR_KEYWORDS}" && db_score=1
   echo "${query}" | grep -wqE "${BE_KEYWORDS}" && be_score=1
   echo "${query}" | grep -wqE "${IF_KEYWORDS}" && if_score=1
   echo "${query}" | grep -wqE "${SE_KEYWORDS}" && se_score=1
@@ -141,7 +178,19 @@ detect_db_domain() {
   echo "${query}" | grep -wqE "${DOMAIN_C_KEYWORDS}" && domains="${domains}C "
   echo "${query}" | grep -wqE "${DOMAIN_D_KEYWORDS}" && domains="${domains}D "
   echo "${query}" | grep -wqE "${DOMAIN_E_KEYWORDS}" && domains="${domains}E "
-  echo "${query}" | grep -wqE "${DOMAIN_F_KEYWORDS}" && domains="${domains}F "
+
+  # Domain F: distributed keywords OR DynamoDB vendor anchor + throughput intent keywords
+  local f_match=0
+  if echo "${query}" | grep -wqE "${DOMAIN_F_KEYWORDS}"; then
+    f_match=1
+  fi
+
+  if echo "${query}" | grep -qE "${DYNAMODB_VENDOR_KEYWORDS}" && \
+     echo "${query}" | grep -qE "${DYNAMODB_THROUGHPUT_INTENT_KEYWORDS}"; then
+    f_match=1
+  fi
+
+  [ "${f_match}" -eq 1 ] && domains="${domains}F "
 
   if [ -z "${domains}" ]; then
     echo "UNKNOWN"
@@ -397,4 +446,103 @@ run_session_cleanup() {
   cleanup_session_history 1000
   evict_pattern_cache 90
   cleanup_constraints_archive 20
+  rotate_session_log
+}
+
+# ── Progress tracking ────────────────────────────────────
+
+PROGRESS_FILE="${CACHE_DIR}/progress.json"
+
+# Write current phase/status to progress file
+write_progress() {
+  local phase="${1}"
+  local status="${2}"
+  local ts
+  ts=$(timestamp_iso)
+
+  local existing
+  existing=$(read_json "${PROGRESS_FILE}" '{}')
+
+  local updated
+  updated=$(echo "${existing}" | jq \
+    --arg phase "${phase}" \
+    --arg status "${status}" \
+    --arg ts "${ts}" \
+    '.phase = $phase | .status = $status | .updated_at = $ts | if .started_at == null then .started_at = $ts else . end')
+
+  write_json "${PROGRESS_FILE}" "${updated}"
+  log_detail "Progress: phase=${phase} status=${status}"
+}
+
+# Read current progress (returns JSON object or empty object)
+read_progress() {
+  read_json "${PROGRESS_FILE}" '{}'
+}
+
+# Archive progress file (mark as completed or archive interrupted session)
+archive_progress() {
+  local final_status="${1:-completed}"
+  if [ ! -f "${PROGRESS_FILE}" ]; then
+    return
+  fi
+
+  local ts
+  ts=$(timestamp_iso)
+  local updated
+  updated=$(jq --arg status "${final_status}" --arg ts "${ts}" \
+    '.status = $status | .completed_at = $ts' "${PROGRESS_FILE}" 2>/dev/null)
+
+  if [ -n "${updated}" ]; then
+    write_json "${PROGRESS_FILE}" "${updated}"
+  fi
+
+  # Archive to history
+  local archive_ts
+  archive_ts=$(date -u +"%Y%m%dT%H%M%SZ")
+  mkdir -p "${CACHE_DIR}/history" 2>/dev/null || true
+  cp "${PROGRESS_FILE}" "${CACHE_DIR}/history/progress-${archive_ts}.json" 2>/dev/null || true
+  log_detail "Archived progress as ${final_status}: progress-${archive_ts}.json"
+}
+
+# ── Session summary ──────────────────────────────────────
+
+SESSION_SUMMARY="${CACHE_DIR}/session-summary.json"
+
+# Write session summary after query completion
+write_session_summary() {
+  local query="${1:-}"
+  local classification_json="${2}"
+  if [ -z "${classification_json}" ]; then classification_json='{}'; fi
+  local tier="${3:-LIGHT}"
+  local agents_dispatched="${4:-0}"
+  local constraint_summary="${5}"
+  if [ -z "${constraint_summary}" ]; then constraint_summary='{}'; fi
+
+  local ts
+  ts=$(timestamp_iso)
+
+  local summary
+  summary=$(jq -n \
+    --arg query "${query}" \
+    --argjson classification "${classification_json}" \
+    --arg tier "${tier}" \
+    --argjson agents "${agents_dispatched}" \
+    --argjson constraints "${constraint_summary}" \
+    --arg ts "${ts}" \
+    '{
+      last_query: $query,
+      last_classification: $classification,
+      last_tier: $tier,
+      agents_dispatched: $agents,
+      constraint_summary: $constraints,
+      completed_at: $ts
+    }')
+
+  write_json "${SESSION_SUMMARY}" "${summary}"
+  log_detail "Session summary written for query: ${query}"
+}
+
+# Read session summary (returns JSON object or empty object)
+read_session_summary() {
+  read_json "${SESSION_SUMMARY}" '{}'
 }

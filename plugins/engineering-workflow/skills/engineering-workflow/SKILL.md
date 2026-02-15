@@ -27,9 +27,6 @@ allowed-tools:
 
 A **3-tier micro-agent orchestration system** for engineering architecture decisions spanning four
 major systems: **DB** (Database), **BE** (Backend), **IF** (Infrastructure), and **SE** (Security).
-Instead of a monolithic analysis approach, this plugin decomposes queries into domain-specific
-sub-problems, dispatches them to specialized micro agents, and synthesizes their outputs into
-coherent, constraint-aware recommendations.
 
 ### Architecture Overview
 
@@ -54,11 +51,9 @@ coherent, constraint-aware recommendations.
 
 ### Core Principles
 
-1. **Route, don't monolith**: Every query is classified and routed to the narrowest competent agent
-2. **Constraint-first synthesis**: Agents declare constraints; conflicts are detected and resolved before output
-3. **Token-efficient orchestration**: Only load agent definitions and references needed for the specific query
-4. **Deterministic fast-path**: Use `classify-query.sh` for unambiguous queries; reserve LLM classification for edge cases
-5. **Graceful degradation**: If an agent fails or times out, return partial results with clear warnings
+1. **Constraint-first synthesis**: Agents declare constraints; conflicts are detected and resolved before output
+2. **Deterministic fast-path**: Use `classify-query.sh` for unambiguous queries; reserve LLM classification for edge cases
+3. **Graceful degradation**: If an agent fails or times out, return partial results with clear warnings
 
 ---
 
@@ -68,7 +63,7 @@ coherent, constraint-aware recommendations.
 
 | System | Keywords | Orchestrator |
 |--------|----------|--------------|
-| **DB** | database, storage engine, index, query optimization, schema, replication, sharding, partition, consistency model, isolation level, MVCC, WAL, B-tree, LSM, vacuum, ACID | `agents/db-orchestrator.md` |
+| **DB** | database, storage engine, index, query optimization, schema, replication, sharding, partition, consistency model, isolation level, MVCC, WAL, B-tree, LSM, vacuum, ACID, DynamoDB, RCU, WCU, hot partition, adaptive capacity, throttling | `agents/db-orchestrator.md` |
 | **BE** | backend, API design, service layer, concurrency, thread pool, connection pool, caching strategy, microservice, event-driven, CQRS, saga, domain model | `agents/be-orchestrator.md` |
 | **IF** | infrastructure, deployment, container, kubernetes, CI/CD, load balancer, CDN, monitoring, observability, scaling, network topology, DNS, TLS | `agents/if-orchestrator.md` |
 | **SE** | security, authentication, authorization, encryption, key management, RBAC, ABAC, OAuth, JWT, zero-trust, penetration, vulnerability, compliance | `agents/se-orchestrator.md` |
@@ -82,7 +77,7 @@ coherent, constraint-aware recommendations.
 | Concurrency & Locking | C | concurrency, isolation level, MVCC, locking, deadlock, optimistic, pessimistic, serializable, phantom read | `c1-isolation-advisor`, `c2-mvcc-specialist`, `c3-lock-designer` |
 | Schema & Normalization | D | schema design, normalization, denormalization, document model, embedding, referencing, access pattern | `d1-schema-expert`, `d2-document-modeler`, `d3-access-pattern-modeler` |
 | I/O & Buffer Management | E | page, buffer pool, WAL, write-ahead log, checkpoint, dirty page, flush, I/O optimization | `e1-page-optimizer`, `e2-wal-engineer`, `e3-buffer-tuner` |
-| Distributed & Replication | F | replication, failover, consensus, raft, paxos, sharding, partition, consistency, CAP theorem | `f1-replication-designer`, `f2-consistency-selector`, `f3-sharding-architect` |
+| Distributed & Replication | F | replication, failover, consensus, raft, paxos, sharding, partition, consistency, CAP theorem, dynamodb, rcu, wcu, hot partition, adaptive capacity, throttling, provisioned throughput, on-demand, TPS | `f1-replication-designer`, `f2-consistency-selector`, `f3-sharding-architect`, `f4-dynamodb-throughput-optimizer` |
 
 ### BE Sub-Domain Detection (4 Clusters: S/B/R/T)
 
@@ -111,86 +106,32 @@ coherent, constraint-aware recommendations.
 
 ## Execution Patterns
 
-### Pattern 1: Single-Domain (1 Agent)
+Three execution patterns exist: Single-Domain (1 agent), Multi-Domain (2-3 agents, parallel dispatch),
+and Cross-System (multiple orchestrators + synthesizer).
 
-The simplest case. Query maps to exactly one system and one sub-domain.
-
-```
-User: "Should I use B-tree or LSM-tree for my write-heavy workload?"
-  → System: DB
-  → Sub-domain: A (Storage Engine)
-  → Dispatch: db-orchestrator → a1-engine-selector
-  → Token budget: ~6K
-```
-
-**Flow**:
-```
-Gateway Router
-  └─→ classify-query.sh → { system: "DB", domains: ["A"], confidence: 0.95 }
-  └─→ Read agents/db-orchestrator.md
-  └─→ Task(db-orchestrator): "Route to a1-engine-selector for B-tree vs LSM comparison"
-        └─→ Read agents/db/a1-engine-selector.md
-        └─→ Task(a1-engine-selector): "Compare B-tree and LSM-tree for write-heavy workload"
-        └─→ Return: analysis + recommendation + constraints
-  └─→ format-output.sh → structured output
-```
-
-### Pattern 2: Multi-Domain (2-3 Agents within Same System)
-
-Query spans multiple sub-domains within one system. Agents run in parallel; results are merged
-with constraint resolution.
-
-```
-User: "Design a schema for time-series data with high write throughput and range queries"
-  → System: DB
-  → Sub-domains: A (Storage Engine) + D (Schema & Normalization) + B (Index & Query Plan)
-  → Dispatch: db-orchestrator → 3 agents parallel
-  → Token budget: ~10K
-```
-
-**Flow**:
-```
-Gateway Router
-  └─→ classify-query.sh → { system: "DB", domains: ["A", "D", "B"], confidence: 0.88 }
-  └─→ Read agents/db-orchestrator.md
-  └─→ Task(db-orchestrator):
-        ├─→ Task(a1-engine-selector): "LSM vs B-tree for time-series writes"
-        ├─→ Task(d1-schema-expert): "Time-series schema with partitioning"
-        └─→ Task(b1-index-architect): "Range query optimization for time-series"
-        └─→ resolve-constraints.sh → merge constraints from 3 agents
-        └─→ Return: unified analysis + resolved constraints
-  └─→ format-output.sh → structured output
-```
-
-### Pattern 3: Cross-System (DB+BE, DB+SE, etc.)
-
-Query requires agents from different systems. Multiple orchestrators run, then a synthesizer
-merges results across system boundaries.
-
-```
-User: "Design a multi-tenant architecture with tenant isolation at DB and API levels"
-  → Systems: DB + BE + SE
-  → Dispatch: 3 orchestrators → synthesizer
-  → Token budget: ~14K
-```
-
-**Flow**:
-```
-Gateway Router
-  └─→ classify-query.sh → { systems: ["DB", "BE", "SE"], confidence: 0.82 }
-  └─→ Read agents/db-orchestrator.md, agents/be-orchestrator.md, agents/se-orchestrator.md
-  └─→ Parallel:
-  │   ├─→ Task(db-orchestrator): "Multi-tenant DB isolation (schema-per-tenant vs RLS)"
-  │   ├─→ Task(be-orchestrator): "Multi-tenant API routing and context propagation"
-  │   └─→ Task(se-orchestrator): "Tenant-level authorization and data isolation"
-  └─→ Read agents/synthesizer.md
-  └─→ Task(synthesizer): merge 3 orchestrator outputs + resolve cross-system constraints
-  └─→ format-output.sh → structured output
-```
+For detailed flow diagrams and examples, see [resources/orchestration-protocol.md § Pattern Examples](./resources/orchestration-protocol.md).
 
 ---
 
 ## Phase Flow
+
+### Pre-Flight Check (before Phase 0)
+
+Run before any phase execution to ensure clean session state and detect reusable context.
+
+1. **Dependency check**: Verify `jq` is available (`command -v jq`)
+2. **Interrupted session detection**: Read `~/.claude/cache/engineering-workflow/progress.json`
+   - If `status == "in_progress"`: previous session was interrupted
+   - Archive the interrupted progress file and notify: "Previous session interrupted at phase {phase}. Starting fresh."
+3. **Session summary reuse**: Read `~/.claude/cache/engineering-workflow/session-summary.json`
+   - If recent (< 30 min) and query is similar: display "Recent analysis available for reuse" with summary
+   - Skip re-classification if the same query signature matches
+4. **Initialize progress**: Write `progress.json` with `{phase: "pre-flight", status: "in_progress"}`
+5. **Run cleanup**: Execute session cleanup (trim history, evict stale cache)
+
+```
+[engineering-workflow] Pre-Flight: deps=OK | prev_session={none|interrupted} | summary={available|none}
+```
 
 ### Phase 0: Query Classification
 
@@ -216,6 +157,7 @@ Gateway Router
 3. Construct Task prompt per orchestration-protocol.md template
 4. For single-system: invoke one orchestrator Task
 5. For cross-system: invoke multiple orchestrator Tasks in parallel
+6. Run `scripts/enforce-budget.sh <pattern> orchestrator-dispatch <output>` to verify token budget before proceeding
 
 **Orchestrator Task prompt template**:
 ```
@@ -275,6 +217,7 @@ before constraint resolution.
 | THOROUGH | All above + Dynamic Expansion via `audit-reviewer` agent | +3.5K |
 
 **Steps**:
+0. **Budget Check**: Run `scripts/enforce-budget.sh <pattern> quality-gate <output>` to verify token budget before audit
 1. **Confidence Gating** (all tiers): Run `scripts/audit-analysis.sh confidence` per agent result
    - >= 0.70: PASS
    - 0.50-0.69: PASS + warning
@@ -318,9 +261,10 @@ STANDARD+ tier only. Validates orchestrator output contracts before synthesis.
 
 Only activated for Pattern 3 (cross-system) queries.
 
-1. Read `agents/synthesizer.md`
-2. Pass all orchestrator outputs + resolved/conflicting constraints
-3. Synthesizer produces:
+1. Run `scripts/enforce-budget.sh <pattern> synthesis <output>` to verify token budget before synthesis
+2. Read `agents/synthesizer.md`
+3. Pass all orchestrator outputs + resolved/conflicting constraints
+4. Synthesizer produces:
    - Unified recommendation that respects all system constraints
    - Explicit documentation of cross-system trade-offs
    - Implementation priority ordering
@@ -385,21 +329,14 @@ THOROUGH tier, cross-system pattern only. Validates synthesis output integrity.
 | **Analyze** | `analyze: "our current sharding strategy"` | Deep analysis without recommendation |
 | **Compare** | `compare: "PostgreSQL vs CockroachDB for multi-tenant"` | Structured comparison with decision matrix |
 | **Recommend** | `recommend: "caching strategy for read-heavy API"` | Recommendation-focused with implementation steps |
-| **Shallow** | `"index design" --depth shallow` | Quick analysis, single agent, ~3K tokens |
-| **Deep** | `"index design" --depth deep` | Exhaustive analysis, all relevant agents, full references |
 
-### Depth Modes
-
-| Depth | Agent Count | Reference Loading | Token Budget | Use Case |
-|-------|-------------|-------------------|--------------|----------|
-| **shallow** | 1 (primary domain only) | Agent .md only, no extra references | ~3K | Quick guidance, confirmation checks |
-| **deep** (default) | All relevant domains | Agent .md + reference excerpts via Read | ~6K-14K | Architecture decisions, design reviews |
+Depth flag: `--depth shallow` (1 agent, ~3K) or `--depth deep` (all relevant agents, ~6-14K, default).
 
 ---
 
 ## Resource Loading Instructions
 
-Resources are loaded on-demand per phase. Never pre-load all resources.
+Resources are loaded on-demand per phase. MUST NOT pre-load all resources.
 
 | Phase | Resource to Load | Trigger |
 |-------|-----------------|---------|
@@ -426,52 +363,11 @@ Resources are loaded on-demand per phase. Never pre-load all resources.
 
 ## Constraint Propagation
 
-Constraints are the mechanism by which agents communicate their requirements and limitations
-to each other. Each agent declares constraints in its output; these flow upward through
-orchestrators and are resolved before final synthesis.
+Agents declare constraints (requires | recommends | prohibits | conflicts_with) in their output.
+Constraints flow upward through orchestrators → synthesizer for resolution.
+Hard constraints MUST be respected; soft constraints may be overridden with justification.
 
-### Constraint Schema
-
-```json
-{
-  "source_agent": "db/a1-engine-selector",
-  "constraint_type": "requires | recommends | prohibits | conflicts_with",
-  "target_domain": "C",
-  "description": "LSM-tree selection requires sorted string table schema layout",
-  "priority": "hard | soft",
-  "evidence": "Write amplification increases 3x without sorted key design"
-}
-```
-
-### Constraint Flow
-
-```
-Agent A declares constraint → Orchestrator collects
-Agent B declares constraint → Orchestrator collects
-                                    ↓
-                          Orchestrator merges
-                          (intra-system resolution)
-                                    ↓
-                          Gateway Router collects
-                          orchestrator outputs
-                                    ↓
-                    Synthesizer merges (cross-system)
-                                    ↓
-                        Resolved constraint set
-                                    ↓
-                    ~/.claude/cache/engineering-workflow/constraints.json
-```
-
-### Storage
-
-Constraints are persisted at `~/.claude/cache/engineering-workflow/constraints.json` with
-session lifecycle management:
-- **Create**: New constraint set initialized per query
-- **Update**: Agents append constraints during execution
-- **Resolve**: Conflicts detected and resolved in Phase 3/4
-- **Archive**: Completed constraint sets archived with timestamp
-
-Details: [resources/constraint-propagation.md](./resources/constraint-propagation.md)
+Schema, flow diagrams, and storage: [resources/constraint-propagation.md](./resources/constraint-propagation.md)
 
 ---
 
@@ -493,11 +389,14 @@ truncation, not query failure.
 > **Note**: Budgets include ~20% contingency for complex queries requiring additional
 > reference loading. Actual token usage is typically 10-20% below budget for standard queries.
 
-**Budget guidelines** (informational, not enforced by scripts):
-1. Orchestrators should prefer offset/limit reference loading over full-file reads
+**Budget enforcement**: Run `scripts/enforce-budget.sh <pattern> <phase> <output>` at phase transitions.
+Exits non-zero if estimated tokens exceed 120% of budget. Patterns: `shallow`, `analysis`, `implementation`, `test`, `full`, `cross-system`, `cross-pruning`.
+
+**Budget guidelines**:
+1. Orchestrators MUST use offset/limit reference loading over full-file reads
 2. At high context pressure (>80%): truncate reference excerpts to essential sections only
 3. At critical context pressure (>90%): skip remaining low-priority reference loading
-4. Never sacrifice constraint resolution for token savings
+4. MUST NOT sacrifice constraint resolution for token savings
 
 ---
 
@@ -567,46 +466,10 @@ Display current state at each phase entry.
 
 ```
 [engineering-workflow] Phase: Classification | Pattern: pending | Systems: pending
-[engineering-workflow] Phase: Orchestrator Dispatch | Pattern: multi-domain | Systems: DB | Budget: 1.2/10K
 [engineering-workflow] Phase: Agent Execution | Pattern: cross-system | Systems: DB,BE,SE | Budget: 5.8/14K
-[engineering-workflow] Phase: Synthesis | Pattern: cross-system | Systems: DB,BE,SE | Budget: 11.2/14K
-[engineering-workflow] Phase: Output | Pattern: single-domain | Systems: DB | Budget: 4.1/6K
 ```
 
----
-
-## Session Wisdom Protocol
-
-### Storage
-
-```
-~/.claude/cache/engineering-workflow/
-├── constraints.json          # Current session constraints
-├── session-history.jsonl     # Past query classifications + outcomes
-└── pattern-cache.json        # Learned routing patterns
-```
-
-### Cross-Session Learning
-
-1. After each query completion, append classification + outcome to `session-history.jsonl`
-2. If the same query pattern appears 3+ times, cache the routing decision in `pattern-cache.json`
-3. On next similar query, use cached routing for instant classification (confidence: 1.0)
-
----
-
-## Scripts
-
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `classify-query.sh` | Keyword-based query classification | `./classify-query.sh "$QUERY"` |
-| `resolve-constraints.sh` | Constraint conflict detection and resolution | `./resolve-constraints.sh [constraints.json]` |
-| `format-output.sh` | Structure final output into standard format | `./format-output.sh [results.json]` |
-| `validate-agent-output.sh` | Agent output JSON schema + quality validation | `./validate-agent-output.sh <agent-type> [file]` |
-| `audit-analysis.sh` | Deterministic audit checks (confidence, schema, synthesis) | `./audit-analysis.sh <mode> [input]` |
-
-**Script requirements**:
-- Required CLI: `bash 3.2+`, `jq`, `grep`, `awk`, `sed`
-- Environment: Unix-like (Linux, macOS) -- Windows requires WSL/Git Bash
+Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [constraint-propagation.md](./resources/constraint-propagation.md))
 
 ---
 
@@ -623,50 +486,10 @@ Display current state at each phase entry.
 | [synthesizer](./agents/synthesizer.md) | Cross-system synthesis and constraint resolution | sonnet |
 | [audit-reviewer](./agents/audit-reviewer.md) | Analysis quality audit (THOROUGH tier only) | sonnet |
 
-### Micro Agents (Tier 3) -- DB (6 Domains, 17 Agents)
+### Micro Agents (Tier 3)
 
-| Agent | Domain | Model |
-|-------|--------|-------|
-| [a1-engine-selector](./agents/db/a1-engine-selector.md) | A: Storage Engine | sonnet |
-| [a2-compaction-strategist](./agents/db/a2-compaction-strategist.md) | A: Storage Engine | haiku |
-| [b1-index-architect](./agents/db/b1-index-architect.md) | B: Index & Query Plan | sonnet |
-| [b2-join-optimizer](./agents/db/b2-join-optimizer.md) | B: Index & Query Plan | sonnet |
-| [b3-query-plan-analyst](./agents/db/b3-query-plan-analyst.md) | B: Index & Query Plan | sonnet |
-| [c1-isolation-advisor](./agents/db/c1-isolation-advisor.md) | C: Concurrency & Locking | sonnet |
-| [c2-mvcc-specialist](./agents/db/c2-mvcc-specialist.md) | C: Concurrency & Locking | sonnet |
-| [c3-lock-designer](./agents/db/c3-lock-designer.md) | C: Concurrency & Locking | haiku |
-| [d1-schema-expert](./agents/db/d1-schema-expert.md) | D: Schema & Normalization | sonnet |
-| [d2-document-modeler](./agents/db/d2-document-modeler.md) | D: Schema & Normalization | sonnet |
-| [d3-access-pattern-modeler](./agents/db/d3-access-pattern-modeler.md) | D: Schema & Normalization | sonnet |
-| [e1-page-optimizer](./agents/db/e1-page-optimizer.md) | E: I/O & Buffer Management | sonnet |
-| [e2-wal-engineer](./agents/db/e2-wal-engineer.md) | E: I/O & Buffer Management | sonnet |
-| [e3-buffer-tuner](./agents/db/e3-buffer-tuner.md) | E: I/O & Buffer Management | haiku |
-| [f1-replication-designer](./agents/db/f1-replication-designer.md) | F: Distributed & Replication | sonnet |
-| [f2-consistency-selector](./agents/db/f2-consistency-selector.md) | F: Distributed & Replication | sonnet |
-| [f3-sharding-architect](./agents/db/f3-sharding-architect.md) | F: Distributed & Replication | sonnet |
-
-### Micro Agents (Tier 3) -- BE (4 Clusters, 18 Agents)
-
-| Agent | Cluster | Sub-Domain | Model |
-|-------|---------|-----------|-------|
-| [s1-dependency-auditor](./agents/be/s1-dependency-auditor.md) | S: Structure | Dependency Rule Audit | sonnet |
-| [s2-di-pattern-selector](./agents/be/s2-di-pattern-selector.md) | S: Structure | DI Pattern Selection | sonnet |
-| [s3-architecture-advisor](./agents/be/s3-architecture-advisor.md) | S: Structure | Architecture Style Advisory | sonnet |
-| [s4-fitness-engineer](./agents/be/s4-fitness-engineer.md) | S: Structure | Fitness Function Engineering | sonnet |
-| [s5-convention-verifier](./agents/be/s5-convention-verifier.md) | S: Structure | Code Convention Verification | sonnet |
-| [b1-context-classifier](./agents/be/b1-context-classifier.md) | B: Boundary | Context Relationship Classification | sonnet |
-| [b2-acl-designer](./agents/be/b2-acl-designer.md) | B: Boundary | ACL Design | sonnet |
-| [b3-event-architect](./agents/be/b3-event-architect.md) | B: Boundary | Event Integration Architecture | sonnet |
-| [b4-saga-coordinator](./agents/be/b4-saga-coordinator.md) | B: Boundary | Saga Coordination | sonnet |
-| [b5-implementation-guide](./agents/be/b5-implementation-guide.md) | B: Boundary | Implementation Pattern Guide | sonnet |
-| [r1-bulkhead-architect](./agents/be/r1-bulkhead-architect.md) | R: Resilience | Bulkhead Architecture | sonnet |
-| [r2-cb-configurator](./agents/be/r2-cb-configurator.md) | R: Resilience | Circuit Breaker Configuration | sonnet |
-| [r3-retry-strategist](./agents/be/r3-retry-strategist.md) | R: Resilience | Retry/Timeout Strategy | sonnet |
-| [r4-observability-designer](./agents/be/r4-observability-designer.md) | R: Resilience | Observability Design | sonnet |
-| [t1-test-guard](./agents/be/t1-test-guard.md) | T: Test | Test Architecture Guard | sonnet |
-| [t2-test-strategist](./agents/be/t2-test-strategist.md) | T: Test | Test Technique Selection | sonnet |
-| [t3-test-generator](./agents/be/t3-test-generator.md) | T: Test | Test Code Generation | sonnet |
-| [t4-quality-assessor](./agents/be/t4-quality-assessor.md) | T: Test | Test Quality Assessment | sonnet |
+- **DB**: 6 domains (A-F), 18 agents — see [db-orchestrator.md](./agents/db-orchestrator.md) § Agent Selection Matrix
+- **BE**: 4 clusters (S/B/R/T), 18 agents — see [be-orchestrator.md](./agents/be-orchestrator.md) § Agent Selection Matrix
 
 ---
 
@@ -692,43 +515,11 @@ Display current state at each phase entry.
 | [resolve-constraints.sh](./scripts/resolve-constraints.sh) | Constraint conflict detection and auto-resolution |
 | [validate-agent-output.sh](./scripts/validate-agent-output.sh) | Agent output JSON schema + quality indicator validation |
 | [audit-analysis.sh](./scripts/audit-analysis.sh) | Deterministic audit checks (confidence, schema, synthesis, tier) |
-| [format-output.sh](./scripts/format-output.sh) | Output formatting for display |
+| [format-output.sh](./scripts/format-output.sh) | Output formatting for display (supports `--summary` for compact output) |
+| [enforce-budget.sh](./scripts/enforce-budget.sh) | Token budget enforcement — exits non-zero if output exceeds 120% of budget |
 | [_common.sh](./scripts/_common.sh) | Shared utilities — imported by all other scripts (not called directly) |
 
-### References (Static) — BE
+### References (Static)
 
-| Document | Cluster | Purpose |
-|----------|---------|---------|
-| [cluster-s-structure.md](./references/be/cluster-s-structure.md) | S | Hexagonal architecture, dependency rules, DI patterns |
-| [cluster-b-boundary-context.md](./references/be/cluster-b-boundary-context.md) | B | Context mapping, ACL, conformist patterns |
-| [cluster-b-event-saga.md](./references/be/cluster-b-event-saga.md) | B | Event architecture, saga coordination |
-| [cluster-r-config.md](./references/be/cluster-r-config.md) | R | Bulkhead, circuit breaker, retry configuration |
-| [cluster-r-observability.md](./references/be/cluster-r-observability.md) | R | Monitoring, tracing, alerting patterns |
-| [cluster-t-testing.md](./references/be/cluster-t-testing.md) | T | Test architecture, test guard rules |
-| [kotlin-spring-idioms.md](./references/be/kotlin-spring-idioms.md) | S | Kotlin code style, Spring DI, naming conventions |
-| [jpa-data-patterns.md](./references/be/jpa-data-patterns.md) | S | Entity-Model separation, JPA, repository, Gradle |
-| [test-techniques-catalog.md](./references/be/test-techniques-catalog.md) | T | 7 testing technique catalogs with framework guides |
-| [test-generation-patterns.md](./references/be/test-generation-patterns.md) | T | Focal context injection, type-driven test generation |
-| [test-quality-validation.md](./references/be/test-quality-validation.md) | T | 5-stage validation pipeline, coverage, mutation |
-
-### References (Static) — DB
-
-| Document | Domain | Purpose |
-|----------|--------|---------|
-| [domain-a-engine-selection.md](./references/db/domain-a-engine-selection.md) | A | Storage engine comparison (B-Tree vs LSM, InnoDB vs RocksDB) |
-| [domain-a-compaction.md](./references/db/domain-a-compaction.md) | A | LSM compaction strategies and tuning |
-| [domain-b-index-design.md](./references/db/domain-b-index-design.md) | B | Index design principles, composite indexes, cardinality |
-| [domain-b-join-optimization.md](./references/db/domain-b-join-optimization.md) | B | Join algorithms (nested loop, hash, merge) |
-| [domain-b-query-plan.md](./references/db/domain-b-query-plan.md) | B | Execution plan analysis (EXPLAIN output) |
-| [domain-c-isolation.md](./references/db/domain-c-isolation.md) | C | Isolation level selection and trade-offs |
-| [domain-c-mvcc.md](./references/db/domain-c-mvcc.md) | C | MVCC implementations and version management |
-| [domain-c-locking.md](./references/db/domain-c-locking.md) | C | Lock types, deadlock detection, gap locking |
-| [domain-d-normalization.md](./references/db/domain-d-normalization.md) | D | Normal forms, functional dependencies, denormalization |
-| [domain-d-document-modeling.md](./references/db/domain-d-document-modeling.md) | D | Document DB schema design (embed vs reference) |
-| [domain-d-access-patterns.md](./references/db/domain-d-access-patterns.md) | D | Access pattern analysis and hot path optimization |
-| [domain-e-page-optimization.md](./references/db/domain-e-page-optimization.md) | E | Page structure, fill factor, fragmentation |
-| [domain-e-wal.md](./references/db/domain-e-wal.md) | E | Write-ahead logging, checkpoints, durability |
-| [domain-e-buffer-tuning.md](./references/db/domain-e-buffer-tuning.md) | E | Buffer pool sizing, eviction, cache hit optimization |
-| [domain-f-replication.md](./references/db/domain-f-replication.md) | F | Replication topologies and failover design |
-| [domain-f-consistency.md](./references/db/domain-f-consistency.md) | F | CAP/PACELC, consistency models, boundary design |
-| [domain-f-sharding.md](./references/db/domain-f-sharding.md) | F | Shard key selection, rebalancing, routing |
+- **DB**: `references/db/` — 18 files covering domains A-F (mapped in [db-orchestrator.md § Load Reference Excerpts](./agents/db-orchestrator.md))
+- **BE**: `references/be/` — 11 files covering clusters S/B/R/T (mapped in [be-orchestrator.md § Load Reference Excerpts](./agents/be-orchestrator.md))

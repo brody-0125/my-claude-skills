@@ -1,0 +1,342 @@
+[
+  {
+    "id": "AS-001",
+    "description": "Confidence 0.85 — PASS",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.85,
+      "rationale": "Detailed analysis of storage engine trade-offs for the given workload",
+      "recommendation": "Use RocksDB with level compaction for write-heavy workloads with good read performance",
+      "trade_offs": [
+        {"option": "A", "pros": ["p1"], "cons": ["c1"]},
+        {"option": "B", "pros": ["p2"], "cons": ["c2"]}
+      ],
+      "constraints": [{"id": "c1", "target": "t1", "value": "v1"}]
+    },
+    "expected": {
+      "action": "PASS",
+      "has_calibration": false
+    }
+  },
+  {
+    "id": "AS-002",
+    "description": "Confidence 0.55 — WARN",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.55,
+      "rationale": "Moderate analysis",
+      "recommendation": "Consider using B-tree for read-heavy workloads"
+    },
+    "expected": {
+      "action": "WARN",
+      "has_calibration": false
+    }
+  },
+  {
+    "id": "AS-003",
+    "description": "Confidence 0.35 — RETRY",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.35,
+      "rationale": "Uncertain analysis"
+    },
+    "expected": {
+      "action": "RETRY",
+      "has_calibration": false
+    }
+  },
+  {
+    "id": "AS-004",
+    "description": "Confidence 0.20 — REJECT",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.20,
+      "rationale": "Very low confidence"
+    },
+    "expected": {
+      "action": "REJECT",
+      "has_calibration": false
+    }
+  },
+  {
+    "id": "AS-005",
+    "description": "Confidence 1.0 — unconditional CALIBRATION warning",
+    "mode": "confidence",
+    "input": {
+      "confidence": 1.0,
+      "rationale": "Perfect confidence claim",
+      "recommendation": "Use this approach without question for maximum performance benefits",
+      "trade_offs": [
+        {"option": "A", "pros": ["p1"], "cons": ["c1"]},
+        {"option": "B", "pros": ["p2"], "cons": ["c2"]}
+      ],
+      "constraints": [{"id": "c1", "target": "t1", "value": "v1"}]
+    },
+    "expected": {
+      "action": "WARN",
+      "has_calibration": true
+    }
+  },
+  {
+    "id": "AS-006",
+    "description": "Confidence 0.95 with low quality signals — CALIBRATION",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.95,
+      "rationale": "High confidence but minimal supporting evidence"
+    },
+    "expected": {
+      "action": "WARN",
+      "has_calibration": true
+    }
+  },
+  {
+    "id": "AS-007",
+    "description": "Confidence 0.92 with good quality signals — no CALIBRATION",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.92,
+      "rationale": "Well-supported analysis with comprehensive evidence",
+      "recommendation": "Implement connection pooling with HikariCP configured for the expected concurrent connection count of approximately 200 connections per instance",
+      "trade_offs": [
+        {"option": "HikariCP", "pros": ["Fast", "Light"], "cons": ["Less config"]},
+        {"option": "Tomcat Pool", "pros": ["Flexible"], "cons": ["Slower"]}
+      ],
+      "constraints": [{"id": "c1", "target": "pool-size", "value": "200"}]
+    },
+    "expected": {
+      "action": "PASS",
+      "has_calibration": false
+    }
+  },
+  {
+    "id": "AS-008",
+    "description": "Orchestrator audit — valid output",
+    "mode": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "completed",
+      "guidance": "Use LSM-tree with sorted keys for write optimization",
+      "recommendations": [{"title": "Use RocksDB", "priority": "high"}],
+      "resolved_constraints": [],
+      "unresolved_constraints": [],
+      "metadata": {"confidence": 0.85}
+    },
+    "expected": {
+      "overall": "PASS"
+    }
+  },
+  {
+    "id": "AS-009",
+    "description": "Orchestrator audit — missing system field (CRITICAL)",
+    "mode": "orchestrator",
+    "input": {
+      "status": "completed",
+      "guidance": "Some guidance text here"
+    },
+    "expected": {
+      "overall": "FAIL"
+    }
+  },
+  {
+    "id": "AS-010",
+    "description": "Orchestrator audit — missing optional fields (WARN)",
+    "mode": "orchestrator",
+    "input": {
+      "system": "BE",
+      "status": "completed"
+    },
+    "expected": {
+      "overall": "WARN"
+    }
+  },
+  {
+    "id": "AS-011",
+    "description": "Synthesis audit — valid output",
+    "mode": "synthesis",
+    "input": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Implement DB sharding first, then update BE connection pools to match the new topology",
+      "implementation_order": [
+        {"phase": "db-sharding", "risk": "high", "rollback": "Restore single-shard config", "depends_on": []},
+        {"phase": "be-pool-update", "risk": "low", "rollback": "", "depends_on": ["db-sharding"]}
+      ],
+      "confidence_assessment": {"overall": "high"}
+    },
+    "expected": {
+      "overall": "PASS"
+    }
+  },
+  {
+    "id": "AS-012",
+    "description": "Synthesis audit — high-risk phase without rollback",
+    "mode": "synthesis",
+    "input": {
+      "systems_analyzed": ["DB"],
+      "unified_recommendation": "Migrate to new DB storage engine",
+      "implementation_order": [
+        {"phase": "engine-migration", "risk": "high", "depends_on": []}
+      ],
+      "confidence_assessment": {"overall": "high"}
+    },
+    "expected": {
+      "overall": "WARN"
+    }
+  },
+  {
+    "id": "AS-013",
+    "description": "Tier — single domain, 1 agent → LIGHT",
+    "mode": "tier",
+    "input": {
+      "systems": ["DB"],
+      "domains": ["A"],
+      "depth": "shallow"
+    },
+    "agent_count": 1,
+    "expected": {
+      "tier": "LIGHT"
+    }
+  },
+  {
+    "id": "AS-014",
+    "description": "Tier — multi domain, 2 agents → STANDARD",
+    "mode": "tier",
+    "input": {
+      "systems": ["DB"],
+      "domains": ["A", "B"],
+      "depth": "deep"
+    },
+    "agent_count": 2,
+    "expected": {
+      "tier": "STANDARD"
+    }
+  },
+  {
+    "id": "AS-015",
+    "description": "Tier — cross-system → THOROUGH",
+    "mode": "tier",
+    "input": {
+      "systems": ["DB", "BE"],
+      "domains": ["A"],
+      "depth": "deep"
+    },
+    "agent_count": 3,
+    "expected": {
+      "tier": "THOROUGH"
+    }
+  },
+  {
+    "id": "AS-016",
+    "description": "Tier — security system → THOROUGH",
+    "mode": "tier",
+    "input": {
+      "systems": ["SE"],
+      "domains": [],
+      "depth": "shallow"
+    },
+    "agent_count": 1,
+    "expected": {
+      "tier": "THOROUGH"
+    }
+  },
+  {
+    "id": "AS-017",
+    "description": "Synthesis audit — depends_on references non-existent phase",
+    "mode": "synthesis",
+    "input": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Update DB and BE together for consistency",
+      "implementation_order": [
+        {"phase": "step-1", "risk": "low", "depends_on": ["nonexistent-phase"]}
+      ],
+      "confidence_assessment": {"overall": "high"}
+    },
+    "expected": {
+      "overall": "FAIL"
+    }
+  },
+  {
+    "id": "AS-018",
+    "description": "Synthesis audit — low confidence floor",
+    "mode": "synthesis",
+    "input": {
+      "systems_analyzed": ["DB"],
+      "unified_recommendation": "Tentative DB recommendation",
+      "implementation_order": [],
+      "confidence_assessment": {"overall": "low"}
+    },
+    "expected": {
+      "overall": "WARN"
+    }
+  },
+  {
+    "id": "AS-019",
+    "description": "Orchestrator audit — status partial (valid)",
+    "mode": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "partial",
+      "guidance": "Partial analysis due to agent timeout on sub-domain E",
+      "recommendations": [{"title": "Use WAL optimization", "priority": "medium"}],
+      "resolved_constraints": [],
+      "unresolved_constraints": [],
+      "metadata": {"confidence": 0.60}
+    },
+    "expected": {
+      "overall": "PASS"
+    }
+  },
+  {
+    "id": "AS-020",
+    "description": "Orchestrator audit — status stub missing optional fields (WARN)",
+    "mode": "orchestrator",
+    "input": {
+      "system": "IF",
+      "status": "stub",
+      "guidance": "Infrastructure orchestrator is a stub — returning general guidance only"
+    },
+    "expected": {
+      "overall": "WARN"
+    }
+  },
+  {
+    "id": "AS-021",
+    "description": "Synthesis audit — empty systems_analyzed array",
+    "mode": "synthesis",
+    "input": {
+      "systems_analyzed": [],
+      "unified_recommendation": "No systems to analyze",
+      "implementation_order": [],
+      "confidence_assessment": {"overall": "high"}
+    },
+    "expected": {
+      "overall": "PASS"
+    }
+  },
+  {
+    "id": "AS-022",
+    "description": "Confidence -0.5 — out of range WARN",
+    "mode": "confidence",
+    "input": {
+      "confidence": -0.5,
+      "rationale": "Negative confidence value"
+    },
+    "expected": {
+      "action": "WARN",
+      "has_calibration": true
+    }
+  },
+  {
+    "id": "AS-023",
+    "description": "Confidence 1.5 — out of range WARN",
+    "mode": "confidence",
+    "input": {
+      "confidence": 1.5,
+      "rationale": "Confidence exceeds maximum"
+    },
+    "expected": {
+      "action": "WARN",
+      "has_calibration": true
+    }
+  }
+]

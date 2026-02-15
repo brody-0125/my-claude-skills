@@ -3,6 +3,22 @@
 > Detailed procedure for Phase 1 (Orchestrator Dispatch) and Phase 2 (Agent Execution).
 > Loaded when entering Phase 1: Orchestrator Dispatch.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. Overview | ~21 |
+| 2. Step 1: Reading Agent Definitions | ~41 |
+| 3. Step 2: Constructing Task Prompts | ~122 |
+| 4. Step 3: Passing Reference Excerpts | ~231 |
+| 5. Step 4: Parallel vs. Sequential Agent Dispatch | ~281 |
+| 6. Step 5: Result Collection and Merging | ~338 |
+| 7. Step 5.5: Quality Indicators | ~421 |
+| 8. Step 6: Token Budget Management | ~460 |
+| 9. Cross-System Orchestration | ~499 |
+| 10. Phase Transition Context Management | ~569 |
+| 11. Pattern Examples | ~635 |
+
 ## Overview
 
 This document defines how the Gateway Router invokes orchestrators, how orchestrators invoke
@@ -53,7 +69,7 @@ Location: `agents/{system}/{agent-name}.md`
 
 ```
 agents/
-├── db/                          # 6 domains, 17 agents
+├── db/                          # 6 domains, 18 agents
 │   ├── a1-engine-selector.md        # A: Storage Engine
 │   ├── a2-compaction-strategist.md  # A: Storage Engine
 │   ├── b1-index-architect.md        # B: Index & Query Plan
@@ -70,7 +86,8 @@ agents/
 │   ├── e3-buffer-tuner.md           # E: I/O & Buffer Management
 │   ├── f1-replication-designer.md   # F: Distributed & Replication
 │   ├── f2-consistency-selector.md   # F: Distributed & Replication
-│   └── f3-sharding-architect.md     # F: Distributed & Replication
+│   ├── f3-sharding-architect.md     # F: Distributed & Replication
+│   └── f4-dynamodb-throughput-optimizer.md # F: Distributed & Replication
 ├── be/                          # 4 clusters, 18 agents
 │   ├── s1-dependency-auditor.md     # S: Structure
 │   ├── s2-di-pattern-selector.md    # S: Structure
@@ -613,3 +630,84 @@ With pruning: ~8-10K tokens at Phase 4
 | Phase 4 entry | 13.0K | **9.0K** | Raw outputs pruned |
 | Phase 4.5 complete | 14.5K | **10.0K** | Synthesis validation internalized |
 | Phase 5 entry | 15.0K | **10.5K** | All validation artifacts pruned |
+
+---
+
+## Pattern Examples
+
+### Pattern 1: Single-Domain (1 Agent)
+
+The simplest case. Query maps to exactly one system and one sub-domain.
+
+```
+User: "Should I use B-tree or LSM-tree for my write-heavy workload?"
+  → System: DB
+  → Sub-domain: A (Storage Engine)
+  → Dispatch: db-orchestrator → a1-engine-selector
+  → Token budget: ~6K
+```
+
+**Flow**:
+```
+Gateway Router
+  └─→ classify-query.sh → { system: "DB", domains: ["A"], confidence: 0.95 }
+  └─→ Read agents/db-orchestrator.md
+  └─→ Task(db-orchestrator): "Route to a1-engine-selector for B-tree vs LSM comparison"
+        └─→ Read agents/db/a1-engine-selector.md
+        └─→ Task(a1-engine-selector): "Compare B-tree and LSM-tree for write-heavy workload"
+        └─→ Return: analysis + recommendation + constraints
+  └─→ format-output.sh → structured output
+```
+
+### Pattern 2: Multi-Domain (2-3 Agents within Same System)
+
+Query spans multiple sub-domains within one system. Agents run in parallel; results are merged
+with constraint resolution.
+
+```
+User: "Design a schema for time-series data with high write throughput and range queries"
+  → System: DB
+  → Sub-domains: A (Storage Engine) + D (Schema & Normalization) + B (Index & Query Plan)
+  → Dispatch: db-orchestrator → 3 agents parallel
+  → Token budget: ~10K
+```
+
+**Flow**:
+```
+Gateway Router
+  └─→ classify-query.sh → { system: "DB", domains: ["A", "D", "B"], confidence: 0.88 }
+  └─→ Read agents/db-orchestrator.md
+  └─→ Task(db-orchestrator):
+        ├─→ Task(a1-engine-selector): "LSM vs B-tree for time-series writes"
+        ├─→ Task(d1-schema-expert): "Time-series schema with partitioning"
+        └─→ Task(b1-index-architect): "Range query optimization for time-series"
+        └─→ resolve-constraints.sh → merge constraints from 3 agents
+        └─→ Return: unified analysis + resolved constraints
+  └─→ format-output.sh → structured output
+```
+
+### Pattern 3: Cross-System (DB+BE, DB+SE, etc.)
+
+Query requires agents from different systems. Multiple orchestrators run, then a synthesizer
+merges results across system boundaries.
+
+```
+User: "Design a multi-tenant architecture with tenant isolation at DB and API levels"
+  → Systems: DB + BE + SE
+  → Dispatch: 3 orchestrators → synthesizer
+  → Token budget: ~14K
+```
+
+**Flow**:
+```
+Gateway Router
+  └─→ classify-query.sh → { systems: ["DB", "BE", "SE"], confidence: 0.82 }
+  └─→ Read agents/db-orchestrator.md, agents/be-orchestrator.md, agents/se-orchestrator.md
+  └─→ Parallel:
+  │   ├─→ Task(db-orchestrator): "Multi-tenant DB isolation (schema-per-tenant vs RLS)"
+  │   ├─→ Task(be-orchestrator): "Multi-tenant API routing and context propagation"
+  │   └─→ Task(se-orchestrator): "Tenant-level authorization and data isolation"
+  └─→ Read agents/synthesizer.md
+  └─→ Task(synthesizer): merge 3 orchestrator outputs + resolve cross-system constraints
+  └─→ format-output.sh → structured output
+```

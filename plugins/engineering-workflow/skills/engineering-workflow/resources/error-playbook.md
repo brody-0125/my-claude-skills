@@ -135,7 +135,7 @@ IF resolve-constraints.sh output contains conflicts[] with length > 0:
 |---------------|------------|
 | Intra-system, hard vs soft | Accept hard constraint, relax soft constraint |
 | Intra-system, hard vs hard | Orchestrator evaluates evidence strength; if unable to resolve, escalate to synthesizer |
-| Cross-system, SE vs any | Security hard constraints always win |
+| Cross-system, SE vs any | Security hard constraints MUST win |
 | Cross-system, soft vs soft | Present both options with trade-offs to user |
 | Cross-system, hard vs hard | Document conflict explicitly; ask user for priority input |
 

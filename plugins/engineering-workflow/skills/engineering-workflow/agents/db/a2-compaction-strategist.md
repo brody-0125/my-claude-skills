@@ -90,9 +90,17 @@ Include specific parameter values for the recommended strategy.
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with strategy, specific parameter values, expected WA/SA estimates, and trade-off analysis. If the target engine is not LSM-based, return immediately with a note that compaction analysis is not applicable.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] strategy present and non-empty, specifies compaction type (leveled, tiered, FIFO, or hybrid)
+- [ ] parameters present and includes at least 3 engine-specific tuning values
+- [ ] expected_wa and expected_sa present with numeric estimates
+- [ ] trade_offs present and non-empty
+- [ ] trade_offs.pros contains at least 1 entry
+- [ ] trade_offs.cons contains at least 1 entry
+- [ ] trade_offs.alternatives_considered contains at least 1 entry with WA/SA comparison
+- [ ] If target engine is not LSM-based: return immediately with a note that compaction analysis is not applicable
 
 For in-depth analysis, refer to `references/db/domain-a-compaction.md`.
 

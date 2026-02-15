@@ -138,9 +138,17 @@ Decision matrix:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with document_model structure, embedding_decisions with rationale for each relationship, and size_estimate. If access patterns are unknown, assume balanced read/write and note the assumption.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] document_model present and includes: collections array with at least 1 entry
+- [ ] Every collection includes: name, structure, indexes
+- [ ] embedding_decisions contains at least 1 entry
+- [ ] Every embedding_decision includes: relationship, decision (embed/reference), rationale, factors
+- [ ] size_estimate present and includes: average_document_bytes, worst_case_bytes, within_limit
+- [ ] access_patterns contains at least 1 entry with pattern, served_by, efficiency
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If access patterns are unknown: assume balanced read/write, confidence < 0.5 with assumption noted
 
 For in-depth analysis, refer to `references/db/domain-d-document-modeling.md`.
 

@@ -123,9 +123,16 @@ Group commit batches multiple transaction fsync calls:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with wal_config, checkpoint_strategy, group_commit configuration, durability_level, and throughput_impact assessment. If durability requirements are unspecified, default to "standard" and note the assumption.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] wal_config present and includes: engine, at least 3 engine-specific WAL parameters
+- [ ] checkpoint_strategy present and includes: checkpoint_timeout, estimated_recovery_time_s, rationale
+- [ ] group_commit present and includes: enabled, expected_throughput_gain
+- [ ] durability_level present and non-empty (strict, standard, or relaxed)
+- [ ] throughput_impact present and includes: baseline_tps, with_config_tps, improvement
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If durability requirements are unspecified: default to "standard", confidence < 0.5 with assumption noted
 
 For in-depth analysis, refer to `references/db/domain-e-wal.md`.
 

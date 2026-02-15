@@ -109,9 +109,15 @@ Multi-instance configuration (InnoDB):
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with buffer_config including specific size and parameters, eviction_policy, and hit_rate_target. If RAM information is missing, provide percentage-based guidelines and note the assumption.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] buffer_config present and includes: engine, at least 2 engine-specific buffer parameters, rationale
+- [ ] pool_size present and includes: recommended_gb, allocation_pct, fits_in_pool
+- [ ] eviction_policy present and includes: algorithm, scan_resistance
+- [ ] hit_rate_target present and includes: target_pct, improvement_path
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If RAM information is missing: provide percentage-based guidelines, confidence < 0.5 with assumption noted
 
 For in-depth analysis, refer to `references/db/domain-e-buffer-tuning.md`.
 

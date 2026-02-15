@@ -2,6 +2,24 @@
 
 > Static reference for Bulkhead, Circuit Breaker, Retry/Timeout configuration.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. Dependency Isolation Map | ~23 |
+| 2. Bulkhead YAML Configuration | ~43 |
+| 3. CB Integration Method 1: Spring Cloud OpenFeign + Resilience4j | ~114 |
+| 4. CB Integration Method 2: Resilience4jFeign (Programmatic) | ~206 |
+| 5. Per-Dependency CB Configuration Table | ~246 |
+| 6. Exception Classification YAML | ~264 |
+| 7. CB State Transition Diagram | ~306 |
+| 8. Resilience4j Decorator Chain | ~343 |
+| 9. Per-Dependency Timeout Budget Table | ~390 |
+| 10. Retry Policy YAML | ~411 |
+| 11. Payment idempotencyKey Code | ~475 |
+| 12. Fallback Strategy Table | ~527 |
+| 13. Fallback Implementation Patterns | ~540 |
+
 ---
 
 ## 1. Dependency Isolation Map

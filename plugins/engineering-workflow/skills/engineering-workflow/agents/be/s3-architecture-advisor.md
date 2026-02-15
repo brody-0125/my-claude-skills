@@ -117,9 +117,17 @@ Module dependency control follows strict rules:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with module layout decision, naming rationale, and Gradle dependency configuration. If the integration type is unclear, return with lower confidence and ask whether it is an external API, domain Aggregate, notification channel, or batch job.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] decision present and non-empty
+- [ ] architecture_style present and specifies Hexagonal Architecture
+- [ ] module_layout present and includes: new_module, parent, port_location, adapter_location, stub_location
+- [ ] naming_rationale present and non-empty, uses domain/function-based naming (not vendor names)
+- [ ] gradle_dependencies present and includes: app_module, test dependency declarations
+- [ ] downstream_agents present with at least 1 entry
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If integration type is unclear: confidence < 0.5 with missing_info asking whether it is external API, domain Aggregate, notification channel, or batch job
 
 Code examples and full module structure: `references/be/cluster-s-structure.md`
 

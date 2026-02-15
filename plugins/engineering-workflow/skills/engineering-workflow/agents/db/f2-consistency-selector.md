@@ -129,9 +129,17 @@ Document boundary decisions:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with consistency_model (with per-category breakdown if applicable), cap_analysis, boundary_design, and engine_config. If the application's data categories are unclear, provide a single consistency recommendation and note what information would enable finer-grained analysis.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] consistency_model present and includes: primary consistency level
+- [ ] consistency_model.per_data_category contains at least 1 entry with category, level, rationale
+- [ ] cap_analysis present and includes: cap_choice, pacelc_choice, partition_behavior, normal_behavior
+- [ ] boundary_design present and includes at least one of: service_boundaries, region_boundaries
+- [ ] Every boundary includes: boundary description, consistency level, max_staleness_ms or mechanism
+- [ ] engine_config present and includes: db_engine, settings
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If data categories are unclear: provide single consistency recommendation, confidence < 0.5 with missing_info noting what would enable finer-grained analysis
 
 For in-depth analysis, refer to `references/db/domain-f-consistency.md`.
 

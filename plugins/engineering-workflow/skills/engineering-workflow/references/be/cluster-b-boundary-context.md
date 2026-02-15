@@ -3,6 +3,20 @@
 > Static reference for B-1 (Context Classifier) and B-2 (ACL Designer).
 > Covers DDD context mapping patterns, external system maps, ACL module layout, tier-specific code examples, Feign Client design, and Stub patterns.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. DDD Context Mapping Patterns | ~22 |
+| 2. External System Map | ~57 |
+| 3. Semantic Gap to ACL Tier Mapping | ~86 |
+| 4. ACL Module Layout | ~96 |
+| 5. ACL Tier Code Examples | ~123 |
+| 6. Feign Client Design | ~410 |
+| 7. Stub Design Patterns | ~469 |
+| 8. Stub Configuration | ~533 |
+| 9. Wiring (build.gradle.kts) | ~555 |
+
 ---
 
 ## 1. DDD Context Mapping Patterns

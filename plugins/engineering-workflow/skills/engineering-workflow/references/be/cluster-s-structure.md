@@ -4,6 +4,25 @@
 > S-2 (DI Pattern Selector), S-3 (Architecture Style Advisor), and S-4 (Fitness Function Engineer).
 > Agent files reference this document for all Kotlin/Gradle code snippets.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. 5-Layer Model Code Examples | ~27 |
+| 2. Violation Severity Matrix | ~133 |
+| 3. DI Pattern Catalog | ~174 |
+| 4. Stub Double Pattern | ~238 |
+| 5. Pattern Selection Decision Tree | ~291 |
+| 6. Module Naming Convention | ~310 |
+| 7. Gradle Multi-Module Structure | ~334 |
+| 8. java-test-fixtures Plugin Setup | ~371 |
+| 9. New Module Addition Decision Tree | ~399 |
+| 10. ArchUnit Rules | ~425 |
+| 11. Konsist Rules | ~475 |
+| 12. Test Name Byte Limit | ~536 |
+| 13. Gradle Dependency Scope | ~564 |
+| 14. CI/CD Pipeline | ~588 |
+
 ---
 
 ## 1. 5-Layer Model Code Examples

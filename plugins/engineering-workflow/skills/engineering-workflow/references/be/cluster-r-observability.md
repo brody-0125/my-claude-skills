@@ -2,6 +2,22 @@
 
 > Static reference for resilience observability design.
 
+## Table of Contents
+
+| Section | Line |
+|---------|------|
+| 1. Tracing Infrastructure | ~21 |
+| 2. Observation API Code | ~48 |
+| 3. Metrics Catalog | ~88 |
+| 4. Prometheus Endpoint YAML | ~143 |
+| 5. Dashboard Layout (Grafana) | ~185 |
+| 6. Alert Rules by Severity | ~198 |
+| 7. PromQL Examples | ~235 |
+| 8. Distributed Tracing Design | ~330 |
+| 9. Custom Span Attributes Code | ~359 |
+| 10. Saga Tracing | ~439 |
+| 11. Health Indicator YAML | ~538 |
+
 ---
 
 ## 1. Tracing Infrastructure
