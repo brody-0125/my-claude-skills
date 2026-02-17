@@ -84,34 +84,72 @@ Each keyword is assigned to one or more systems with a weight.
 | `multi-tenant` | 0.5 | 0.5 | 0.2 | 0.4 | 0.6 |
 | `architecture decision` | 0.3 | 0.3 | 0.3 | 0.3 | 0.5 |
 
-### Scoring Algorithm
+### Scoring Algorithm (2-Phase)
 
-> **Implementation note**: The keyword-to-system matrix weights above are used for
-> documentation and LLM classification context. The `classify-query.sh` fast-path
-> uses a simplified fixed-tier confidence algorithm (below) which was chosen over
-> weighted scoring because: (1) bash regex matching is binary (match/no-match),
-> not weighted; (2) the fixed-tier approach is sufficient for keyword-based routing;
-> (3) weighted scoring adds complexity without meaningful accuracy gains for a
-> deterministic fast-path that falls through to LLM for ambiguous cases anyway.
+Classification uses a 2-phase scoring pipeline implemented in `_common.sh`:
 
-**Actual confidence calculation** (implemented in `classify-query.sh`):
+**Phase 1 — Binary keyword grep (fast path)**:
+Each system has a dedicated keyword set. A grep match gives a binary 1/0 score per system.
+
+**Phase 2 — Cross-keyword weighted scoring**:
+~14 cross-system keyword groups (from the matrix above) are tested via `score_cross_keywords()`.
+Each group contributes weighted scores to multiple systems (e.g., "replication|failover" → DB=0.80, IF=0.24).
+Scores accumulate into `_EW_DB_SCORE`, `_EW_BE_SCORE`, `_EW_IF_SCORE`, `_EW_SE_SCORE`.
+
+**Gap and Dominance** (computed when Phase 2 is active):
+```
+scores = [DB_SCORE, BE_SCORE, IF_SCORE, SE_SCORE]
+max1 = highest score
+max2 = second highest score
+gap = max1 - max2
+dominance = max1 / (max1 + max2)    # 0.5-1.0 range
+```
+
+**Confidence calculation** (`compute_confidence()` in `_common.sh`):
 
 ```
-total_matches = count of systems with at least 1 keyword hit
-domain_count  = count of DB sub-domains matched (A-F, including DynamoDB throughput triggers in F)
-cluster_count = count of BE clusters matched (S/B/R/T)
-
-IF total_matches == 0:
+IF total_matches == 0 AND Phase 2 inactive:
   confidence = 0.0      → no keywords matched, fall through to LLM
-ELIF total_matches == 1 AND (domain_count >= 1 OR cluster_count >= 1):
-  confidence = 0.85     → single system with specific sub-domain: high confidence
-ELIF total_matches == 1:
-  confidence = 0.70     → single system but no sub-domain: moderate confidence
-ELIF total_matches >= 2:
-  confidence = 0.60     → multi-system: lower confidence, may benefit from LLM refinement
+
+IF Phase 2 inactive (no cross-keywords matched):
+  # Fast path: fixed tiers (original behavior preserved)
+  IF total_matches == 1 AND has_subdomain:  confidence = 0.85
+  ELIF total_matches == 1:                   confidence = 0.70
+  ELIF total_matches >= 2:                   confidence = 0.60
+
+IF Phase 2 active (cross-keywords matched):
+  # Continuous confidence from gap/dominance
+  IF total_matches == 1:
+    confidence = 0.70 + (dominance - 0.5) × 0.40 + subdomain_bonus(0.10)
+    # Range: 0.70-1.00; high dominance → high confidence
+  ELIF total_matches >= 2:
+    confidence = 0.60 + gap × 0.30    # capped at 0.69
+    # Multi-system stays below 0.70 threshold
 ```
+
+**System selection when Phase 1 has 0 hits but Phase 2 found cross-keywords**:
+- If gap >= 0.3: use only the dominant system
+- If gap < 0.3: include all systems with score > 0
 
 All systems with at least one keyword match are included in the output `systems[]` array.
+
+### LLM Verification Flag (Enhancement 1-3)
+
+When keyword classification produces confidence > 0.0 but < 0.85, the output includes
+`needs_llm_verification: true` and a context-specific `verification_prompt` for LLM
+confirmation. This bridges the gap between deterministic fast-path and full LLM fallback.
+
+```
+IF confidence > 0.0 AND confidence < 0.85:
+  needs_llm_verification = true
+  verification_prompt = context-specific prompt based on system count:
+    - 0 systems: "Classify into [DB,BE,IF,SE]"
+    - 1 system:  "Verify and suggest if other systems apply"
+    - 2+ systems: "Confirm primary system(s) and relevance"
+ELSE:
+  needs_llm_verification = false
+  verification_prompt = null
+```
 
 ### Pattern Detection
 
@@ -201,8 +239,9 @@ Respond in JSON format only.
 ### Confidence Thresholds After LLM
 
 > **Note**: These thresholds apply to the LLM fallback path only. The keyword
-> fast-path (`classify-query.sh`) uses a separate fixed-tier system: 0.85
-> (single system + sub-domain), 0.70 (single system), 0.60 (multi-system).
+> fast-path (`classify-query.sh`) uses a 2-phase scoring system: Phase 1 fixed
+> tiers (0.85/0.70/0.60) when no cross-keywords match; Phase 2 continuous
+> confidence (0.60-1.00) based on gap/dominance when cross-keywords are present.
 > Error code EW-CLF-002 triggers at fast-path confidence < 0.60.
 
 | LLM Confidence | Action |
@@ -210,6 +249,57 @@ Respond in JSON format only.
 | >= 0.70 | Proceed with classification |
 | 0.50 - 0.69 | Proceed but add caveat to output: "Classification confidence is moderate" |
 | < 0.50 | Ask user for domain clarification before proceeding |
+
+---
+
+## Step 4.5: LLM Verification (Mid-Confidence Classification)
+
+Triggered when `needs_llm_verification == true` (keyword classification produced 0.0 < confidence < 0.85).
+This is a lightweight single-turn LLM check — NOT a full LLM classification (Step 4).
+
+### Purpose
+
+Keyword classification sometimes underclassifies (misses a relevant system) or overclassifies
+(includes a tangential system). LLM verification catches these errors before agent dispatch,
+preventing wasted orchestrator invocations.
+
+### Protocol
+
+```
+1. Input: keyword classification result + verification_prompt (generated by classify-query.sh)
+2. Execute a single-turn LLM evaluation using the verification_prompt:
+
+   Verification prompt templates (from classify-query.sh):
+   - 0 systems matched: "Classify into [DB,BE,IF,SE]"
+   - 1 system matched:  "Verify {system} and suggest if other systems apply"
+   - 2+ systems matched: "Confirm primary system(s) and relevance of {systems}"
+
+3. Compare LLM response with keyword classification:
+
+   IF LLM agrees with keyword classification:
+     → confidence += 0.10 (capped at 0.85)
+     → classifier = "keyword+llm-confirmed"
+     → Proceed to Step 5
+
+   IF LLM disagrees (different systems or additional systems):
+     → Adopt LLM classification for systems[]
+     → Re-run sub-domain detection (Step 3) for new systems
+     → Set classifier = "llm-verified"
+     → Set confidence = LLM-provided confidence (apply Step 4 thresholds)
+     → Proceed to Step 5
+```
+
+### Token Budget
+
+- Single-turn prompt: ~150 tokens input, ~100 tokens output
+- Total: ~0.2K per verification
+- No reference loading required
+
+### When to Skip
+
+- `EW_PROGRESSIVE_CLASSIFICATION=0` does NOT disable this step (it only disables session context)
+- Skip if token pressure > 90% (proceed with keyword classification as-is)
+- Skip if `--domain` flag was explicitly set by user (confidence already 1.0)
 
 ---
 
@@ -246,6 +336,50 @@ cache_path = ~/.claude/cache/engineering-workflow/pattern-cache.json
   "last_used": "2026-02-12T10:30:00Z"
 }
 ```
+
+---
+
+## Step 5.5: Progressive Classification
+
+When session history is available, the classifier augments the current classification with
+prior context. This improves routing accuracy for conversational follow-up queries.
+
+### Mechanism
+
+```
+1. Read last 5 entries from session-history.jsonl within 30-minute window
+2. Compute prior_boost: overlap between current systems and recent history
+   - boost = min(0.10, Σ(overlap_ratio × time_decay))
+   - time_decay: most recent = 1.0, each older entry ×= 0.7
+   - INVARIANT: if TOTAL_MATCHES == 0 (no keyword match), boost = 0
+3. Lookup transition patterns in pattern-cache.json.__transitions__
+   - Find frequent from→to system/domain transitions
+   - transition_confidence = count / total_from_source (threshold: 0.20)
+4. Add to output:
+   - prior_boost: float (0.00-0.10)
+   - suggested_expansions[]: array of expansion suggestions from transition history
+```
+
+### Output Fields
+
+```json
+{
+  "prior_boost": 0.05,
+  "suggested_expansions": [
+    {
+      "add_system": "DB",
+      "add_cluster_or_domain": "F",
+      "reason": "DB-F → BE-R 전환 7회 관측 (transition_confidence=0.70)",
+      "transition_confidence": 0.70
+    }
+  ]
+}
+```
+
+### Rollback
+
+Set environment variable `EW_PROGRESSIVE_CLASSIFICATION=0` to disable progressive
+classification entirely. All progressive fields will output default values (0, []).
 
 ---
 

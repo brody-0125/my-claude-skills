@@ -95,6 +95,41 @@ CONFLICTS=$(echo "${CONSTRAINT_ARRAY}" | jq '
   ]
 ')
 
+# ── Tier 2: Semantic Conflict Detection ──────────────────
+# Detect known incompatible constraint pairs using KNOWN_CONFLICT_PAIRS from _common.sh
+KNOWN_PAIRS_JSON=$(printf '%s\n' "${KNOWN_CONFLICT_PAIRS[@]}" | jq -R 'split("|") | {pair_a: .[0], pair_b: .[1]}' | jq -s '.' 2>/dev/null || echo '[]')
+
+SEMANTIC_CONFLICTS=$(echo "${CONSTRAINT_ARRAY}" | jq --argjson pairs "${KNOWN_PAIRS_JSON}" '
+  [
+    . as $all |
+    $pairs[] as $pair |
+    ($pair.pair_a | split(":")) as $a |
+    ($pair.pair_b | split(":")) as $b |
+    range($all | length) as $i |
+    range($all | length) as $j |
+    select($i != $j) |
+    select(
+      ($all[$i].target == $a[0] and ($all[$i].value | test($a[1];"i"))) and
+      ($all[$j].target == $b[0] and ($all[$j].value | test($b[1];"i")))
+    ) |
+    {
+      conflict_id: ("sem-" + ($i|tostring) + "-" + ($j|tostring)),
+      type: "semantic",
+      conflict_tier: "semantic",
+      constraint_a: $all[$i],
+      constraint_b: $all[$j],
+      auto_resolvable: false,
+      rationale: ("Known incompatibility: " + $pair.pair_a + " conflicts with " + $pair.pair_b)
+    }
+  ] | unique_by(.conflict_id)
+' 2>/dev/null || echo '[]')
+
+# Tag Tier 1 conflicts with conflict_tier
+CONFLICTS=$(echo "${CONFLICTS}" | jq '[.[] | . + {conflict_tier: "structural"}]')
+
+# Merge Tier 1 + Tier 2 conflicts
+CONFLICTS=$(jq -n --argjson t1 "${CONFLICTS}" --argjson t2 "${SEMANTIC_CONFLICTS}" '$t1 + $t2')
+
 CONFLICT_COUNT=$(echo "${CONFLICTS}" | jq 'length')
 
 # ── Auto-Resolution ──────────────────────────────────────

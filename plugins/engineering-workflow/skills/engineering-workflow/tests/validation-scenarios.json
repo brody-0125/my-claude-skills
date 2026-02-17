@@ -304,5 +304,217 @@
       "valid": true,
       "error_count": 0
     }
+  },
+  {
+    "id": "VS-018",
+    "description": "Orchestrator status 'failed' — should be valid status",
+    "agent_type": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "failed",
+      "guidance": "Agent execution failed",
+      "confidence": 0.30
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-019",
+    "description": "Domain-agent confidence exactly 0 — valid but warning",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "Unable to determine optimal approach with available information",
+      "recommendation": "Gather more context about workload patterns before making a storage engine decision",
+      "confidence": 0.0
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-020",
+    "description": "Synthesizer with circular dependency in implementation_order — not yet detected",
+    "agent_type": "synthesizer",
+    "input": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Update DB and BE",
+      "implementation_order": [
+        {"phase": "a", "depends_on": ["b"]},
+        {"phase": "b", "depends_on": ["a"]}
+      ],
+      "cross_dependencies": [],
+      "confidence": 0.70
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-021",
+    "description": "Domain-agent with very long rationale (1000+ chars) — valid",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "LSM-tree provides excellent write throughput for append-heavy workloads. The log-structured merge-tree architecture uses sequential writes to memory tables (memtables) that are periodically flushed to sorted string tables (SSTables) on disk. This approach eliminates random write I/O, which is the primary bottleneck for traditional B-tree storage engines. When compaction is properly tuned with leveled compaction strategy, read amplification can be kept manageable. The write amplification factor depends on the number of levels and the size ratio between levels, typically ranging from 10x to 30x for write-optimized configurations. For workloads with write-to-read ratios above 3:1, LSM-tree consistently outperforms B-tree variants by 2-5x in throughput benchmarks while maintaining acceptable tail latency for point reads.",
+      "recommendation": "Use RocksDB with level compaction for optimal write throughput",
+      "confidence": 0.90
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-022",
+    "description": "Synthesizer with empty systems_analyzed — currently passes (not validated)",
+    "agent_type": "synthesizer",
+    "input": {
+      "systems_analyzed": [],
+      "unified_recommendation": "No systems to analyze",
+      "implementation_order": [],
+      "cross_dependencies": [],
+      "confidence": 0.50
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-023",
+    "description": "Domain-agent confidence negative — out of range",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "Test negative confidence",
+      "recommendation": "Test recommendation for negative confidence validation",
+      "confidence": -0.5
+    },
+    "expected": {
+      "valid": false,
+      "error_count": 1
+    }
+  },
+  {
+    "id": "VS-024",
+    "description": "Quantitative data present — no warning for metrics",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "LSM-tree provides 3x write throughput improvement with p99 latency under 5ms for sequential workloads",
+      "recommendation": "Use RocksDB with level compaction. Expected throughput: 50K TPS with 10GB dataset",
+      "trade_offs": [
+        {"option": "LSM", "pros": ["Write 3x faster"], "cons": ["Read amplification 2-4x"], "recommended_when": "Write > 70%"},
+        {"option": "B-tree", "pros": ["Read latency < 1ms"], "cons": ["Write amplification 10x"], "recommended_when": "Read > 80%"}
+      ],
+      "confidence": 0.85
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0,
+      "no_quantitative_warning": true
+    }
+  },
+  {
+    "id": "VS-025",
+    "description": "No quantitative data — warning emitted for missing metrics",
+    "agent_type": "domain-agent",
+    "input": {
+      "rationale": "LSM-tree is good for writes because it uses sequential writes instead of random writes",
+      "recommendation": "Use RocksDB with level compaction for write-heavy workloads in your scenario",
+      "trade_offs": [
+        {"option": "LSM", "pros": ["Better writes"], "cons": ["Worse reads"], "recommended_when": "Write heavy"},
+        {"option": "B-tree", "pros": ["Better reads"], "cons": ["Worse writes"], "recommended_when": "Read heavy"}
+      ],
+      "confidence": 0.80
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0,
+      "has_quantitative_warning": true
+    }
+  },
+  {
+    "id": "VS-026",
+    "description": "Orchestrator without quantitative data in guidance — warning emitted",
+    "agent_type": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "completed",
+      "guidance": "Use LSM-tree based storage engine for better write performance",
+      "recommendations": [
+        {"id": "rec_db_1", "title": "Use LSM", "description": "LSM is better for writes"}
+      ],
+      "confidence": 0.85
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0,
+      "has_quantitative_warning": true
+    }
+  },
+  {
+    "id": "VS-027",
+    "description": "Orchestrator with valid cross_notes — no warning",
+    "agent_type": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "completed",
+      "guidance": "Use sharding with application-level routing for 50K TPS workload",
+      "recommendations": [
+        {"id": "rec_db_1", "title": "Hash-based sharding", "description": "Distribute writes across 8 shards for 50K TPS"}
+      ],
+      "cross_notes": [
+        {"from_agent": "f3-sharding-architect", "target_system": "BE", "constraint": "Application must implement shard routing logic"}
+      ],
+      "confidence": 0.85
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
+  },
+  {
+    "id": "VS-028",
+    "description": "Orchestrator with malformed cross_notes — warning expected",
+    "agent_type": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "completed",
+      "guidance": "Use sharding with application-level routing for high throughput",
+      "recommendations": [
+        {"id": "rec_db_1", "title": "Hash-based sharding", "description": "Distribute writes across shards"}
+      ],
+      "cross_notes": [
+        {"from_agent": "f3-sharding-architect", "target_system": "BE"},
+        {"constraint": "Need encryption", "from_agent": "e1-encryption-advisor"}
+      ],
+      "confidence": 0.80
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0,
+      "has_cross_notes_warning": true
+    }
+  },
+  {
+    "id": "VS-029",
+    "description": "Orchestrator with empty cross_notes array — no warning",
+    "agent_type": "orchestrator",
+    "input": {
+      "system": "BE",
+      "status": "completed",
+      "guidance": "Implement circuit breaker with Resilience4j for external API calls with 500ms timeout",
+      "recommendations": [
+        {"id": "rec_be_1", "title": "Circuit breaker", "description": "Configure Resilience4j CB with 50% failure rate threshold"}
+      ],
+      "cross_notes": [],
+      "confidence": 0.88
+    },
+    "expected": {
+      "valid": true,
+      "error_count": 0
+    }
   }
 ]

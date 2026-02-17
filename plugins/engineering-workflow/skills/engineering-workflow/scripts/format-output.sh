@@ -19,6 +19,12 @@ require_jq
 
 # ── Flags ─────────────────────────────────────────────────
 
+GRAPH_MODE=false
+if [ "${1:-}" = "--graph" ]; then
+  GRAPH_MODE=true
+  shift
+fi
+
 SUMMARY_MODE=false
 if [ "${1:-}" = "--summary" ]; then
   SUMMARY_MODE=true
@@ -161,7 +167,7 @@ format_error() {
   echo ""
   echo "${error_msg}"
   echo ""
-  echo "> See resources/error-playbook.md for resolution guidance."
+  echo "> If this error persists, try narrowing the query scope or specifying --domain explicitly."
 }
 
 # ── Summary Format ────────────────────────────────────────
@@ -225,7 +231,29 @@ format_summary() {
   echo "> Run without --summary for full analysis"
 }
 
+# ── Constraint Graph ──────────────────────────────────────
+
+format_constraint_graph() {
+  local json="${1}"
+  echo '```mermaid'
+  echo 'graph LR'
+  echo "${json}" | jq -r '
+    (.resolved_constraints // .constraints // [])[] |
+    . as $c |
+    ($c.source_agent // $c.source // "unknown") as $src |
+    ($c.target // "general") as $tgt |
+    ($c.constraint_type // $c.type // "requires") as $ctype |
+    "\($src | gsub("[^a-zA-Z0-9]";"_"))[\($src)] --|\($ctype)| \($tgt | gsub("[^a-zA-Z0-9]";"_"))[\($tgt)]"
+  ' 2>/dev/null | sort -u
+  echo '```'
+}
+
 # ── Dispatch ──────────────────────────────────────────────
+
+if [ "${GRAPH_MODE}" = "true" ]; then
+  format_constraint_graph "${INPUT}"
+  exit 0
+fi
 
 if [ "${SUMMARY_MODE}" = "true" ]; then
   format_summary "${INPUT}" "${OUTPUT_TYPE}"

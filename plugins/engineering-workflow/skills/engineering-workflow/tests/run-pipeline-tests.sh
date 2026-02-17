@@ -61,6 +61,39 @@ while IFS= read -r scenario; do
     fi
   fi
 
+  # Optional SE cluster check
+  expected_se_clusters=$(echo "${scenario}" | jq -c '.expected.classification_se_clusters // null')
+  if [ "${expected_se_clusters}" != "null" ]; then
+    actual_se_clusters=$(echo "${classification}" | jq -c '.se_clusters // []')
+    if [ "${actual_se_clusters}" != "${expected_se_clusters}" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         classify se_clusters: expected=${expected_se_clusters} actual=${actual_se_clusters}"
+      test_ok=false
+    fi
+  fi
+
+  # Optional domain check
+  expected_domains=$(echo "${scenario}" | jq -c '.expected.classification_domains // null')
+  if [ "${expected_domains}" != "null" ]; then
+    actual_domains=$(echo "${classification}" | jq -c '.domains // []')
+    if [ "${actual_domains}" != "${expected_domains}" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         classify domains: expected=${expected_domains} actual=${actual_domains}"
+      test_ok=false
+    fi
+  fi
+
+  # Optional pattern check
+  expected_pattern=$(echo "${scenario}" | jq -r '.expected.classification_pattern // "null"')
+  if [ "${expected_pattern}" != "null" ]; then
+    actual_pattern=$(echo "${classification}" | jq -r '.pattern // ""')
+    if [ "${actual_pattern}" != "${expected_pattern}" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         classify pattern: expected=${expected_pattern} actual=${actual_pattern}"
+      test_ok=false
+    fi
+  fi
+
   # ── Step 2: Audit Tier Determination ────────────────────
   expected_tier=$(echo "${scenario}" | jq -r '.expected.tier // "null"')
   if [ "${expected_tier}" != "null" ]; then

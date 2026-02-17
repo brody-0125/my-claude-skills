@@ -70,3 +70,17 @@ Aligned with `audit-analysis.sh` gating thresholds.
 | **> 0.90 Permission Conditions** | `constraints`, `trade_offs`, `rationale` must all be substantive (non-empty and specific) |
 | **== 1.0 Forbidden** | Cache hits only — agents must not directly compute 1.0 |
 | **≥ 0.90 + Low Signal** | `audit-analysis.sh` issues CALIBRATION warning (existing behavior) |
+
+---
+
+## Threshold Context Map
+
+시스템 내 3개 confidence 임계값 계층의 관계와 목적을 명시한다.
+
+| 계층 | 임계값 | 위치 | 목적 |
+|------|--------|------|------|
+| **분류 (Classification)** | 0.85 | `classify-query.sh` → SKILL.md Phase 0 | Fast-path 분류 신뢰도. 0.85 미만이면 LLM 검증 트리거 |
+| **에이전트 산출 (Agent Base)** | 0.90 | 이 문서 § Scoring Procedure | 에이전트가 모든 5-factor를 충족 시 부여하는 기본 confidence 점수 |
+| **게이팅 (Quality Gate)** | 0.70 | `audit-analysis.sh confidence` → analysis-audit-protocol.md | Phase 2.5 감사 통과 최소 기준. 0.70 미만이면 WARN/RETRY/REJECT |
+
+**관계**: 에이전트 base(0.90)에서 감점 후 산출된 최종 confidence가 게이팅 임계값(0.70)과 비교된다. 분류 임계값(0.85)은 독립적으로 Phase 0에서만 사용된다.

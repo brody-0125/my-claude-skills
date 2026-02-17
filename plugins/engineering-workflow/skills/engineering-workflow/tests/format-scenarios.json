@@ -105,7 +105,7 @@
       "error_type": "timeout"
     },
     "expected": {
-      "contains": ["## Analysis Error", "**Error Type**: timeout", "timed out", "error-playbook.md"],
+      "contains": ["## Analysis Error", "**Error Type**: timeout", "timed out", "narrowing the query scope"],
       "not_empty": true
     }
   },
@@ -170,6 +170,27 @@
     },
     "expected": {
       "contains": ["**Cross-System**", "DB, BE", "Dependencies: 1", "Phases: 2", "**Recommendation**", "Run without --summary"],
+      "not_empty": true
+    }
+  },
+  {
+    "id": "FS-011",
+    "description": "--graph cross-system Mermaid diagram output",
+    "output_type": "cross-system",
+    "graph": true,
+    "input": {
+      "systems_analyzed": ["DB", "BE"],
+      "unified_recommendation": "Migrate to connection pooling",
+      "resolved_constraints": [
+        {"source_agent": "db/a1", "target": "schema-design", "constraint_type": "requires"},
+        {"source_agent": "be/r1", "target": "connection-pool", "constraint_type": "requires"}
+      ],
+      "cross_dependencies": [
+        {"from": "DB", "to": "BE", "description": "Schema change"}
+      ]
+    },
+    "expected": {
+      "contains": ["```mermaid", "graph LR"],
       "not_empty": true
     }
   }

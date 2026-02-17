@@ -176,6 +176,8 @@ Field notes:
 - `constraints_used`: Key-value map of environment constraints used during analysis (e.g., `{"db_engine": "MySQL 8.0", "scale": "50GB"}`).
 - `conflicts`: Intra-system conflicts detected before resolution (see constraint-propagation.md for schema).
 - `cross_notes`: Structured array of cross-system constraint objects (`{from_agent, target_system, constraint}`). Each entry declares a constraint that one agent's recommendation imposes on another system.
+
+> **Naming convention**: Orchestrator 출력은 `domains_analyzed` (sub-domain 코드: A, B, C 등)를 사용하고, Synthesizer 출력은 `systems_analyzed` (시스템 코드: DB, BE, IF, SE)를 사용한다. 두 필드는 분석 범위의 계층이 다르다 — `domains_analyzed`는 단일 시스템 내 도메인, `systems_analyzed`는 시스템 간 범위를 나타낸다.
 ```
 
 ### Agent Task Prompt Template
@@ -204,7 +206,7 @@ on outputs from already-completed agents. Omit this section for parallel dispatc
 ## Output Requirements
 Provide your analysis as a JSON object:
 {
-  "analysis": "detailed technical analysis (markdown)",
+  "rationale": "detailed technical analysis (markdown)",
   "recommendation": "concrete actionable recommendation",
   "constraints": [
     {
@@ -395,15 +397,33 @@ The orchestrator merges agent results using this procedure:
 ```
 1. Concatenate all analysis sections (ordered by domain code: A, B, C, ...)
 2. Collect all constraints into a unified list
-3. Persist constraints: for each agent constraint, call write_constraint()
+3. Record all_declared_constraints: before any resolution, snapshot the full
+   constraint list into all_declared_constraints[] for synthesizer transparency
+4. Persist constraints: for each agent constraint, call write_constraint()
    via Bash to append to ~/.claude/cache/engineering-workflow/constraints.json
-4. For recommendations:
+5. For recommendations:
    a. If agents agree: use the consensus recommendation
    b. If agents disagree: present both with orchestrator's synthesis
-5. For trade-offs: merge and deduplicate
-6. Calculate overall confidence: weighted average of agent confidences
-7. After merge: run resolve-constraints.sh on the persisted constraints
+6. For trade-offs: merge and deduplicate
+7. Calculate overall confidence: weighted average of agent confidences
+8. After merge: run resolve-constraints.sh on the persisted constraints
 ```
+
+### Orchestrator Output Schema (updated)
+
+The orchestrator output includes `all_declared_constraints` for full constraint traceability:
+
+```json
+{
+  "all_declared_constraints": [],
+  "resolved_constraints": [],
+  "unresolved_constraints": []
+}
+```
+
+- `all_declared_constraints`: Complete list of all constraints declared by agents before any resolution. This allows the synthesizer to detect cross-system implications even in constraints that were resolved internally.
+- `resolved_constraints`: Constraints resolved within the system.
+- `unresolved_constraints`: Constraints that could not be resolved or have cross-system implications.
 
 ### Handling Agent Failures
 
@@ -452,6 +472,14 @@ IF any agent confidence_action == "RETRY":
   Update agent_result with retry output
 IF quality_score < 50:
   Add warning: "Low quality score ({score}) — analysis may lack depth"
+```
+
+### all_declared_constraints Audit
+
+```
+IF all_declared_constraints is present:
+  Verify count matches sum of all agent constraint declarations
+  Verify resolved_constraints + unresolved_constraints is a subset of all_declared_constraints
 ```
 
 These indicators feed directly into Phase 2.5 audit decisions.

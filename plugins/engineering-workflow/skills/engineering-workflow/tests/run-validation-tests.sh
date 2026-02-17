@@ -98,6 +98,43 @@ while IFS= read -r scenario; do
     fi
   fi
 
+  # Check has_quantitative_warning if specified (new: quantitative data detection)
+  expect_quant_warn=$(echo "${scenario}" | jq -r '.expected.has_quantitative_warning // "null"')
+  if [ "${expect_quant_warn}" = "true" ]; then
+    has_quant_warn=$(echo "${result}" | jq '[.warnings[] | select(test("[Qq]uantitative"))] | length > 0' 2>/dev/null || echo "false")
+    if [ "${has_quant_warn}" != "true" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         expected quantitative data warning but not found"
+      actual_warnings=$(echo "${result}" | jq -c '.warnings' 2>/dev/null || echo "[]")
+      echo "         actual warnings: ${actual_warnings}"
+      test_ok=false
+    fi
+  fi
+
+  # Check no_quantitative_warning if specified (expect NO quantitative warning)
+  expect_no_quant_warn=$(echo "${scenario}" | jq -r '.expected.no_quantitative_warning // "null"')
+  if [ "${expect_no_quant_warn}" = "true" ]; then
+    has_quant_warn=$(echo "${result}" | jq '[.warnings[] | select(test("[Qq]uantitative"))] | length > 0' 2>/dev/null || echo "false")
+    if [ "${has_quant_warn}" = "true" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         expected NO quantitative warning but one was found"
+      test_ok=false
+    fi
+  fi
+
+  # Check has_cross_notes_warning if specified
+  expect_cn_warn=$(echo "${scenario}" | jq -r '.expected.has_cross_notes_warning // "null"')
+  if [ "${expect_cn_warn}" = "true" ]; then
+    has_cn_warn=$(echo "${result}" | jq '[.warnings[] | select(test("cross_notes"))] | length > 0' 2>/dev/null || echo "false")
+    if [ "${has_cn_warn}" != "true" ]; then
+      echo "  FAIL  ${id}: ${desc}"
+      echo "         expected cross_notes warning but not found"
+      actual_warnings=$(echo "${result}" | jq -c '.warnings' 2>/dev/null || echo "[]")
+      echo "         actual warnings: ${actual_warnings}"
+      test_ok=false
+    fi
+  fi
+
   if $test_ok; then
     echo "  PASS  ${id}: ${desc}"
     PASSED=$((PASSED + 1))

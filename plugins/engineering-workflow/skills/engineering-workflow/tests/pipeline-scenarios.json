@@ -120,5 +120,112 @@
       "format_summary": true,
       "format_contains": ["--summary"]
     }
+  },
+  {
+    "id": "PL-007",
+    "description": "IF-only query — classify → tier LIGHT → validate → format",
+    "query": "kubernetes deployment monitoring with HPA",
+    "agent_output": {
+      "rationale": "HPA autoscaling with metrics-based triggers provides responsive scaling for variable workloads",
+      "recommendation": "Configure HPA with custom metrics from Prometheus, set appropriate min/max replicas for the service",
+      "confidence": 0.82
+    },
+    "expected": {
+      "classification_systems": ["IF"],
+      "tier": "LIGHT",
+      "validation_valid": true,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-008",
+    "description": "SE-only query — tier always THOROUGH",
+    "query": "AES-256 encryption with key rotation using Vault",
+    "agent_output": {
+      "rationale": "AES-256-GCM with automated key rotation through HashiCorp Vault provides strong encryption with manageable key lifecycle",
+      "recommendation": "Implement envelope encryption with Vault transit engine, rotate keys every 90 days with automated rotation policy",
+      "confidence": 0.88,
+      "constraints": [{"id": "c1", "target": "encryption-algorithm", "value": "aes-256-gcm", "priority": "hard"}]
+    },
+    "expected": {
+      "classification_systems": ["SE"],
+      "classification_se_clusters": ["E"],
+      "tier": "THOROUGH",
+      "validation_valid": true,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-009",
+    "description": "4-system cross query — tier THOROUGH",
+    "query": "security monitoring database api",
+    "agent_output": {
+      "systems_analyzed": ["DB", "BE", "IF", "SE"],
+      "unified_recommendation": "Implement unified observability across all systems with security-first approach",
+      "implementation_order": [
+        {"phase": "security-audit", "risk": "high", "rollback": "Revert policies", "depends_on": []},
+        {"phase": "monitoring-setup", "risk": "low", "rollback": "", "depends_on": ["security-audit"]}
+      ],
+      "confidence": 0.75
+    },
+    "expected": {
+      "classification_systems": ["DB", "BE", "IF", "SE"],
+      "tier": "THOROUGH",
+      "validation_valid": true,
+      "format_type": "cross-system",
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-010",
+    "description": "Agent output with constraint conflict → resolve step",
+    "query": "B-tree vs LSM storage engine comparison",
+    "agent_output": {
+      "rationale": "LSM-tree suits write-heavy, B-tree suits read-heavy workloads",
+      "recommendation": "Choose based on primary workload pattern",
+      "confidence": 0.85,
+      "constraints": [
+        {"id": "c1", "target": "storage-engine", "value": "lsm", "priority": "hard", "source_agent": "db/a1"},
+        {"id": "c2", "target": "storage-engine", "value": "btree", "priority": "hard", "source_agent": "db/a2"}
+      ]
+    },
+    "expected": {
+      "classification_systems": ["DB"],
+      "resolve_conflicts_count": 1,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-011",
+    "description": "Korean query pipeline — classify + format",
+    "query": "DynamoDB에서 TPS 5000+ 처리량 최적화",
+    "agent_output": {
+      "rationale": "DynamoDB 높은 TPS에서는 파티션 키 설계와 용량 모드 최적화가 핵심",
+      "recommendation": "Write sharding으로 hot partition 방지 및 provisioned capacity with auto-scaling 적용",
+      "confidence": 0.86
+    },
+    "expected": {
+      "classification_systems": ["DB"],
+      "classification_domains": ["F"],
+      "tier": "LIGHT",
+      "validation_valid": true,
+      "format_not_empty": true
+    }
+  },
+  {
+    "id": "PL-012",
+    "description": "No-match query — graceful degradation",
+    "query": "hello world foo bar",
+    "agent_output": {
+      "rationale": "No engineering domain detected",
+      "recommendation": "Please refine the query",
+      "confidence": 0.10
+    },
+    "expected": {
+      "classification_systems": [],
+      "classification_pattern": "none",
+      "validation_valid": true,
+      "format_not_empty": true
+    }
   }
 ]

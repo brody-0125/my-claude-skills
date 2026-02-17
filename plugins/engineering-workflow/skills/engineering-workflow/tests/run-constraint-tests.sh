@@ -27,10 +27,14 @@ while IFS= read -r scenario; do
   TOTAL=$((TOTAL + 1))
   id=$(echo "${scenario}" | jq -r '.id')
   desc=$(echo "${scenario}" | jq -r '.description')
-  expected_conflicts=$(echo "${scenario}" | jq -r '.expected.conflicts_count // -1')
+  # Support both conflicts_count and conflict_count field names
+  expected_conflicts=$(echo "${scenario}" | jq -r 'if .expected.conflicts_count != null then .expected.conflicts_count elif .expected.conflict_count != null then .expected.conflict_count else -1 end')
   expected_resolved=$(echo "${scenario}" | jq -r '.expected.resolved_set_count // -1')
   expected_error=$(echo "${scenario}" | jq -r '.expected.has_error')
-  expected_auto=$(echo "${scenario}" | jq -r '.expected.auto_resolved // "null"')
+  # Support both auto_resolved and auto_resolvable field names
+  expected_auto=$(echo "${scenario}" | jq -r 'if .expected.auto_resolved != null then .expected.auto_resolved elif .expected.auto_resolvable != null then .expected.auto_resolvable else "null" end')
+  expected_conflict_type=$(echo "${scenario}" | jq -r '.expected.conflict_type // "null"')
+  expected_conflict_count_gte=$(echo "${scenario}" | jq -r '.expected.conflict_count_gte // -1')
 
   # Prepare input file
   TMP_INPUT=$(mktemp)
@@ -113,6 +117,28 @@ while IFS= read -r scenario; do
           echo "         expected unresolved conflicts but all were auto-resolved"
           test_ok=false
         fi
+      fi
+    fi
+
+    # conflict_type check (semantic vs structural)
+    if [ "${expected_conflict_type}" != "null" ]; then
+      has_type=$(echo "${result}" | jq --arg t "${expected_conflict_type}" '[.conflicts[] | select(.type == $t)] | length > 0' 2>/dev/null || echo "false")
+      if [ "${has_type}" != "true" ]; then
+        echo "  FAIL  ${id}: ${desc}"
+        echo "         conflict_type: expected at least one '${expected_conflict_type}' conflict"
+        actual_types=$(echo "${result}" | jq -c '[.conflicts[].type // "structural"]' 2>/dev/null || echo "[]")
+        echo "         actual types: ${actual_types}"
+        test_ok=false
+      fi
+    fi
+
+    # conflict_count_gte check (>=N conflicts)
+    if [ "${expected_conflict_count_gte}" != "-1" ]; then
+      actual_conflict_count=$(echo "${result}" | jq '.conflicts | length' 2>/dev/null || echo "0")
+      if [ "${actual_conflict_count}" -lt "${expected_conflict_count_gte}" ]; then
+        echo "  FAIL  ${id}: ${desc}"
+        echo "         conflict_count: expected>=${expected_conflict_count_gte} actual=${actual_conflict_count}"
+        test_ok=false
       fi
     fi
   fi

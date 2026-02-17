@@ -1,0 +1,30 @@
+{
+  "multi-tenant-saas": {
+    "trigger_keywords": ["multi-tenant", "tenant isolation", "saas", "멀티테넌트"],
+    "description": "Multi-tenant SaaS 아키텍처 공통 제약 집합",
+    "preset_constraints": [
+      {"id":"arch-mt-1","target":"access-model","value":"rbac-with-tenant-scope","priority":"hard","constraint_type":"requires","source_agent":"archetype/multi-tenant-saas","evidence":"Tenant isolation requires scoped RBAC"},
+      {"id":"arch-mt-2","target":"sharding-key","value":"tenant_id","priority":"soft","constraint_type":"recommends","source_agent":"archetype/multi-tenant-saas","evidence":"tenant_id as partition key ensures data isolation"},
+      {"id":"arch-mt-3","target":"data-isolation","value":"row-level-security","priority":"hard","constraint_type":"requires","source_agent":"archetype/multi-tenant-saas","evidence":"RLS prevents cross-tenant data leakage"},
+      {"id":"arch-mt-4","target":"index-strategy","value":"tenant-prefixed-composite","priority":"soft","constraint_type":"recommends","source_agent":"archetype/multi-tenant-saas","evidence":"Composite index with tenant_id prefix avoids cross-tenant scans"}
+    ]
+  },
+  "event-driven-microservice": {
+    "trigger_keywords": ["event-driven", "microservice", "eventual consistency", "이벤트 기반", "이벤트드리븐"],
+    "description": "이벤트 기반 마이크로서비스 공통 제약 집합",
+    "preset_constraints": [
+      {"id":"arch-ed-1","target":"consistency","value":"eventual","priority":"soft","constraint_type":"recommends","source_agent":"archetype/event-driven-microservice","evidence":"Event-driven systems typically favor eventual consistency"},
+      {"id":"arch-ed-2","target":"saga-type","value":"choreography","priority":"soft","constraint_type":"recommends","source_agent":"archetype/event-driven-microservice","evidence":"Choreography avoids central coordinator dependency"},
+      {"id":"arch-ed-3","target":"idempotency","value":"required","priority":"hard","constraint_type":"requires","source_agent":"archetype/event-driven-microservice","evidence":"Message redelivery requires idempotent consumers"}
+    ]
+  },
+  "high-write-throughput": {
+    "trigger_keywords": ["write-heavy", "high write", "write throughput", "쓰기 성능", "쓰기 부하"],
+    "description": "높은 쓰기 처리량 요구사항 공통 제약 집합",
+    "preset_constraints": [
+      {"id":"arch-wt-1","target":"storage-engine","value":"lsm-preferred","priority":"soft","constraint_type":"recommends","source_agent":"archetype/high-write-throughput","evidence":"LSM-tree has lower write amplification than B-tree"},
+      {"id":"arch-wt-2","target":"consistency","value":"eventual-acceptable","priority":"soft","constraint_type":"recommends","source_agent":"archetype/high-write-throughput","evidence":"Strong consistency adds write synchronization overhead"},
+      {"id":"arch-wt-3","target":"batch-write","value":"enabled","priority":"soft","constraint_type":"recommends","source_agent":"archetype/high-write-throughput","evidence":"Batching reduces per-write overhead"}
+    ]
+  }
+}
