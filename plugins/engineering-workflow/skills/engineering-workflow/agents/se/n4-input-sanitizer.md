@@ -116,9 +116,16 @@ Secure the file upload pipeline: type validation (verify magic bytes, not just C
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete input validation and sanitization design has been produced covering all input surfaces, with injection prevention strategies, context-aware XSS prevention, file upload security pipeline, and framework-specific integration guidance.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] validation_rules present and includes: query_params, request_body, url_paths, headers (each with strategy)
+- [ ] injection_prevention present and includes: sql_injection (primary, secondary, detection), nosql_injection, command_injection
+- [ ] xss_strategy present and includes: output_encoding_library, html_sanitization, csp_as_defense_layer
+- [ ] file_upload_policy present and includes: type_validation, allowed_types, max_file_size, filename_handling, malware_scan, storage
+- [ ] framework_integration contains at least 1 framework with integration steps
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If input surfaces or framework constraints are insufficient: return partial design, confidence < 0.5 with missing_info
 
 ## NEVER
 

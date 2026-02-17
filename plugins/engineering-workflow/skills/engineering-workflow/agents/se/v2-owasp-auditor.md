@@ -143,9 +143,15 @@ Additional controls:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with owasp_assessment (all 10 categories evaluated), overall_score, critical_findings, and remediation_priority. If application details are insufficient to assess certain categories, mark them as "Insufficient Information" and return with confidence < 0.5.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] owasp_assessment contains all 10 OWASP categories, each with: category, status, findings (array)
+- [ ] overall_score present and includes: pass, fail, partial, risk_level
+- [ ] critical_findings present as array with entries containing: id, category, severity, title
+- [ ] remediation_priority contains at least 1 entry with: priority, finding_id, effort, impact, fix
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If application details are insufficient: mark unassessable categories as "Insufficient Information", confidence < 0.5 with missing_info
 
 ## NEVER
 

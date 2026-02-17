@@ -145,9 +145,16 @@ Engine-specific options:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with topology selection, replication_config with specific settings, lag_handling strategy, and failover_plan. If availability requirements are unspecified, default to 99.9% and note the assumption.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] topology present and includes: type, primary_count, replica_count, rationale
+- [ ] replication_config present and includes: mode, engine_settings
+- [ ] lag_handling present and includes: strategy
+- [ ] failover_plan present and includes: mechanism, detection_timeout_s, estimated_failover_time_s, runbook_steps
+- [ ] failover_plan.runbook_steps contains at least 3 entries
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If availability requirements are unspecified: default to 99.9% and note the assumption, confidence < 0.5 with missing_info
 
 For in-depth analysis, refer to `references/db/domain-f-replication.md`.
 

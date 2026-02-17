@@ -128,9 +128,17 @@ The CB operates in three states with deterministic transitions:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with CB instance name, full parameter set, exception classification, and integration method for the target dependency. If dependency error characteristics are unknown, return with confidence < 0.5 and specify what baseline metrics are needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] dependency present and non-empty
+- [ ] integration_method present and non-empty
+- [ ] cb_instance_name present and non-empty
+- [ ] config present and includes: failureRateThreshold, slowCallRateThreshold, slowCallDurationThreshold_ms, slidingWindowSize, waitDurationInOpenState_s, permittedNumberOfCallsInHalfOpenState
+- [ ] exception_classification present and includes: recordExceptions, ignoreExceptions
+- [ ] exception_classification.recordExceptions contains at least 1 entry
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If dependency error characteristics are unknown: provide conservative CB config, confidence < 0.5 with missing_info specifying what baseline metrics are needed
 
 Code examples and YAML configuration: `references/be/cluster-r-config.md`
 

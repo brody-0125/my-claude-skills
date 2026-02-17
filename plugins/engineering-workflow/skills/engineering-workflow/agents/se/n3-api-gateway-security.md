@@ -115,9 +115,16 @@ Plan API key management: issuance (self-service via developer portal, admin-prov
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete API gateway security configuration has been produced covering auth delegation, request validation, tiered throttling, API key lifecycle, and mTLS termination with upstream forwarding design.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] gateway_auth_config present and includes: jwt_validation (issuer, audience, algorithms), api_key (header, lookup), mtls (client_cert_validation)
+- [ ] validation_rules present and includes: schema_validation, max_payload_size, allowed_content_types, request_id
+- [ ] throttling_policy present and includes: tiers (at least 1 with tier, rate_limit, burst, daily_quota), per_endpoint_overrides, response
+- [ ] api_key_management present and includes: issuance, rotation, scoping, revocation, usage_tracking
+- [ ] mtls_config present and includes: termination, client_cert_header, cert_renewal
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If gateway platform or client types are insufficient: return partial config, confidence < 0.5 with missing_info
 
 ## NEVER
 

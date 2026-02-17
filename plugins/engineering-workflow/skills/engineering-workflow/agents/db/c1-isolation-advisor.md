@@ -106,9 +106,17 @@ Engine-specific behaviors:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with isolation_level recommendation, anomalies_prevented/accepted lists, and at least one edge case identified. If the application's transaction patterns are too vague, return with lower confidence and list what information is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] isolation_level present and non-empty
+- [ ] anomalies_prevented present and contains at least 1 entry
+- [ ] anomalies_accepted present (may be empty array)
+- [ ] edge_cases present and contains at least 1 entry
+- [ ] Every edge_case includes: scenario, description, mitigation, likelihood
+- [ ] engine_specific_notes present and non-empty
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If transaction patterns are too vague: provide conservative recommendation, confidence < 0.5 with missing_info listing what information is needed
 
 For in-depth analysis, refer to `references/db/domain-c-isolation.md`.
 

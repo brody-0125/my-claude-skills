@@ -87,6 +87,19 @@
 }
 ```
 
+## Exit Checklist
+
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] audit_tier present and is "THOROUGH"
+- [ ] findings present and contains at least 1 entry
+- [ ] Every finding includes: phase, check, target, status, detail
+- [ ] Every finding with status FAIL or WARN includes: recommendation
+- [ ] expansion_needed present (may be empty array)
+- [ ] Every expansion entry includes: domain, reason, priority
+- [ ] overall_score present and is between 0 and 100
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If agent_results are empty or invalid: return error noting no valid results to audit
+
 ## Scoring
 
 ```

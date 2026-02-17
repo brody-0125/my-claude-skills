@@ -151,9 +151,15 @@ Role consolidation analysis:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with audit_results (violations array with severity), over_privilege_findings, role_explosion_score, and remediation_steps. If role-permission configuration is incomplete, return with confidence < 0.5 and specify what data is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] audit_results present and includes: total_roles, total_permissions, total_users, violations (array with severity, type, detail, remediation)
+- [ ] over_privilege_findings contains at least 1 entry with: role, unused_permissions, days_since_last_use, recommendation
+- [ ] role_explosion_score present and includes: total_roles, assessment, overlap_pairs, single_user_roles
+- [ ] remediation_steps contains at least 1 prioritized action item
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If role-permission configuration is incomplete: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

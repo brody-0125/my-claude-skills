@@ -112,9 +112,17 @@ Select the engine with the best overall fit. Document:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with engine recommendation, workload_profile, quantitative_comparison of at least 2 candidates, and confidence score. If workload information is insufficient, return with confidence < 0.5 and note what additional data is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] engine present and non-empty
+- [ ] workload_profile present and includes: read_write_ratio, latency_class, data_volume, access_pattern
+- [ ] quantitative_comparison present and contains at least 2 entries
+- [ ] Every comparison entry includes: engine, write_amp, read_amp, space_amp, fit_score
+- [ ] migration_notes present and non-empty
+- [ ] tuning_recommendations present and contains at least 1 entry
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If workload information is insufficient: provide best-effort recommendation, confidence < 0.5 with missing_info noting what additional data is needed
 
 For in-depth analysis, refer to `references/db/domain-a-engine-selection.md`.
 

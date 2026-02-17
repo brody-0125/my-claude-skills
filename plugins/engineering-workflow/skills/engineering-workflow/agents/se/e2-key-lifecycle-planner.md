@@ -95,9 +95,16 @@ Choose key storage by key tier: HSM (FIPS 140-2 Level 3) for root keys and KEKs,
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete key lifecycle plan has been produced covering all key types, with rotation schedules defined, distribution architecture designed, storage tiers selected, and escrow/DR procedures documented.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] key_inventory contains at least 1 entry with key_type, purpose, algorithm, storage, scope
+- [ ] rotation_schedule contains at least 1 entry with key_type, interval_days, method, re_encryption
+- [ ] distribution_architecture present and includes: pattern, flow, multi_region
+- [ ] storage_recommendation present and includes: root_keys, operational_keys, application_keys
+- [ ] escrow_policy present and includes: method, storage, test_frequency
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If key types or infrastructure constraints are insufficient: return partial plan, confidence < 0.5 with missing_info
 
 ## NEVER
 

@@ -277,9 +277,20 @@ FOR each conflict:
 | Constraints file missing | Use empty constraints, note in output |
 | One orchestrator timed out | Include partial results, mark system as "timeout" status |
 
-## Exit Condition
+## Exit Checklist
 
-Done when: All orchestrator results are merged, all cross-system dependencies identified, all conflicts resolved (or documented as unresolvable), and implementation order is defined as a valid topological ordering. Output JSON validates against the schema above.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] systems_analyzed present and contains at least 1 system
+- [ ] system_statuses present with status for each analyzed system
+- [ ] cross_dependencies present (may be empty array)
+- [ ] Every cross_dependency includes: from, to, trigger, affected, type
+- [ ] conflicts present (may be empty array) with resolution for each conflict
+- [ ] resolution_summary present and includes: total_conflicts, unresolved
+- [ ] unified_recommendation present and includes: summary, key_decisions
+- [ ] implementation_order present and contains at least 1 phase
+- [ ] Every phase includes: phase, system, action, depends_on, risk
+- [ ] confidence_assessment.overall is one of: high, medium, low
+- [ ] If only 1 system analyzed: skip cross-system analysis, output single system recommendation directly
 
 ## Model Assignment
 

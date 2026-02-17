@@ -136,9 +136,16 @@ Every test must satisfy all 6 items:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with tier classification, violation list, and all 6 checklist items evaluated. If test source is insufficient, return with confidence < 0.5 and specify what code is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] test_class present and non-empty
+- [ ] tier present and is one of: Tier 1 Unit, Tier 2 Integration
+- [ ] violations present (may be empty array)
+- [ ] Every violation includes: rule, detail, severity
+- [ ] checklist present and includes all 6 items: source_set, naming_bytes, fixture_monkey, strikt_assertions, forbidden_imports, deterministic
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If test source is insufficient: provide partial evaluation, confidence < 0.5 with missing_info specifying what code is needed
 
 Code examples and configuration details: `references/be/cluster-t-testing.md`
 

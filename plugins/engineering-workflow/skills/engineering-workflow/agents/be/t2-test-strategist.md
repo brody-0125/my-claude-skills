@@ -106,9 +106,15 @@ Assemble the complete strategy and present for user confirmation before handing 
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with all target classes mapped to layers and techniques, coverage targets assigned, test counts estimated, and validation tier determined. If target class information is insufficient for layer classification, return with lower confidence and specify what source structure is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] targets present and contains at least 1 entry
+- [ ] Every target includes: class, layer, technique, framework, coverage_target, estimated_tests
+- [ ] tier present and is one of: LIGHT, STANDARD, THOROUGH
+- [ ] total_estimated_tests present and is a positive integer
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If target class information is insufficient: provide best-effort layer classification, confidence < 0.5 with missing_info specifying what source structure is needed
 
 Technique details and framework configuration: `references/be/test-techniques-catalog.md`
 

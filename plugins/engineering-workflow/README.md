@@ -39,6 +39,7 @@ Argument hint:
 - **Quality gates** via `audit-analysis.sh` (confidence/schema/synthesis checks)
 - **Session learning cache** (`pattern-cache.json`) for repeated query patterns
 - **False-positive resistant keyword matching** using word-boundary based detection
+- **Exit Checklist quality gates** across all agents — checkbox-based output validation ensuring JSON schema conformance, field presence/cardinality, confidence bounds (0.0–1.0), and graceful degradation on insufficient input
 
 ---
 

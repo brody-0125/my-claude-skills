@@ -184,9 +184,16 @@ Consent screen best practices:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with scope_hierarchy, granularity_model, dynamic_scope_rules, consent_design, and token_permission_mapping. If API surface or client types are unknown, return with confidence < 0.5 and specify what information is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] scope_hierarchy present and includes: naming_convention, standard_scopes, api_scopes, scope_groups
+- [ ] granularity_model present and includes: level, total_scopes, rationale, progressive_consent, initial_scopes, deferred_scopes
+- [ ] dynamic_scope_rules contains at least 1 entry with: rule, scopes or condition, effect or condition
+- [ ] consent_design present and includes: screen_layout, granular_revocation, persistence, admin_pre_approval, audit_logging
+- [ ] token_permission_mapping present and includes: description, examples, enforcement
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If API surface or client types are unknown: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

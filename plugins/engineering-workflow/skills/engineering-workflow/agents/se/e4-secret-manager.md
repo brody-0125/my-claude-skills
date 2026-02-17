@@ -100,9 +100,16 @@ Define who can read which secrets using least-privilege policies, implement acce
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete secret management strategy has been produced with secret inventory, platform selection justified, dynamic secret design for eligible secret types, access control policies defined, and rotation schedules established.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] secret_inventory contains at least 1 entry with type, count, current_storage, risk_level, dynamic_eligible
+- [ ] platform_recommendation present and includes: primary, justification, deployment, fallback
+- [ ] dynamic_secret_design present and includes at least 1 secret engine with ttl and rotation
+- [ ] access_policy present and includes: auth_method, policy_scope, least_privilege, break_glass
+- [ ] rotation_schedule contains at least 1 entry with secret_type, interval_days, method, notification
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If secret types or platform constraints are insufficient: return partial strategy, confidence < 0.5 with missing_info
 
 ## NEVER
 

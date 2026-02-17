@@ -134,9 +134,18 @@ Selection criteria:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with timeout budget, retry parameters, idempotency assessment, and fallback strategy for the target dependency. If latency characteristics or idempotency status are unknown, return with confidence < 0.5 and specify what information is needed. Code examples and YAML configuration: `references/be/cluster-r-config.md`
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] dependency present and non-empty
+- [ ] timeout present and includes: connect_ms, read_ms, total_budget_ms
+- [ ] retry present and includes: maxAttempts, waitDuration_ms, retryExceptions, ignoreExceptions
+- [ ] retry.retryExceptions contains at least 1 entry
+- [ ] fallback present and includes: strategy, reason
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If latency characteristics or idempotency status are unknown: provide conservative defaults, confidence < 0.5 with missing_info specifying what information is needed
+
+Code examples and YAML configuration: `references/be/cluster-r-config.md`
 
 ## NEVER
 

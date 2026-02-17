@@ -183,9 +183,16 @@ Build attestation:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with sbom_summary, vulnerability_report, license_audit, provenance_status, and remediation_plan. If dependency manifest files are unavailable or incomplete, return with confidence < 0.5 and note what additional information is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] sbom_summary present and includes: format, total_components, direct_dependencies, transitive_dependencies, completeness_score, generation_tool
+- [ ] vulnerability_report present and includes: total_cves, by_severity, critical_findings (array), auto_fixable, requires_manual_review
+- [ ] license_audit present and includes: total_licenses, compliant, violations (array), unknown_licenses, copyleft_risk
+- [ ] provenance_status present and includes: current_slsa_level, target_slsa_level, signing_status, recommendations
+- [ ] remediation_plan contains at least 1 entry with: priority, action, effort, blocks
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If dependency manifest files are unavailable or incomplete: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

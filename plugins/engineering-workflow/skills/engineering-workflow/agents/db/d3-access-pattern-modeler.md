@@ -138,7 +138,8 @@ Flag hot paths that conflict with each other (e.g., one needs normalization, ano
 - [ ] hot_paths contains at least 1 entry
 - [ ] Every hot_path includes: pattern_id, impact_score, priority, optimization
 - [ ] conflicts present (may be empty array if no conflicts detected)
-- [ ] If frequency data is unavailable: use relative ranking (high/medium/low) and note the assumption
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If frequency data is unavailable: use relative ranking (high/medium/low) and note the assumption, confidence < 0.5 with missing_info
 
 For in-depth analysis, refer to `references/db/domain-d-access-patterns.md`.
 

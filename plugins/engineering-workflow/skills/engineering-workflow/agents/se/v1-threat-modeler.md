@@ -162,9 +162,16 @@ Total DREAD = sum / 5 -> Low (1-1.5), Medium (1.5-2.5), High (2.5-3)
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with methodology_applied, system_map, threat_catalog (with per-threat scoring), risk_matrix, and recommended_mitigations. If system architecture details are insufficient, return with confidence < 0.5 and note what additional context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] methodology_applied present as a non-empty string
+- [ ] system_map present and includes: trust_boundaries, data_flows, entry_points, assets
+- [ ] threat_catalog contains at least 1 entry with: id, category, component, threat, attack_scenario, existing_mitigation, residual_risk, dread_score
+- [ ] risk_matrix present and includes: critical, high, medium, low
+- [ ] recommended_mitigations contains at least 1 entry with: threat_id, mitigation, priority
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If system architecture details are insufficient: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

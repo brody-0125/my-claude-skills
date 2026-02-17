@@ -114,9 +114,14 @@ Recommended combination: ArchUnit for layer direction, Konsist for Kotlin idiom 
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with violation report listing each violation's module, import, direction, layer_pair, severity, fix, and archunit_rule. If no violations found, output empty violations array with confirmation. If module information is insufficient, return with lower confidence and specify what Gradle config or source structure is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] violations present (may be empty array if no violations found)
+- [ ] Every violation includes: module, import, direction, layer_pair, severity, fix, archunit_rule
+- [ ] summary present and includes: critical, high, medium, low, overall_severity
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If module information is insufficient: provide partial audit results, confidence < 0.5 with missing_info specifying what Gradle config or source structure is needed
 
 Code examples and ArchUnit/Konsist rule implementations: `references/be/cluster-s-structure.md`
 

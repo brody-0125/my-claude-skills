@@ -121,9 +121,16 @@ Prioritize controls satisfying multiple frameworks first for maximum compliance 
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with applicable_frameworks, control_mapping, gap_analysis, cross_framework_map, and remediation_priority. If business context is insufficient to determine applicable frameworks, return with confidence < 0.5 and note what additional context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] applicable_frameworks present and includes: framework, rationale, relevant_criteria
+- [ ] control_mapping present with per-framework arrays containing: control, description, status, gap
+- [ ] gap_analysis present and includes: total_controls_assessed, implemented, partial, missing, not_applicable
+- [ ] cross_framework_map contains at least 1 entry with: common_control, frameworks, current_status, single_implementation_covers
+- [ ] remediation_priority contains at least 1 entry with: priority, control, frameworks_satisfied, estimated_effort, risk_reduction
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If business context is insufficient to determine applicable frameworks: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

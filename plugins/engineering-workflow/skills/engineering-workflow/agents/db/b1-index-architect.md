@@ -118,9 +118,15 @@ Analyzes the query workload to design an optimal set of indexes. Considers colum
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with at least one index recommendation, storage estimate, and query coverage analysis. If table schema is insufficient, return with low confidence and request specific DDL.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] indexes present and contains at least 1 entry
+- [ ] Every index includes: name, columns, type, covers_queries, rationale
+- [ ] storage_estimate present and includes: per_index, total_mb, percentage_of_table
+- [ ] query_coverage present and includes: covered, coverage_percentage
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If table schema is insufficient: provide general index guidelines, confidence < 0.5 with missing_info requesting specific DDL
 
 For in-depth analysis, refer to `references/db/domain-b-index-design.md`.
 
