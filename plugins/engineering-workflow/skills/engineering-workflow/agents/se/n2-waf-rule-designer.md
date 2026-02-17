@@ -113,9 +113,15 @@ Layer DDoS protection: L3/L4 via cloud provider (AWS Shield Standard/Advanced, C
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete WAF configuration has been produced with managed and custom rules, rate-limiting policies per endpoint, IP filtering rules, and a layered DDoS mitigation strategy covering L3 through L7.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] waf_config present and includes: platform, managed_rules (at least 1 with name, action), custom_rules (at least 1 with name, endpoint, condition, action)
+- [ ] rate_limit_policy contains at least 1 entry with scope, limit, action, window
+- [ ] ip_filtering_rules present and includes: blocklist_sources, tor_exit_nodes, geo_blocking
+- [ ] ddos_strategy present and includes: l3_l4, l7, failover
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If threat profile or endpoint information is insufficient: return partial config, confidence < 0.5 with missing_info
 
 ## NEVER
 

@@ -100,7 +100,8 @@ Include specific parameter values for the recommended strategy.
 - [ ] trade_offs.pros contains at least 1 entry
 - [ ] trade_offs.cons contains at least 1 entry
 - [ ] trade_offs.alternatives_considered contains at least 1 entry with WA/SA comparison
-- [ ] If target engine is not LSM-based: return immediately with a note that compaction analysis is not applicable
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If target engine is not LSM-based: return immediately with a note that compaction analysis is not applicable, confidence < 0.5 with missing_info
 
 For in-depth analysis, refer to `references/db/domain-a-compaction.md`.
 

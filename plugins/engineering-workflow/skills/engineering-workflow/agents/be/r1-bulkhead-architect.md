@@ -99,9 +99,17 @@ Designs bulkhead isolation for a Spring Boot backend that communicates with exte
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with bulkhead type, pool sizing, queue capacity, and thread budget verification for the target dependency. If concurrency estimates are unavailable, return with confidence < 0.5 and specify what load data is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] dependency present and non-empty
+- [ ] bulkhead_type present and is one of: Thread Pool, Semaphore, HikariCP Pool, Lettuce Pool, Async Thread Pool
+- [ ] criticality present and is one of: CRITICAL, HIGH, MEDIUM, LOW
+- [ ] pool_size present and is a positive integer
+- [ ] queue_capacity present (integer or null for semaphore type)
+- [ ] total_thread_budget_check present and non-empty
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If concurrency estimates are unavailable: provide conservative sizing, confidence < 0.5 with missing_info specifying what load data is needed
 
 Code examples and YAML configuration: `references/be/cluster-r-config.md`
 

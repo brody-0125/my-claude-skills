@@ -139,9 +139,15 @@ Check: user can view document IF user is member of team that owns document
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with model_recommendation, rationale, and the relevant model design (role_hierarchy for RBAC, attribute_schema for ABAC, relationship_model for ReBAC). If organization structure is unclear, return with confidence < 0.5 and specify what context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] model_recommendation present and is one of: RBAC, ABAC, ReBAC, Hybrid RBAC+ABAC, Hybrid RBAC+ReBAC
+- [ ] rationale present explaining why the model was selected
+- [ ] Relevant model design included: role_hierarchy (for RBAC), relationship_model with entities and relations (for ReBAC), or both (for Hybrid)
+- [ ] migration_from_current present and includes: current_model, migration_steps, estimated_effort
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If organization structure is unclear: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

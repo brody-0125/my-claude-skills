@@ -127,9 +127,15 @@ Federation trust model:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with session_model, mfa_flow, sso_federation_design, and security_controls. If architecture constraints are unclear, return with confidence < 0.5 and specify what deployment context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] session_model present and includes: type, store, session_id_format, rationale
+- [ ] mfa_flow present and includes: enrollment, challenge_trigger, supported_methods, recovery, max_attempts, lockout_duration
+- [ ] sso_federation_design present and includes: model, idp_discovery, logout_strategy, session_lifetime
+- [ ] security_controls present and includes: fixation_prevention, concurrent_sessions, idle_timeout_minutes, absolute_timeout_hours, ip_binding, secure_transport
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If architecture constraints are unclear: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

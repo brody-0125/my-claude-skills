@@ -158,7 +158,7 @@ With 5+ targets, Agent Teams (experimental) can generate tests in parallel. Obse
 
 Routes architecture queries across **DB** (Database), **BE** (Backend), **IF** (Infrastructure), and **SE** (Security) domains using a 3-tier micro-agent orchestration model.
 
-Starts with deterministic keyword classification (`classify-query.sh`), dispatches to system orchestrators and domain agents, then resolves cross-domain constraints before generating final recommendations.
+Starts with deterministic keyword classification (`classify-query.sh`), dispatches to system orchestrators and domain agents, then resolves cross-domain constraints before generating final recommendations. All agents enforce structured Exit Checklists for output validation, ensuring schema compliance and confidence-bounded responses.
 
 ```
 /engineering-workflow

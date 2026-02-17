@@ -123,9 +123,16 @@ For every design decision, explicitly state:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with schema_design containing at least one table, normal_form determination, and trade_offs documented. If entity descriptions are too vague, return with lower confidence and list what additional information is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] normal_form present and non-empty
+- [ ] schema_design present and includes: tables, relationships
+- [ ] schema_design.tables contains at least 1 entry with name, columns, normal_form
+- [ ] denormalization_decisions present (may be empty array if fully normalized)
+- [ ] trade_offs present and includes: gains, losses, revisit_conditions
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If entity descriptions are too vague: provide general schema guidelines, confidence < 0.5 with missing_info listing what additional information is needed
 
 For in-depth analysis, refer to `references/db/domain-d-normalization.md`.
 

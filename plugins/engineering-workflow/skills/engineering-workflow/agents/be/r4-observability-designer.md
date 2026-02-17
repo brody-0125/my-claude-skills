@@ -128,9 +128,18 @@ Resilience4j health indicators are registered with Spring Boot Actuator. CB heal
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with tracing configuration, metrics catalog, dashboard layout, alert rules with severity/thresholds, and distributed tracing design. If the resilience setup is incomplete (no CB or bulkhead configured yet), return with confidence < 0.5 and specify which resilience agents (R-1, R-2, R-3) must run first. Code examples, PromQL queries, and YAML: `references/be/cluster-r-observability.md`
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] tracing_bridge present and non-empty
+- [ ] metrics_endpoint present and non-empty
+- [ ] dashboard present and includes: rows, total_panels, refresh_interval
+- [ ] alerts present and includes: p1_critical, p2_high, p3_warning
+- [ ] tracing present and includes: propagation, custom_attributes, saga_support
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If resilience setup is incomplete: specify which resilience agents (R-1, R-2, R-3) must run first, confidence < 0.5 with missing_info
+
+Code examples, PromQL queries, and YAML: `references/be/cluster-r-observability.md`
 
 ## NEVER
 

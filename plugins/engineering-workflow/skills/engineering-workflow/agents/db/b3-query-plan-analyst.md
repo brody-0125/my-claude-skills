@@ -103,9 +103,16 @@ For each identified bottleneck, provide a specific actionable fix:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with bottlenecks list (may be empty if plan is optimal), improvements list, and estimated improvement. If EXPLAIN output is missing or unparseable, return error with instructions for obtaining it.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] bottlenecks present (may be empty array if plan is optimal)
+- [ ] Every bottleneck includes: node, severity, indicator, impact
+- [ ] improvements present and contains at least 1 entry (or empty if no bottlenecks)
+- [ ] Every improvement includes: target, fix, rationale, expected_change
+- [ ] estimated_improvement present and includes: before, after, speedup_factor
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If EXPLAIN output is missing or unparseable: return error with instructions for obtaining it, confidence < 0.5 with missing_info
 
 For in-depth analysis, refer to `references/db/domain-b-query-plan.md`.
 

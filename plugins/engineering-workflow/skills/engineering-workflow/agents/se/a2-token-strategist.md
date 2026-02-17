@@ -138,9 +138,15 @@ Refresh token rotation policy:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with claims_schema, token_strategy (access_ttl, refresh_ttl, rotation_policy), storage_recommendation, and revocation_mechanism. If auth protocol decision is pending from A1, return with confidence < 0.5 and note the dependency.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] claims_schema present and includes: standard, identity, authorization, custom, estimated_size_bytes
+- [ ] token_strategy present and includes: access_token (format, ttl, signing_algorithm), refresh_token (format, ttl, rotation_policy)
+- [ ] storage_recommendation present and includes: mechanism, rationale, fallback
+- [ ] revocation_mechanism present and includes: strategy, blacklist_key, ttl_alignment, emergency
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If auth protocol decision is pending from A1: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

@@ -85,9 +85,16 @@ Configure X-Frame-Options (DENY or SAMEORIGIN), X-Content-Type-Options (nosniff)
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete security header configuration has been produced covering CSP, CORS, HSTS, and all supplementary headers, with platform-specific implementation snippets and compliance mapping provided.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] header_config present and includes: Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- [ ] csp_policy present and includes: default-src, script-src, style-src, connect-src, frame-ancestors
+- [ ] cors_config present and includes: Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers
+- [ ] implementation_snippet contains at least 1 platform-specific example
+- [ ] compliance_notes contains at least 1 compliance mapping entry
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If application type or third-party requirements are insufficient: return partial config, confidence < 0.5 with missing_info
 
 ## NEVER
 

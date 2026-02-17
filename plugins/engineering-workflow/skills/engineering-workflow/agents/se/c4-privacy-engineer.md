@@ -145,9 +145,16 @@ Automated PII detection:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with dpia_summary, data_subject_rights_implementation, consent_management_design, pii_handling, and data_retention_policy. If data processing activities are unclear, return with confidence < 0.5 and note what additional context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] dpia_summary present and includes: data_inventory, processing_activities, risk_assessment, recommended_safeguards
+- [ ] data_subject_rights_implementation present and includes: access, erasure, portability, restriction (each with mechanism and sla)
+- [ ] consent_management_design present and includes: collection, storage, withdrawal, preference_center
+- [ ] pii_handling present and includes: detection, masking_strategy
+- [ ] data_retention_policy contains at least 1 entry with: category, retention, basis
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If data processing activities are unclear: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

@@ -86,9 +86,16 @@ Enable OCSP stapling (must-staple extension for new certificates), configure aut
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete TLS/mTLS configuration has been produced with version and cipher suite selection, certificate chain design, pinning strategy, renewal automation, and a platform-specific configuration snippet.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] tls_config present and includes: version (minimum, preferred), cipher_suites (tls_1_3, tls_1_2), curves
+- [ ] certificate_chain_design present and includes: root_ca, intermediate_ca, leaf
+- [ ] pinning_config present and includes: method, caa_record, backup_pins
+- [ ] renewal_strategy present and includes: protocol, renewal_threshold_days, monitoring
+- [ ] nginx_envoy_config_snippet present with platform-specific configuration
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If platform or compliance constraints are insufficient: return partial config, confidence < 0.5 with missing_info
 
 ## NEVER
 

@@ -141,9 +141,16 @@ Alert triggers:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with event_schema, immutability_design, retention_policy, query_architecture, and alerting_rules. If regulatory requirements are unclear, return with confidence < 0.5 and note which regulations need clarification.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] event_schema present and includes: fields (array with name, type, required), serialization
+- [ ] immutability_design present and includes: hash_chain, storage_type, write_path, tamper_detection
+- [ ] retention_policy present and includes: hot_tier, warm_tier, cold_tier, deletion_policy
+- [ ] query_architecture present and includes: real_time, batch, forensic
+- [ ] alerting_rules contains at least 1 entry with: name, condition, severity
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If regulatory requirements are unclear: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

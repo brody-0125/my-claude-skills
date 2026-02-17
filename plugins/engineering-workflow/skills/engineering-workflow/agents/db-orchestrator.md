@@ -182,7 +182,7 @@ If any agent results contain contradictory recommendations:
 
 ```
 aggregate_confidence = weighted_average(agent_confidences)
-weight = 1.0 for sonnet agents, 0.8 for haiku agents
+weight = 1.0 for sonnet agents, 0.8 for haiku agents (a2, c3, e3)
 ```
 
 If any agent confidence < 0.5, flag as low-confidence and recommend human review.
@@ -262,9 +262,19 @@ If any agent confidence < 0.5, flag as low-confidence and recommend human review
 | All agents fail | Return error with diagnostics, suggest manual analysis |
 | Reference file missing | Proceed without excerpt, note in output |
 
-## Exit Condition
+## Exit Checklist
 
-Done when: all dispatched agents have returned results (or errored), conflicts are resolved, and merged JSON output is produced. If no agents were dispatched (empty domain list), return an error indicating classification is required first.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] system is "DB" and status is "completed"
+- [ ] domains_analyzed present and contains at least 1 domain
+- [ ] agents_dispatched present and contains at least 1 agent name
+- [ ] agent_results present and contains at least 1 entry with agent, domain, result, confidence
+- [ ] recommendations present and contains at least 1 entry with id, title, description, priority
+- [ ] All dispatched agents have returned results or errored
+- [ ] conflicts present (may be empty array) with resolution documented for each conflict
+- [ ] metadata present and includes: confidence
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If no agents dispatched (empty domain list): return error indicating classification is required first
 
 ## Model Assignment
 

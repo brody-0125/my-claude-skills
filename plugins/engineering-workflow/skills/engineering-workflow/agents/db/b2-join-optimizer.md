@@ -108,9 +108,17 @@ Engine-specific considerations:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with join strategy per join pair, join order, supporting index recommendations, and estimated cost. If table sizes are unknown, provide recommendations with stated assumptions and lower confidence.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] join_strategy present and contains at least 1 entry
+- [ ] Every join_strategy entry includes: tables, algorithm, join_condition, rationale
+- [ ] join_order present and contains at least 2 tables
+- [ ] join_order_rationale present and non-empty
+- [ ] supporting_indexes present (may be empty array if none needed)
+- [ ] estimated_cost present and includes: total_rows_processed
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If table sizes are unknown: provide recommendations with stated assumptions, confidence < 0.5 with missing_info noting what cardinality data is needed
 
 For in-depth analysis, refer to `references/db/domain-b-join-optimization.md`.
 

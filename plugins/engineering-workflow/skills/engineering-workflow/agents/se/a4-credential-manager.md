@@ -132,9 +132,15 @@ Breached password checking:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with hashing_recommendation, passwordless_design, rotation_policy, and migration_plan. If current credential storage details are unknown, return with confidence < 0.5 and specify what legacy system information is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] hashing_recommendation present and includes: algorithm, parameters (memory_kb, iterations, parallelism), pepper, rationale
+- [ ] passwordless_design present and includes: primary_method, registration_flow, authentication_flow, fallback, cross_device
+- [ ] rotation_policy present and includes: forced_rotation, breach_response, password_history_depth, breached_password_check, service_accounts
+- [ ] migration_plan present and includes: current_state, target_state, phases, estimated_timeline
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If current credential storage details are unknown: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

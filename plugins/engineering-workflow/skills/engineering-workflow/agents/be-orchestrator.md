@@ -320,9 +320,20 @@ If any agent confidence < 0.5, flag as low-confidence and recommend human review
 | Reference file missing | Proceed without excerpt, note in output |
 | Chain rule triggered but mid-chain agent fails | Continue chain with remaining agents, note gap |
 
-## Exit Condition
+## Exit Checklist
 
-Done when: all dispatched agents have returned results (or errored), chain execution is complete, conflicts are surfaced (resolved or awaiting user input), and merged JSON output is produced. If no agents were dispatched (empty cluster list), return an error indicating classification is required first.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] system is "BE" and status is "completed"
+- [ ] domains_analyzed present and contains at least 1 cluster
+- [ ] agents_dispatched present and contains at least 1 agent name
+- [ ] agent_results present and contains at least 1 entry with agent, cluster, result, confidence
+- [ ] recommendations present and contains at least 1 entry with id, title, description, priority
+- [ ] All dispatched agents have returned results or errored
+- [ ] Chain execution is complete (if chain was triggered)
+- [ ] conflicts present (may be empty array) with resolution documented for each conflict
+- [ ] metadata present and includes: confidence
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If no agents dispatched (empty cluster list): return error indicating classification is required first
 
 ## Model Assignment
 

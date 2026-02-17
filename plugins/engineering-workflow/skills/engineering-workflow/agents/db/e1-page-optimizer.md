@@ -115,9 +115,16 @@ Assess storage-specific considerations:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with page_config, fill_factor recommendations per table, io_strategy, and estimated_improvement. If table profiles are unknown, provide general guidelines and note assumptions.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] page_config present and includes: page_size, compression
+- [ ] fill_factor present and contains at least 1 entry
+- [ ] Every fill_factor entry includes: table, fill_factor_pct, rationale
+- [ ] io_strategy present and includes: flush_method, rationale
+- [ ] estimated_improvement present and includes: read_throughput, write_throughput
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If table profiles are unknown: provide general guidelines with stated assumptions, confidence < 0.5 with missing_info
 
 For in-depth analysis, refer to `references/db/domain-e-page-optimization.md`.
 

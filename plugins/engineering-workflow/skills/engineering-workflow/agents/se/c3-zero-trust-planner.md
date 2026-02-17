@@ -141,9 +141,16 @@ Migration path from perimeter-based security:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with trust_boundary_map, microsegmentation_design, continuous_verification_policy, beyondcorp_architecture, and implementation_phases. If infrastructure details are insufficient, return with confidence < 0.5 and note what additional context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] trust_boundary_map contains at least 1 entry with: zone, data_classification, services, access_policy
+- [ ] microsegmentation_design present and includes: network_layer, service_mesh, allowed_flows, denied_by_default
+- [ ] continuous_verification_policy present and includes: signals, trust_scoring, step_up_triggers, re_auth_interval
+- [ ] beyondcorp_architecture present and includes: identity_aware_proxy, device_trust, access_tiers
+- [ ] implementation_phases contains at least 1 entry with: phase, scope, duration
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If infrastructure details are insufficient: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

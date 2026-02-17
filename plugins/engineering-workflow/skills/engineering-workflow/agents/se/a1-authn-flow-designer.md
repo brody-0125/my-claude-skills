@@ -110,9 +110,16 @@ Decision shortcuts:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with protocol_recommendation, flow_type, integration_points, and security_considerations. If use-case requirements are ambiguous, return with confidence < 0.5 and note what additional context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] protocol_recommendation present and is one of: OAuth2+PKCE, OIDC, SAML 2.0, Custom
+- [ ] flow_type present describing the selected flow variant
+- [ ] flow_steps contains at least 3 entries describing the end-to-end authentication flow
+- [ ] integration_points present and includes: idp_config, client_registration, redirect_uris, scopes
+- [ ] security_considerations contains at least 2 entries with protocol-specific guidance
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If use-case requirements are ambiguous: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 

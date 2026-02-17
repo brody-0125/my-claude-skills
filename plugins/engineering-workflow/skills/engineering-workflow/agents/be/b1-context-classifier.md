@@ -127,9 +127,17 @@ See `references/be/cluster-b-boundary-context.md` for the full system map.
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with context_mapping_pattern, semantic_gap score, acl_tier, and b2_recommendation. If target module information is insufficient, return with confidence < 0.5 and note what additional context is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] target_module present and non-empty
+- [ ] context_mapping_pattern present and is one of: Partnership, Shared Kernel, Customer/Supplier, Conformist, ACL, OHS + PL, Separate Ways
+- [ ] semantic_gap present and is an integer between 0 and 10
+- [ ] acl_tier present and non-empty
+- [ ] b2_recommendation present and non-empty
+- [ ] classification_factors present and includes: team_ownership, model_influence, model_acceptable
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If target module information is insufficient: provide best-effort classification, confidence < 0.5 with missing_info noting what additional context is needed
 
 For in-depth analysis, refer to `references/be/cluster-b-boundary-context.md`.
 

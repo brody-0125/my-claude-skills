@@ -89,7 +89,7 @@ Append to guidance:
     }
   ],
   "metadata": {
-    "confidence": "low",
+    "confidence": 0.20,
     "stub_note": "IF domain micro-agents are not yet implemented. General guidance only."
   }
 }
@@ -102,9 +102,15 @@ Append to guidance:
 | Query keywords not recognized | Return generic IF guidance with note |
 | Constraints missing | Proceed without constraints, note in output |
 
-## Exit Condition
+## Exit Checklist
 
-Done when: General guidance is produced based on query keywords. Output JSON is valid with `status: "stub"` and `future_agents` listing planned micro-agents.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] system is "IF" and status is "stub"
+- [ ] guidance present and non-empty
+- [ ] future_agents present and contains at least 1 entry with name, purpose, status
+- [ ] metadata present and includes: confidence, stub_note
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If query keywords are not recognized: return generic IF guidance with note
 
 ## Model Assignment
 

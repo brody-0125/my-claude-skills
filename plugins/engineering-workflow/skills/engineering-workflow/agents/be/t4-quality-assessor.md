@@ -126,9 +126,18 @@ When targets are not met and termination conditions are not triggered:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with all pipeline stage results, termination decision, and gap report (if continuing). If test files cannot be compiled or executed due to environment issues, return with infrastructure failure flag and specify what setup is needed.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] pipeline_results present and includes: compile, execute, coverage, quality
+- [ ] pipeline_results.compile includes: status, errors
+- [ ] pipeline_results.execute includes: status, passed, failed, skipped
+- [ ] pipeline_results.coverage includes: line, branch, target_met
+- [ ] tier present and is one of: LIGHT, STANDARD, THOROUGH
+- [ ] terminated present (boolean)
+- [ ] loop_iteration present and is a positive integer
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If test files cannot be compiled or executed due to environment issues: return with infrastructure failure flag, confidence < 0.5 with missing_info specifying what setup is needed
 
 Validation pipeline details and thresholds: `references/be/test-quality-validation.md`
 

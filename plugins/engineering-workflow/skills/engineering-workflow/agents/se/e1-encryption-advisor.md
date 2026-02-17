@@ -81,9 +81,15 @@ Quantify throughput impact per encryption layer, measure latency overhead (encry
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-This agent is done when a complete encryption strategy has been produced covering all identified data sensitivity tiers, with algorithm selections justified, performance impact quantified, and implementation guidance provided.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] encryption_strategy present and includes: tiers (array), scope_mapping (at_rest, in_transit, application_level)
+- [ ] algorithm_selections contains at least 1 entry with use_case, algorithm, justification
+- [ ] performance_analysis present and includes: throughput_impact, latency_per_operation_us, hardware_acceleration
+- [ ] implementation_guidance contains at least 1 actionable recommendation
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If data types or constraints are insufficient to determine tiers: return partial strategy, confidence < 0.5 with missing_info
 
 ## NEVER
 

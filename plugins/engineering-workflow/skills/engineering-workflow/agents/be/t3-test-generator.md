@@ -121,9 +121,15 @@ Test file placement mirrors source structure:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with all generated and extended test files listed, test counts per file, and techniques applied. If focal context is insufficient, return with lower confidence and specify what source code is needed. Never overwrite existing test files; only extend them.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] generated_files present (may be empty array if only extending)
+- [ ] Every generated_file includes: path, test_count, technique
+- [ ] extended_files present (may be empty array if only generating new)
+- [ ] patterns_matched present and contains at least 1 entry
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If focal context is insufficient: provide partial generation, confidence < 0.5 with missing_info specifying what source code is needed
 
 Test patterns and generation rules: `references/be/test-generation-patterns.md`, `references/be/test-techniques-catalog.md`
 

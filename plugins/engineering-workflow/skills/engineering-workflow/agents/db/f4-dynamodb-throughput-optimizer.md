@@ -142,9 +142,21 @@ Provide explicit trade-off table across options:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output includes `analysis`, `rationale`, `recommendation`, `constraints`, `trade_offs`, and `confidence`, and every constraint entry includes at least `id`, `target`, `value`, `priority`, `source_agent`.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] analysis present and includes: workload_summary, hotspot_findings, capacity_findings
+- [ ] analysis.hotspot_findings contains at least 1 entry
+- [ ] rationale present and non-empty
+- [ ] recommendation present and includes: partition_strategy, capacity_mode, throttling_mitigation, operational_controls
+- [ ] recommendation.throttling_mitigation contains at least 1 entry
+- [ ] recommendation.operational_controls contains at least 1 entry
+- [ ] constraints present and contains at least 1 entry
+- [ ] Every constraint includes: id, target, value, priority, source_agent
+- [ ] trade_offs present and contains at least 1 entry
+- [ ] Every trade_off includes: option, pros, cons, recommended_when
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If workload characteristics are unclear: provide general DynamoDB throughput guidance, confidence < 0.5 with missing_info noting what traffic pattern or target TPS data would enable specific analysis
 
 For in-depth analysis, refer to `references/db/domain-f-dynamodb-throughput.md`.
 

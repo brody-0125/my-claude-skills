@@ -219,6 +219,10 @@ Orchestrators handle this phase internally. Each orchestrator:
 4. Collects results and performs intra-system constraint merge
 5. Returns structured output with constraints declared
 
+Each agent determines its confidence score using the calibration rubric in
+`resources/confidence-calibration.md` (5-factor model: input completeness,
+specificity, evidence grounding, trade-off coverage, assumption count).
+
 **Agent Task prompt template**:
 ```
 You are the {domain} Micro Agent.
@@ -234,6 +238,7 @@ You are the {domain} Micro Agent.
 2. Recommendation: concrete actionable recommendation
 3. Constraints: declare any constraints your recommendation imposes on other domains
 4. Trade-offs: explicit trade-off documentation
+5. Confidence: score between 0.0–1.0 per `resources/confidence-calibration.md` rubric
 ```
 
 ### Phase 2.5: Analysis Quality Gate
@@ -379,6 +384,7 @@ Resources are loaded on-demand per phase. MUST NOT pre-load all resources.
 | Phase 1 (DB) | `resources/db-orchestration-protocol.md` | When DB system detected |
 | Phase 1 (BE) | `resources/be-orchestration-protocol.md` | When BE system detected |
 | Phase 1 (SE) | `resources/se-orchestration-protocol.md` | When SE system detected |
+| Phase 2 | `resources/confidence-calibration.md` | Loaded by orchestrators for agent confidence scoring |
 | Phase 2.5 | `resources/analysis-audit-protocol.md` | Always at Phase 2.5 entry (reused in 3.5, 4.5) |
 | Phase 3 | `resources/constraint-propagation.md` | Always at Phase 3 entry |
 | Phase 3 | `resources/priority-matrix.md` | When conflicts detected (reused in Phase 4) |
@@ -543,6 +549,7 @@ Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [co
 | [se-orchestration-protocol.md](./resources/se-orchestration-protocol.md) | SE 6-cluster agent selection, 8 chain rules, and security dispatch protocol |
 | [priority-matrix.md](./resources/priority-matrix.md) | Universal priority hierarchy for conflict resolution across all systems |
 | [synthesis-protocol.md](./resources/synthesis-protocol.md) | Cross-system synthesis procedure and dependency graph construction |
+| [confidence-calibration.md](./resources/confidence-calibration.md) | 5-factor confidence scoring rubric for micro agents |
 
 ### Scripts
 

@@ -158,9 +158,15 @@ Policy-as-code workflow:
 }
 ```
 
-## Exit Condition
+## Exit Checklist
 
-Done when: JSON output produced with engine_recommendation, rule_schema, evaluation_architecture, and test_strategy. If the access control model from Z1 is not yet decided, return with confidence < 0.5 and note the dependency.
+- [ ] Output is valid JSON matching Output Format schema
+- [ ] engine_recommendation present and includes: engine, language, deployment, rationale
+- [ ] rule_schema present and includes: policy_structure (subject, action, resource, condition, effect), hierarchy, conflict_resolution, sample_rule
+- [ ] evaluation_architecture present and includes: pep, pdp, pip, pap, fail_mode, latency_budget
+- [ ] test_strategy present and includes: unit_tests, decision_tables, integration_tests, shadow_mode, coverage_target
+- [ ] confidence is between 0.0 and 1.0
+- [ ] If access control model from Z1 is not yet decided: return partial result, confidence < 0.5 with missing_info
 
 ## NEVER
 
