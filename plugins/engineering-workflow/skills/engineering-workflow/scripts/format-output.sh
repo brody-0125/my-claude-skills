@@ -42,7 +42,7 @@ fi
 format_confidence() {
   local conf="${1:-0}"
   local level
-  level=$(awk -v c="${conf}" 'BEGIN { if (c >= 0.80) print "High"; else if (c >= 0.60) print "Medium"; else print "Low" }')
+  level=$(awk -v c="${conf}" 'BEGIN { if (c >= 0.70) print "High"; else if (c >= 0.50) print "Medium"; else print "Low" }')
   echo "${level} (${conf})"
 }
 
