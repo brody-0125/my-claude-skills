@@ -42,18 +42,26 @@ Phase 2 (Agent Execution) 완료 직후, Phase 3 (Constraint Resolution) 진입 
 
 각 `agent_results[]` 항목에 대해 개별 적용. 여러 에이전트가 동시에 낮은 confidence를 보이면 에스컬레이션 규칙 적용.
 
-### Step 2: Completeness Audit (STANDARD+, 프로토콜 기반)
+### Step 2: Completeness Audit (STANDARD+, 혼합 방식)
 
-Gateway Router 또는 Orchestrator가 LLM 판단으로 수행하는 6-point 체크리스트:
+6-point 체크리스트를 **결정론적 검사**(jq, 3개)와 **의미적 평가**(LLM, 3개)로 분리:
+
+#### 결정론적 검사 (jq — `validate-agent-output.sh`, 토큰 비용 0)
+
+2. **정량적 데이터**: `validate-agent-output.sh`가 rationale/recommendation/trade_offs에서 수치+단위 패턴 탐지 (ms, GB, %, TPS, IOPS 등). 미탐지 시 quality_score -5 + 경고
+3. **Trade-off 문서화**: `trade_offs` 배열 길이 >= 2 검사 (기존). 미충족 시 quality_score -10/-15 + 경고
+4. **Constraint 선언**: `constraints` 필드 존재 검사 (기존). Multi-domain인데 0개면 EW-AUD-010 경고
+
+#### 의미적 평가 (LLM — STANDARD+ only, ~0.3K/agent)
 
 1. **맥락 반영**: 분석이 사용자 쿼리의 구체적 맥락을 반영하는가 (generic 아닌가)
-2. **정량적 데이터**: 정량적 데이터 포함 여부 (해당될 경우 — 수치, 벤치마크, 비율 등)
-3. **Trade-off 문서화**: 최소 2개 옵션 비교 (`trade_offs` 필드 확인)
-4. **Constraint 선언**: Multi-domain인데 constraints 0개면 의심 — 경고 추가 (EW-AUD-010)
 5. **Actionable 추천**: 추천이 모호하지 않고 실행 가능한가
 6. **컨텍스트 인용**: 사용자 쿼리의 핵심 용어를 분석에서 참조하는가
 
-> 검사 주체: LLM (Gateway Router/Orchestrator). `validate-agent-output.sh`의 `quality_score`를 보조 지표로 활용.
+각 의미적 평가 항목은 PASS/FAIL + 한 줄 사유로 판정. FAIL 항목이 있으면 해당 agent_result에 EW-AUD-011 경고 추가.
+
+> **검사 분리 근거**: Point 2/3/4는 JSON 구조 검사로 완전히 커버 가능 → jq 결정론적 처리. Point 1/5/6은 의미 판단이 필수 → LLM 평가로만 수행 가능.
+> `validate-agent-output.sh`의 `quality_score`는 결정론적 검사 3개의 결과를 통합한 보조 지표.
 
 ### Step 3: Feasibility Check (STANDARD+, 프로토콜 기반)
 
@@ -105,15 +113,7 @@ STANDARD 이상에서 활성화. LIGHT에서는 skip.
 
 모든 intra-system conflict resolution이 `priority-matrix.md`의 규칙을 따르는지 검증.
 
-DB-specific 규칙과 범용 matrix의 매핑:
-
-| DB 규칙 (constraint-propagation.md) | Priority Matrix (priority-matrix.md) |
-|------|------|
-| Correctness (Domain C) | Data Integrity (Level 5) |
-| Durability (Domain E: WAL, checkpoint, flush) | Data Integrity (Level 5) |
-| Performance (Domain A, B; Domain E: buffer/I/O tuning) | Performance (Level 2) |
-| Scalability (Domain F) | Availability (Level 3) |
-| Simplicity (Domain D) | Convenience (Level 1) |
+DB-specific 도메인→우선순위 매핑은 [constraint-propagation.md § Intra-System Resolution](./constraint-propagation.md)에 정의되어 있으며, 범용 계층은 [priority-matrix.md](./priority-matrix.md)를 참조한다.
 
 검증 방법:
 1. `resolved_constraints`에서 conflict resolution이 적용된 항목 추출

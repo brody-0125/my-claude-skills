@@ -44,10 +44,23 @@ if [ -n "${CACHED}" ]; then
   exit 0
 fi
 
+# ── Archetype Matching ────────────────────────────────────
+# Match query against archetype library and inject preset constraints
+
+ARCHETYPE_CONSTRAINTS=$(match_archetype "${QUERY}" 2>/dev/null || echo "[]")
+ARCHETYPE_NAMES=$(get_matched_archetypes "${QUERY}" 2>/dev/null || echo "[]")
+if [ "$(echo "${ARCHETYPE_CONSTRAINTS}" | jq 'length')" -gt 0 ]; then
+  # Inject archetype preset constraints into constraints.json
+  echo "${ARCHETYPE_CONSTRAINTS}" | jq -c '.[]' 2>/dev/null | while IFS= read -r c; do
+    write_constraint "${c}" 2>/dev/null || true
+  done || true  # while-read returns 1 on EOF; prevent set -e exit
+fi
+
 # ── System Detection (delegates to _common.sh) ───────────
 # Keywords are defined once in _common.sh; detect_* functions are the single source of truth.
 
-DETECTED_SYSTEMS=$(detect_system "${QUERY}")
+detect_system "${QUERY}" > /dev/null
+DETECTED_SYSTEMS="${_EW_DETECTED_SYSTEMS}"
 SYSTEMS=()
 DB_MATCH=0; BE_MATCH=0; IF_MATCH=0; SE_MATCH=0
 
@@ -105,25 +118,7 @@ else
   PATTERN="cross"
 fi
 
-# ── Confidence Calculation ────────────────────────────────
-
-TOTAL_MATCHES=$(( DB_MATCH + BE_MATCH + IF_MATCH + SE_MATCH ))
-DOMAIN_COUNT=${#DOMAINS[@]}
-BE_CLUSTER_COUNT=${#BE_CLUSTERS[@]}
-SE_CLUSTER_COUNT=${#SE_CLUSTERS[@]}
-
-if [ "${TOTAL_MATCHES}" -eq 0 ]; then
-  CONFIDENCE="0.0"
-elif [ "${TOTAL_MATCHES}" -eq 1 ] && { [ "${DOMAIN_COUNT}" -ge 1 ] || [ "${BE_CLUSTER_COUNT}" -ge 1 ] || [ "${SE_CLUSTER_COUNT}" -ge 1 ]; }; then
-  CONFIDENCE="0.85"
-elif [ "${TOTAL_MATCHES}" -eq 1 ]; then
-  CONFIDENCE="0.70"
-else
-  # 2+ system matches → multi-system, lower confidence
-  CONFIDENCE="0.60"
-fi
-
-# ── Output JSON ───────────────────────────────────────────
+# ── Build JSON arrays ─────────────────────────────────────
 
 if [ ${#SYSTEMS[@]} -eq 0 ]; then
   SYSTEMS_JSON='[]'
@@ -149,6 +144,63 @@ else
   SE_CLUSTERS_JSON=$(printf '%s\n' "${SE_CLUSTERS[@]}" | jq -R . | jq -s . 2>/dev/null || echo '[]')
 fi
 
+# ── Session Context (Enhancement 1-2) ───────────────────────
+# Apply session history decay weights to cross-keyword scores before confidence calc.
+# EW_PROGRESSIVE_CLASSIFICATION=0 to disable (rollback support)
+CLASSIFIER="keyword-fast-path"
+if [ "${EW_PROGRESSIVE_CLASSIFICATION:-1}" != "0" ]; then
+  apply_session_context 2>/dev/null || true
+  if [ "${_EW_SESSION_CONTEXT_APPLIED}" = "1" ]; then
+    CLASSIFIER="keyword-weighted+context"
+  fi
+fi
+
+if [ "${_EW_PHASE2_ACTIVE}" = "1" ] && [ "${CLASSIFIER}" = "keyword-fast-path" ]; then
+  CLASSIFIER="keyword-weighted"
+fi
+
+# ── Confidence Calculation (Enhancement 1-1) ────────────────
+# Uses compute_confidence() with Phase 2 weighted scores + session context
+
+TOTAL_MATCHES=$(( DB_MATCH + BE_MATCH + IF_MATCH + SE_MATCH ))
+DOMAIN_COUNT=${#DOMAINS[@]}
+BE_CLUSTER_COUNT=${#BE_CLUSTERS[@]}
+SE_CLUSTER_COUNT=${#SE_CLUSTERS[@]}
+
+HAS_SUBDOMAIN=0
+if [ "${DOMAIN_COUNT}" -ge 1 ] || [ "${BE_CLUSTER_COUNT}" -ge 1 ] || [ "${SE_CLUSTER_COUNT}" -ge 1 ]; then
+  HAS_SUBDOMAIN=1
+fi
+
+CONFIDENCE=$(compute_confidence "${TOTAL_MATCHES}" "${HAS_SUBDOMAIN}")
+
+# ── Progressive Classification ──────────────────────────────
+if [ "${EW_PROGRESSIVE_CLASSIFICATION:-1}" != "0" ]; then
+  PRIOR_BOOST="${_EW_SESSION_BOOST}"
+  SUGGESTED_EXPANSIONS=$(lookup_transitions "${SYSTEMS[0]:-}" "${DOMAINS[0]:-${BE_CLUSTERS[0]:-${SE_CLUSTERS[0]:-}}}" 2>/dev/null || echo "[]")
+  PREV_SIG=$([ -f "${SESSION_HISTORY}" ] && tail -1 "${SESSION_HISTORY}" 2>/dev/null | jq -r '.signature // empty' 2>/dev/null || echo "")
+else
+  PRIOR_BOOST="0"; SUGGESTED_EXPANSIONS="[]"; PREV_SIG=""
+fi
+
+# ── LLM Verification Flag (Enhancement 1-3) ────────────────
+# Flag queries that have a classification but need LLM confirmation
+NEEDS_LLM="false"
+VERIFICATION_PROMPT="null"
+
+if [ "$(awk "BEGIN{print (${CONFIDENCE} > 0.0 && ${CONFIDENCE} < 0.85)}")" = "1" ]; then
+  NEEDS_LLM="true"
+  if [ "${SYSTEM_COUNT}" -ge 2 ]; then
+    VERIFICATION_PROMPT="\"Classify: '${QUERY}'. Detected systems: [${SYSTEMS[*]}] (confidence=${CONFIDENCE}). Confirm primary system(s) and relevance. Return JSON: {systems:[], confidence:float}\""
+  elif [ "${SYSTEM_COUNT}" -eq 1 ]; then
+    VERIFICATION_PROMPT="\"Classify: '${QUERY}'. Detected: ${SYSTEMS[0]} (confidence=${CONFIDENCE}). Verify classification and suggest if other systems apply. Return JSON: {systems:[], confidence:float}\""
+  else
+    VERIFICATION_PROMPT="\"Classify: '${QUERY}'. No system detected by keywords. Classify into [DB,BE,IF,SE]. Return JSON: {systems:[], domains:[], confidence:float}\""
+  fi
+fi
+
+# ── Output JSON ───────────────────────────────────────────
+
 OUTPUT=$(jq -n \
   --argjson systems "${SYSTEMS_JSON}" \
   --argjson domains "${DOMAINS_JSON}" \
@@ -157,6 +209,12 @@ OUTPUT=$(jq -n \
   --arg confidence "${CONFIDENCE}" \
   --arg query "${QUERY}" \
   --arg pattern "${PATTERN}" \
+  --arg classifier "${CLASSIFIER}" \
+  --arg prior_boost "${PRIOR_BOOST}" \
+  --argjson suggested_expansions "${SUGGESTED_EXPANSIONS}" \
+  --argjson archetype_matched "${ARCHETYPE_NAMES}" \
+  --argjson needs_llm_verification "${NEEDS_LLM}" \
+  --argjson verification_prompt "${VERIFICATION_PROMPT}" \
   '{
     query: $query,
     systems: $systems,
@@ -165,7 +223,12 @@ OUTPUT=$(jq -n \
     se_clusters: $se_clusters,
     pattern: $pattern,
     confidence: ($confidence | tonumber),
-    classifier: "keyword-fast-path"
+    classifier: $classifier,
+    prior_boost: ($prior_boost | tonumber),
+    suggested_expansions: $suggested_expansions,
+    archetype_matched: $archetype_matched,
+    needs_llm_verification: $needs_llm_verification,
+    verification_prompt: $verification_prompt
   }')
 
 echo "${OUTPUT}"
@@ -175,6 +238,10 @@ echo "${OUTPUT}"
 # Write to session history (non-blocking, errors suppressed)
 CLASSIFICATION_JSON=$(echo "${OUTPUT}" | jq '{systems, domains, be_clusters, se_clusters, pattern, confidence}' 2>/dev/null || true)
 if [ -n "${CLASSIFICATION_JSON}" ]; then
-  write_session_history "${QUERY}" "${CLASSIFICATION_JSON}" 2>/dev/null || true
+  write_session_history "${QUERY}" "${CLASSIFICATION_JSON}" "${PREV_SIG}" 2>/dev/null || true
   promote_to_cache "${QUERY_SIG}" "${CLASSIFICATION_JSON}" 2>/dev/null || true
+  # Record transition for progressive classification
+  if [ "${EW_PROGRESSIVE_CLASSIFICATION:-1}" != "0" ] && [ -n "${PREV_SIG}" ]; then
+    record_transition "${PREV_SIG}" "${SYSTEMS[0]:-}" "${DOMAINS[0]:-${BE_CLUSTERS[0]:-}}" 2>/dev/null || true
+  fi
 fi

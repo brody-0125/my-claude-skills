@@ -87,6 +87,15 @@ case "${AGENT_TYPE}" in
         *) ERRORS+=("Invalid status: ${STATUS}. Must be: completed, partial, stub, or failed") ;;
       esac
     fi
+    # cross_notes validation: if present, each entry must have from_agent, target_system, constraint
+    if echo "${INPUT}" | jq -e 'has("cross_notes")' >/dev/null 2>&1; then
+      invalid_notes=$(echo "${INPUT}" | jq '[.cross_notes[]? | select(
+        (has("from_agent") | not) or (has("target_system") | not) or (has("constraint") | not)
+      )] | length' 2>/dev/null || echo "0")
+      if [ "${invalid_notes}" -gt 0 ]; then
+        WARNINGS+=("${invalid_notes} cross_notes entries missing required fields (from_agent, target_system, constraint)")
+      fi
+    fi
     ;;
 
   synthesizer)
@@ -182,6 +191,30 @@ if [ "${STRICT_MODE}" = "true" ]; then
       ;;
   esac
 fi
+
+# ── Quantitative data detection (completeness audit point 2) ─
+
+# Check for quantitative data presence: numbers with units, percentages, benchmarks
+# This deterministically verifies audit point 2 ("정량적 데이터") without LLM.
+# Pattern: digits followed by common units (ms, GB, %, x, K, M, TPS, IOPS, etc.)
+QUANTITATIVE_PATTERN='[0-9]+(\.[0-9]+)?\s*(ms|s|sec|min|MB|GB|TB|KB|%|x|X|K|M|TPS|IOPS|QPS|RPS|ops\/s|req\/s|p99|p95|p50|latency|throughput)'
+
+case "${AGENT_TYPE}" in
+  domain-agent)
+    combined_text=$(echo "${INPUT}" | jq -r '(.rationale // "") + " " + (.recommendation // "") + " " + ((.trade_offs // [])[] | (.pros // [])[] + " " + (.cons // [])[] // "")' 2>/dev/null || echo "")
+    if [ -n "${combined_text}" ] && ! echo "${combined_text}" | grep -qE "${QUANTITATIVE_PATTERN}"; then
+      WARNINGS+=("No quantitative data detected (numbers with units, percentages, benchmarks) — consider adding metrics")
+      QUALITY_SCORE=$(( QUALITY_SCORE - 5 ))
+    fi
+    ;;
+  orchestrator)
+    combined_text=$(echo "${INPUT}" | jq -r '(.guidance // "") + " " + ((.recommendations // [])[] | .description // "")' 2>/dev/null || echo "")
+    if [ -n "${combined_text}" ] && ! echo "${combined_text}" | grep -qE "${QUANTITATIVE_PATTERN}"; then
+      WARNINGS+=("No quantitative data detected in guidance/recommendations — consider adding metrics")
+      QUALITY_SCORE=$(( QUALITY_SCORE - 5 ))
+    fi
+    ;;
+esac
 
 # ── Degenerate content detection ─────────────────────────
 

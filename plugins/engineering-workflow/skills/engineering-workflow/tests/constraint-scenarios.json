@@ -203,5 +203,321 @@
       "has_error": false,
       "auto_resolved": false
     }
+  },
+  {
+    "id": "CS-010",
+    "description": "Semantic conflict: LSM selection + low read latency requirement",
+    "input": {
+      "constraints": [
+        {
+          "id": "c-a1-1",
+          "source_agent": "db/a1",
+          "target": "storage-engine",
+          "value": "lsm",
+          "priority": "hard"
+        },
+        {
+          "id": "c-b1-1",
+          "source_agent": "db/b1",
+          "target": "read-latency",
+          "value": "low",
+          "priority": "hard"
+        }
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-011",
+    "description": "Archetype injection: multi-tenant query pre-populates constraints",
+    "type": "archetype",
+    "query": "multi-tenant SaaS RBAC schema design",
+    "expected": {
+      "archetype_matched": ["multi-tenant-saas"],
+      "preset_constraints_injected": 4
+    }
+  },
+  {
+    "id": "CS-012",
+    "description": "--graph output produces valid Mermaid diagram",
+    "type": "graph",
+    "input": {
+      "resolved_constraints": [
+        {
+          "source_agent": "db/a1-engine-selector",
+          "target": "schema-design",
+          "constraint_type": "requires"
+        },
+        {
+          "source_agent": "db/f3-sharding-architect",
+          "target": "connection-pool",
+          "constraint_type": "requires"
+        }
+      ]
+    },
+    "expected": {
+      "output_contains": "graph LR",
+      "output_contains_2": "```mermaid"
+    }
+  },
+  {
+    "id": "CS-013",
+    "description": "Semantic conflict: strong consistency + low write latency",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/c1", "target": "consistency", "value": "strong", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/f1", "target": "write-latency", "value": "low", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-014",
+    "description": "Semantic conflict: sync replication + cross-region",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/f1", "target": "replication", "value": "sync", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/f2", "target": "cross-region", "value": "true", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-015",
+    "description": "Semantic conflict: hash sharding + frequent range queries",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/f3", "target": "sharding", "value": "hash", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/b1", "target": "range-query", "value": "frequent", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-016",
+    "description": "Semantic conflict: field-level encryption + high query performance",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "se/e1", "target": "encryption", "value": "field-level", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/a1", "target": "query-performance", "value": "high", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-017",
+    "description": "Semantic conflict: orchestration saga + loose coupling",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "be/b1", "target": "saga", "value": "orchestration", "priority": "hard"},
+        {"id": "c2", "source_agent": "be/s1", "target": "coupling", "value": "loose", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-018",
+    "description": "3-way structural conflict on same target with mixed priorities",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/a1", "target": "storage-engine", "value": "lsm", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/a2", "target": "storage-engine", "value": "btree", "priority": "hard"},
+        {"id": "c3", "source_agent": "db/a3", "target": "storage-engine", "value": "wiredtiger", "priority": "soft"}
+      ]
+    },
+    "expected": {
+      "conflicts_count": 3,
+      "has_error": false,
+      "auto_resolved": false
+    }
+  },
+  {
+    "id": "CS-019",
+    "description": "Mixed: structural conflict + semantic conflict in same set",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/a1", "target": "storage-engine", "value": "lsm", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/a2", "target": "storage-engine", "value": "btree", "priority": "hard"},
+        {"id": "c3", "source_agent": "db/b1", "target": "read-latency", "value": "low", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count_gte": 2,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-020",
+    "description": "Semantic conflict: zero-downtime deployment + schema lock",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "if/d1", "target": "deployment", "value": "zero-downtime", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/d1", "target": "schema", "value": "schema-lock", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-021",
+    "description": "Semantic conflict: single-leader replication + multi-region writes",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/f1", "target": "replication", "value": "single-leader", "priority": "hard"},
+        {"id": "c2", "source_agent": "if/r1", "target": "write-region", "value": "multi-region", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-022",
+    "description": "Semantic conflict: in-memory storage + large dataset",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/a1", "target": "storage", "value": "in-memory", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/d1", "target": "dataset-size", "value": "large", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-023",
+    "description": "Semantic conflict: NoSQL + ACID transactions",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/a1", "target": "database", "value": "nosql", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/c1", "target": "transaction", "value": "acid", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-024",
+    "description": "Semantic conflict: eventual consistency + financial data",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/f2", "target": "consistency", "value": "eventual", "priority": "hard"},
+        {"id": "c2", "source_agent": "be/b1", "target": "data-type", "value": "financial", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-025",
+    "description": "Semantic conflict: microservices + shared database",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "be/s3", "target": "architecture", "value": "microservices", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/d1", "target": "database", "value": "shared", "priority": "soft"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-026",
+    "description": "Semantic conflict: serverless + long-running execution",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "if/c1", "target": "compute", "value": "serverless", "priority": "hard"},
+        {"id": "c2", "source_agent": "be/r1", "target": "execution", "value": "long-running", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-027",
+    "description": "Semantic conflict: cache-first + strong consistency",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "be/r1", "target": "caching", "value": "cache-first", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/f2", "target": "consistency", "value": "strong", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
+  },
+  {
+    "id": "CS-028",
+    "description": "Semantic conflict: denormalized schema + complex joins",
+    "input": {
+      "constraints": [
+        {"id": "c1", "source_agent": "db/d1", "target": "schema", "value": "denormalized", "priority": "hard"},
+        {"id": "c2", "source_agent": "db/b1", "target": "query-type", "value": "complex-join", "priority": "hard"}
+      ]
+    },
+    "expected": {
+      "conflict_count": 1,
+      "conflict_type": "semantic",
+      "auto_resolvable": false,
+      "has_error": false
+    }
   }
 ]

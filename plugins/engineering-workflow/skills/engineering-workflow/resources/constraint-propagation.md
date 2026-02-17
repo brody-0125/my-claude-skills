@@ -53,6 +53,16 @@ Every constraint object follows this schema:
 | `timestamp` | ISO 8601 | datetime | When the constraint was declared |
 | `status` | enum | declared, accepted, rejected, resolved, archived | Lifecycle status |
 
+### Schema Layers
+
+Constraint 스키마는 3개 계층으로 사용된다. 각 계층은 동일 데이터의 다른 뷰를 나타낸다.
+
+| 계층 | 필드 수 | 사용 위치 | 설명 |
+|------|---------|----------|------|
+| **Full Schema** | 12 | `constraints.json` 저장, 이 문서의 정규 정의 | 모든 메타데이터 포함 (`id`, `source_agent`, `source_system`, `source_domain`, `constraint_type`, `target_system`, `target_domain`, `description`, `priority`, `evidence`, `timestamp`, `status`) |
+| **Agent Declaration** | 5 | 에이전트 출력 JSON (`orchestration-protocol.md` § Agent Task Prompt) | 에이전트가 선언하는 최소 필드 (`constraint_type`, `target_domain`, `description`, `priority`, `evidence`). Orchestrator가 `source_*` 메타데이터를 부가하여 Full Schema로 확장 |
+| **Resolution Working** | 5 | `resolve-constraints.sh`, `all_declared_constraints[]` | 충돌 감지 및 해결에 사용되는 작업 필드 (`id`, `target`, `value`, `priority`, `constraint_type`). `target`=`target_domain`, `value`=`description`에 대응 |
+
 ### Constraint Types
 
 | Type | Semantics | Example |
@@ -223,6 +233,35 @@ Orchestrators MUST separate constraints into two categories in their output:
 This split enables the synthesizer to detect cross-system conflicts that would otherwise be hidden by intra-system resolution.
 
 **Rule**: When an intra-system constraint has an `impacts` field pointing to another system, it MUST be included in BOTH `resolved_constraints` AND passed to the synthesizer via the orchestrator output, even if resolved locally.
+
+### all_declared_constraints Field
+
+Orchestrators MUST include `all_declared_constraints` in their output — the complete list of all constraints declared by agents before any resolution or filtering:
+
+```json
+{
+  "all_declared_constraints": [
+    {
+      "id": "c-a1-1",
+      "source_agent": "db/a1-engine-selector",
+      "target": "schema-design",
+      "value": "sorted-key",
+      "priority": "hard",
+      "constraint_type": "requires"
+    }
+  ],
+  "resolved_constraints": [...],
+  "unresolved_constraints": [...]
+}
+```
+
+**Purpose**: The synthesizer uses `all_declared_constraints` to detect cross-system implications in constraints that were resolved internally by an orchestrator. Without this field, constraints filtered during intra-system resolution would be invisible to the synthesizer, potentially missing implicit cross-system conflicts.
+
+**Requirement by pattern**:
+- Pattern "cross" 쿼리: `all_declared_constraints` MUST be present — synthesizer가 cross-system 충돌을 감지하는 데 필수.
+- Single/multi-domain 쿼리 (synthesizer 미사용): MAY omit — orchestrator가 내부적으로 constraint를 해결하므로 선택적.
+
+포함 시, `all_declared_constraints` MUST contain every constraint object emitted by any agent in the orchestrator's pipeline. No filtering, deduplication, or resolution is applied to this field.
 
 ### Resolved Constraint Object Schema
 

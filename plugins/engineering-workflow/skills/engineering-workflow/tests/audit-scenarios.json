@@ -120,6 +120,7 @@
       "recommendations": [{"title": "Use RocksDB", "priority": "high"}],
       "resolved_constraints": [],
       "unresolved_constraints": [],
+      "cross_notes": [],
       "metadata": {"confidence": 0.85}
     },
     "expected": {
@@ -280,6 +281,7 @@
       "recommendations": [{"title": "Use WAL optimization", "priority": "medium"}],
       "resolved_constraints": [],
       "unresolved_constraints": [],
+      "cross_notes": [],
       "metadata": {"confidence": 0.60}
     },
     "expected": {
@@ -337,6 +339,69 @@
     "expected": {
       "action": "WARN",
       "has_calibration": true
+    }
+  },
+  {
+    "id": "AS-024",
+    "description": "Confidence boundary 0.70 exactly — PASS threshold (>= 0.70 = PASS)",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.70,
+      "rationale": "Moderate analysis with some uncertainty",
+      "recommendation": "Consider using connection pooling for the expected load"
+    },
+    "expected": {
+      "action": "PASS",
+      "has_calibration": false
+    }
+  },
+  {
+    "id": "AS-025",
+    "description": "Confidence boundary 0.40 exactly — RETRY threshold",
+    "mode": "confidence",
+    "input": {
+      "confidence": 0.40,
+      "rationale": "Borderline retry threshold"
+    },
+    "expected": {
+      "action": "RETRY",
+      "has_calibration": false
+    }
+  },
+  {
+    "id": "AS-026",
+    "description": "Synthesis audit — 3-system with complete rollback plan",
+    "mode": "synthesis",
+    "input": {
+      "systems_analyzed": ["DB", "BE", "SE"],
+      "unified_recommendation": "Implement encrypted DB storage with secure BE API layer and SE audit controls",
+      "implementation_order": [
+        {"phase": "db-encryption", "risk": "high", "rollback": "Disable encryption and restore cleartext", "depends_on": []},
+        {"phase": "api-security", "risk": "medium", "rollback": "Revert security middleware", "depends_on": ["db-encryption"]},
+        {"phase": "se-audit", "risk": "low", "rollback": "", "depends_on": ["api-security"]}
+      ],
+      "confidence_assessment": {"overall": "high"}
+    },
+    "expected": {
+      "overall": "PASS"
+    }
+  },
+  {
+    "id": "AS-027",
+    "description": "Orchestrator audit — cross pattern missing all_declared_constraints → FAIL",
+    "mode": "orchestrator",
+    "input": {
+      "system": "DB",
+      "status": "completed",
+      "pattern": "cross",
+      "guidance": "Use sharding with application-level routing for cross-system optimization",
+      "recommendations": [{"title": "Hash-based sharding", "priority": "high"}],
+      "resolved_constraints": [],
+      "unresolved_constraints": [],
+      "metadata": {"confidence": 0.80}
+    },
+    "expected": {
+      "overall": "FAIL"
     }
   }
 ]

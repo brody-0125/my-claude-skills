@@ -89,6 +89,25 @@ A stub orchestrator must include at least the following fields:
 
 ## 2. Dependency Detection Rules
 
+### 2.0 all_declared_constraints Analysis
+
+Before dependency detection, the synthesizer examines `all_declared_constraints` from each orchestrator output. This field contains every constraint declared by agents before intra-system resolution.
+
+```
+For each orchestrator output:
+  1. Read all_declared_constraints[] (if present)
+  2. For each constraint in all_declared_constraints:
+     a. If constraint.impacts includes a system different from the source:
+        → Flag as potential cross-system dependency (even if resolved internally)
+     b. If constraint.target matches a known semantic conflict pair (KNOWN_CONFLICT_PAIRS):
+        → Check all other orchestrator all_declared_constraints for counterpart
+        → If found: report as implicit cross-system conflict
+  3. Cross-reference with resolved_constraints to identify constraints that were
+     resolved locally but have cross-system implications
+```
+
+This step ensures no cross-system conflicts are lost due to intra-system resolution filtering.
+
 ### 2.1 Cross-System Dependency Patterns
 
 Cross-system dependencies are detected using the following rules.

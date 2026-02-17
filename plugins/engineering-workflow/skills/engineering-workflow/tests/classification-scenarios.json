@@ -6,8 +6,13 @@
       "systems": ["DB"],
       "domains": ["A"],
       "be_clusters": [],
+      "se_clusters": [],
       "pattern": "single",
       "min_confidence": 0.85
+    },
+    "extended_checks": {
+      "needs_llm_verification": false,
+      "archetype_empty": true
     },
     "description": "Single-system DB query matching domain A"
   },
@@ -43,8 +48,12 @@
       "systems": ["BE"],
       "domains": [],
       "be_clusters": ["B", "R"],
+      "se_clusters": [],
       "pattern": "single",
       "min_confidence": 0.85
+    },
+    "extended_checks": {
+      "needs_llm_verification": false
     },
     "description": "Multi-cluster BE query matching Boundary and Resilience"
   },
@@ -67,8 +76,12 @@
       "systems": [],
       "domains": [],
       "be_clusters": [],
+      "se_clusters": [],
       "pattern": "none",
       "min_confidence": 0.0
+    },
+    "extended_checks": {
+      "archetype_empty": true
     },
     "description": "No match — frontend query not in any domain"
   },
@@ -79,8 +92,13 @@
       "systems": ["DB"],
       "domains": ["C"],
       "be_clusters": [],
+      "se_clusters": [],
       "pattern": "single",
       "min_confidence": 0.85
+    },
+    "extended_checks": {
+      "needs_llm_verification": false,
+      "archetype_empty": true
     },
     "description": "DB concurrency domain with domain sub-detection"
   },
@@ -103,8 +121,13 @@
       "systems": ["BE"],
       "domains": [],
       "be_clusters": ["T"],
+      "se_clusters": [],
       "pattern": "single",
       "min_confidence": 0.85
+    },
+    "extended_checks": {
+      "needs_llm_verification": false,
+      "archetype_empty": true
     },
     "description": "BE Test cluster detection"
   },
@@ -128,8 +151,12 @@
       "systems": [],
       "domains": [],
       "be_clusters": [],
+      "se_clusters": [],
       "pattern": "none",
       "min_confidence": 0.0
+    },
+    "extended_checks": {
+      "archetype_empty": true
     },
     "description": "Edge case — no domain keywords match"
   },
@@ -288,6 +315,10 @@
       "pattern": "single",
       "min_confidence": 0.85
     },
+    "extended_checks": {
+      "needs_llm_verification": false,
+      "archetype_empty": true
+    },
     "description": "SE Cluster A — Authentication with OAuth2 and JWT"
   },
   {
@@ -299,9 +330,9 @@
       "be_clusters": [],
       "se_clusters": ["Z"],
       "pattern": "single",
-      "min_confidence": 0.85
+      "min_confidence": 0.80
     },
-    "description": "SE Cluster Z — Authorization model selection"
+    "description": "SE Cluster Z — Authorization model selection (multi-tenant cross-keyword lowers Phase 2 confidence)"
   },
   {
     "id": "TC-026",
@@ -471,5 +502,364 @@
       "min_confidence": 0.85
     },
     "description": "SE Cluster A — Biometric authentication (Fix 6 keyword verification)"
+  },
+  {
+    "id": "TC-039",
+    "type": "progressive",
+    "description": "이전 DB-F 컨텍스트에서 BE-R 쿼리 → transition 기록 + suggested_expansions 확인",
+    "setup": {
+      "prev_entries": [
+        {"systems": ["DB"], "domains": ["F"], "be_clusters": [], "se_clusters": [], "pattern": "single", "confidence": 0.85}
+      ]
+    },
+    "query": "API latency가 높은데 circuit breaker 설정이 필요한가",
+    "expected": {
+      "systems": ["BE"],
+      "be_clusters": ["R"],
+      "transition_recorded": true
+    }
+  },
+  {
+    "id": "TC-040",
+    "type": "progressive",
+    "description": "동일 도메인 3회 반복 후 전환 count 증가 확인",
+    "setup": {
+      "prev_entries": [
+        {"systems": ["DB"], "domains": ["F"], "be_clusters": [], "se_clusters": [], "pattern": "single", "confidence": 0.85},
+        {"systems": ["DB"], "domains": ["F"], "be_clusters": [], "se_clusters": [], "pattern": "single", "confidence": 0.85},
+        {"systems": ["DB"], "domains": ["F"], "be_clusters": [], "se_clusters": [], "pattern": "single", "confidence": 0.85}
+      ]
+    },
+    "query": "retry 전략과 idempotency key 설계",
+    "expected": {
+      "systems": ["BE"],
+      "be_clusters": ["R"],
+      "transition_recorded": true
+    }
+  },
+  {
+    "id": "TC-041",
+    "type": "progressive",
+    "description": "세션 갭 35분 후 쿼리 → prior_boost = 0 (window 밖)",
+    "setup": {
+      "prev_entries_age_minutes": 35,
+      "prev_entries": [
+        {"systems": ["DB"], "domains": ["F"], "be_clusters": [], "se_clusters": [], "pattern": "single", "confidence": 0.85}
+      ]
+    },
+    "query": "circuit breaker failureRate 설정",
+    "expected": {
+      "prior_boost": "0"
+    }
+  },
+  {
+    "id": "TC-042",
+    "type": "progressive",
+    "description": "EW_PROGRESSIVE_CLASSIFICATION=0 → prior_boost=0, suggested_expansions=[]",
+    "env": {
+      "EW_PROGRESSIVE_CLASSIFICATION": "0"
+    },
+    "query": "sharding latency circuit breaker",
+    "expected": {
+      "prior_boost": "0",
+      "suggested_expansions": []
+    }
+  },
+  {
+    "id": "TC-043",
+    "query": "hexagonal port adapter naming convention archunit",
+    "expected": {
+      "systems": ["BE"],
+      "domains": [],
+      "be_clusters": ["S"],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "BE Cluster S (Structure) standalone detection"
+  },
+  {
+    "id": "TC-044",
+    "query": "anti-corruption layer feign client external event",
+    "expected": {
+      "systems": ["BE"],
+      "domains": [],
+      "be_clusters": ["B"],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "BE Cluster B (Boundary) standalone detection"
+  },
+  {
+    "id": "TC-045",
+    "query": "normalization 3NF schema design access pattern",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["D"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "DB Domain D (Schema/Normalization) standalone detection"
+  },
+  {
+    "id": "TC-046",
+    "query": "buffer pool WAL checkpoint flush dirty page",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["E"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "DB Domain E (Page/IO) standalone detection"
+  },
+  {
+    "id": "TC-047",
+    "query": "composite index hash index query plan explain",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["B"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "DB Domain B (Index) standalone detection"
+  },
+  {
+    "id": "TC-048",
+    "query": "hexagonal saga circuit breaker fixture monkey",
+    "expected": {
+      "systems": ["BE"],
+      "domains": [],
+      "be_clusters": ["S", "B", "R", "T"],
+      "pattern": "single",
+      "min_confidence": 0.80
+    },
+    "description": "BE 4-cluster simultaneous detection (S+B+R+T)"
+  },
+  {
+    "id": "TC-049",
+    "query": "storage engine innodb isolation level deadlock",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["A", "C"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "DB multi-domain A+C simultaneous detection"
+  },
+  {
+    "id": "TC-050",
+    "query": "B-tree storage engine innodb compaction",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["A"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "extended_checks": {
+      "needs_llm_verification": false
+    },
+    "description": "High-confidence query → needs_llm_verification=false"
+  },
+  {
+    "id": "TC-051",
+    "query": "configure monitoring alerts",
+    "expected": {
+      "systems": ["IF"],
+      "domains": [],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.70
+    },
+    "extended_checks": {
+      "needs_llm_verification": true
+    },
+    "description": "Medium-confidence IF query → needs_llm_verification=true (no session boost from prior DB tests)"
+  },
+  {
+    "id": "TC-052",
+    "query": "multi-tenant SaaS RBAC schema design",
+    "expected": {
+      "systems": ["DB", "SE"],
+      "domains": ["D"],
+      "be_clusters": [],
+      "se_clusters": ["Z"],
+      "pattern": "multi",
+      "min_confidence": 0.60
+    },
+    "extended_checks": {
+      "archetype_contains": "multi-tenant-saas"
+    },
+    "description": "Archetype matching — multi-tenant-saas detected in output"
+  },
+  {
+    "id": "TC-053",
+    "query": "event-driven microservice saga eventual consistency",
+    "expected": {
+      "systems": ["DB", "BE"],
+      "domains": ["F"],
+      "be_clusters": ["B"],
+      "pattern": "multi",
+      "min_confidence": 0.60
+    },
+    "extended_checks": {
+      "archetype_contains": "event-driven-microservice"
+    },
+    "description": "Archetype matching — event-driven-microservice detected (consistency triggers DB)"
+  },
+  {
+    "id": "TC-054",
+    "query": "write-heavy workload LSM compaction throughput",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["A"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "extended_checks": {
+      "archetype_contains": "high-write-throughput"
+    },
+    "description": "Archetype matching — high-write-throughput detected"
+  },
+  {
+    "id": "TC-055",
+    "query": "database transaction isolation level",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["C"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "extended_checks": {
+      "archetype_empty": true
+    },
+    "description": "No archetype match → archetype_matched=[]"
+  },
+  {
+    "id": "TC-056",
+    "query": "isolation mvcc locking with caching strategy",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["C"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.80
+    },
+    "description": "Phase 2 DB-dominant: isolation+mvcc+locking → strong DB-C, caching alone insufficient for BE"
+  },
+  {
+    "id": "TC-057",
+    "query": "event sourcing saga with monitoring observability",
+    "expected": {
+      "systems": ["BE", "IF"],
+      "domains": [],
+      "be_clusters": ["B", "R"],
+      "pattern": "multi",
+      "min_confidence": 0.60
+    },
+    "description": "Phase 2 cross-keyword: g7(BE=0.80)+g12(IF=0.70) → BE+IF multi"
+  },
+  {
+    "id": "TC-058",
+    "query": "encryption tls key management firewall certificate",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["E", "N"],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "Phase 2 cross-keyword: g9+g11 both SE-dominant → single SE"
+  },
+  {
+    "id": "TC-059",
+    "query": "architecture decision multi-tenant encryption compliance",
+    "expected": {
+      "systems": ["SE"],
+      "domains": [],
+      "be_clusters": [],
+      "se_clusters": ["E", "C"],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "SE-dominant: encryption+compliance → strong SE with E+C clusters"
+  },
+  {
+    "id": "TC-060",
+    "query": "데이터베이스 transaction isolation level 설정",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["C"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "Mixed Korean+English with DB keywords (transaction isolation) and domain C"
+  },
+  {
+    "id": "TC-061",
+    "query": "!@#$%^ special chars",
+    "expected": {
+      "systems": [],
+      "domains": [],
+      "be_clusters": [],
+      "pattern": "none",
+      "min_confidence": 0.0
+    },
+    "description": "Special characters only — no system match, graceful handling"
+  },
+  {
+    "id": "TC-062",
+    "query": "the api gateway needs configuring",
+    "expected": {
+      "systems": ["BE"],
+      "domains": [],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.70
+    },
+    "description": "Substring guard — 'configuring' should NOT false-positive on 'gin'"
+  },
+  {
+    "id": "TC-063",
+    "query": "the engineer designed a beautiful bridge",
+    "expected": {
+      "systems": [],
+      "domains": [],
+      "be_clusters": [],
+      "pattern": "none",
+      "min_confidence": 0.0
+    },
+    "description": "False positive guard — 'engineer' should NOT match 'gin' via word boundary"
+  },
+  {
+    "id": "TC-064",
+    "query": "database replication sharding with api retry saga",
+    "expected": {
+      "systems": ["DB", "BE"],
+      "domains": ["F"],
+      "be_clusters": ["B", "R"],
+      "pattern": "multi",
+      "min_confidence": 0.60
+    },
+    "description": "Multi-system with both domain and cluster sub-detection (DB-F + BE-B,R)"
+  },
+  {
+    "id": "TC-065",
+    "query": "    database     isolation    ",
+    "expected": {
+      "systems": ["DB"],
+      "domains": ["C"],
+      "be_clusters": [],
+      "pattern": "single",
+      "min_confidence": 0.85
+    },
+    "description": "Excessive whitespace — should still classify correctly"
   }
 ]

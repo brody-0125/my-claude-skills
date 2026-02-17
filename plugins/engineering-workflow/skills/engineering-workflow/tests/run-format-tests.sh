@@ -41,9 +41,13 @@ while IFS= read -r scenario; do
 
   # Build format arguments
   use_summary=$(echo "${scenario}" | jq -r '.summary // false')
+  use_graph=$(echo "${scenario}" | jq -r '.graph // false')
   format_args=()
   if [ "${use_summary}" = "true" ]; then
     format_args+=("--summary")
+  fi
+  if [ "${use_graph}" = "true" ]; then
+    format_args+=("--graph")
   fi
   format_args+=("${output_type}")
 

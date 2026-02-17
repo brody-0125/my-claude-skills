@@ -188,6 +188,31 @@ audit_orchestrator() {
     findings+=('{"field":"unresolved_constraints","severity":"WARN","status":"MISSING","action":"default to empty array"}')
   fi
 
+  # all_declared_constraints completeness check
+  if echo "${input}" | jq -e 'has("all_declared_constraints")' >/dev/null 2>&1; then
+    local all_count resolved_count unresolved_count declared_count
+    declared_count=$(echo "${input}" | jq '.all_declared_constraints | length' 2>/dev/null || echo "0")
+    resolved_count=$(echo "${input}" | jq '.resolved_constraints | length // 0' 2>/dev/null || echo "0")
+    unresolved_count=$(echo "${input}" | jq '.unresolved_constraints | length // 0' 2>/dev/null || echo "0")
+    all_count=$(( resolved_count + unresolved_count ))
+    if [ "${all_count}" -gt "${declared_count}" ]; then
+      findings+=("{\"field\":\"all_declared_constraints\",\"severity\":\"WARN\",\"status\":\"INCOMPLETE\",\"action\":\"resolved+unresolved (${all_count}) exceeds all_declared (${declared_count})\"}")
+    fi
+  else
+    # C4: all_declared_constraints absence — severity depends on pattern
+    local cur_pattern
+    cur_pattern=$(echo "${input}" | jq -r '.pattern // ""' 2>/dev/null || echo "")
+    if [ "${cur_pattern}" = "cross" ]; then
+      findings+=('{"field":"all_declared_constraints","severity":"ERROR","status":"MISSING","action":"cross-system pattern requires all_declared_constraints for synthesizer transparency"}')
+      has_critical=true
+    fi
+  fi
+
+  # C3: cross_notes presence check
+  if ! echo "${input}" | jq -e 'has("cross_notes")' >/dev/null 2>&1; then
+    findings+=('{"field":"cross_notes","severity":"WARN","status":"MISSING","action":"cross_notes absent — cross-system constraint notes will not be forwarded"}')
+  fi
+
   if ! echo "${input}" | jq -e '.metadata.confidence' >/dev/null 2>&1; then
     findings+=('{"field":"metadata.confidence","severity":"WARN","status":"MISSING","action":"default to 0.5 + warning"}')
   fi

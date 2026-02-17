@@ -135,7 +135,8 @@ major systems: **DB** (Database), **BE** (Backend), **IF** (Infrastructure), and
 
 ## Execution Patterns
 
-Three execution patterns exist: Single-Domain (1 agent), Multi-Domain (2-3 agents, parallel dispatch),
+Four execution patterns exist: **None** (0 systems matched — falls through to LLM classification),
+Single-Domain (1 agent), Multi-Domain (2-3 agents, parallel dispatch),
 and Cross-System (multiple orchestrators + synthesizer).
 
 For detailed flow diagrams and examples, see [resources/orchestration-protocol.md § Pattern Examples](./resources/orchestration-protocol.md).
@@ -167,10 +168,21 @@ Run before any phase execution to ensure clean session state and detect reusable
 > **Resource**: Read [resources/routing-protocol.md](./resources/routing-protocol.md) when entering this phase.
 
 1. Parse user input for explicit flags (`--domain`, `--depth`)
-2. Run `scripts/classify-query.sh "$QUERY"` for keyword-based fast-path classification
-3. If confidence >= 0.85: proceed with fast-path result
-4. If confidence < 0.85: use LLM classification (read routing-protocol.md for detailed algorithm)
-5. Output: `{ systems: [...], domains: [...], pattern: "single|multi|cross", confidence: float }`
+2. Run `scripts/classify-query.sh "$QUERY"` for keyword-based fast-path classification (2-phase: binary keywords → cross-keyword weighted scoring)
+3. **Progressive Classification**: If session history exists within 30-minute window, augment confidence with `prior_boost` and suggest domain expansions based on transition patterns (see routing-protocol.md § Step 5.5)
+4. **Archetype Matching**: If query matches a known archetype (e.g., multi-tenant-saas, event-driven-microservice), inject preset constraints from `resources/constraints-archetypes.json`
+5. If confidence >= 0.85: proceed with fast-path result
+6. **LLM Verification** (if `needs_llm_verification == true`, i.e., confidence > 0.0 AND < 0.85):
+   Execute the lightweight LLM verification protocol defined in [routing-protocol.md § Step 4.5](./resources/routing-protocol.md):
+   - Use the provided `verification_prompt` as-is (it is context-specific to system count)
+   - Compare LLM answer against the keyword classification
+   - If LLM agrees: boost confidence by +0.10 (capped at 0.85) and proceed
+   - If LLM disagrees: adopt LLM classification, set `classifier: "llm-verified"`, recalculate domains
+   - Token cost: ~0.2K per verification (single-turn, no reference loading)
+7. If confidence == 0.0 (no keywords matched): use full LLM classification (read routing-protocol.md for detailed algorithm)
+8. Output: `{ systems: [...], domains: [...], pattern: "...", confidence: float, classifier: "...", prior_boost: float, suggested_expansions: [...], archetype_matched: [...], needs_llm_verification: bool, verification_prompt: string|null }`
+
+**Progressive Classification rollback**: Set `EW_PROGRESSIVE_CLASSIFICATION=0` to disable.
 
 **Status Display**:
 ```
@@ -245,9 +257,7 @@ You are the {domain} Micro Agent.
 
 > **Resource**: Read [resources/analysis-audit-protocol.md](./resources/analysis-audit-protocol.md) when entering this phase.
 
-Audit tier is determined automatically based on classification and agent count
-(`scripts/audit-analysis.sh tier`). This phase validates agent output quality
-before constraint resolution.
+This phase validates agent output quality before constraint resolution.
 
 | Tier | Steps | Additional Tokens |
 |------|-------|-------------------|
@@ -256,15 +266,25 @@ before constraint resolution.
 | THOROUGH | All above + Dynamic Expansion via `audit-reviewer` agent | +3.5K |
 
 **Steps**:
-0. **Budget Check**: Run `scripts/enforce-budget.sh <pattern> quality-gate <output>` to verify token budget before audit
-1. **Confidence Gating** (all tiers): Run `scripts/audit-analysis.sh confidence` per agent result
+0. **Tier Determination**: Run `scripts/audit-analysis.sh tier <classification> <agent-count>` — auto-selects LIGHT / STANDARD / THOROUGH based on system count, agent count, depth, and security keywords. Escalation is upward only (see auto-escalation rules below).
+1. **Budget Check**: Run `scripts/enforce-budget.sh <pattern> quality-gate <output>` to verify token budget before audit
+2. **Confidence Gating** (all tiers): Run `scripts/audit-analysis.sh confidence` per agent result
    - >= 0.70: PASS
    - 0.50-0.69: PASS + warning
    - 0.30-0.49: Simplified re-dispatch (1 attempt)
    - < 0.30: Reject, orchestrator fallback
-2. **Completeness Audit** (STANDARD+): 6-point checklist (context, quantitative data, trade-offs, constraints, actionability, query reference)
-3. **Feasibility Check** (STANDARD+): Verify recommendations against `constraints_used` environment
-4. **Dynamic Expansion** (THOROUGH only): Dispatch `audit-reviewer` agent for gap detection and expansion
+3. **Completeness Audit** (STANDARD+): 6-point checklist — split into deterministic (jq) and semantic (LLM):
+   - **Deterministic (jq via `validate-agent-output.sh`)**: automatically checked, no LLM cost
+     - Point 2: 정량적 데이터 — `validate-agent-output.sh` detects number+unit patterns (ms, GB, %, TPS, etc.)
+     - Point 3: Trade-off 문서화 — existing `trade_offs` array length check (>= 2 options)
+     - Point 4: Constraint 선언 — existing `constraints` field presence check
+   - **Semantic (LLM evaluation, STANDARD+ only)**: evaluate each agent output against these 3 criteria:
+     - Point 1: **맥락 반영** — Does the analysis address the user's specific context, not generic advice?
+     - Point 5: **Actionable 추천** — Is the recommendation concrete and implementable, not vague?
+     - Point 6: **컨텍스트 인용** — Does the analysis reference key terms from the user's query?
+   - LLM evaluation output: for each point, PASS or FAIL with one-line reason. If any FAIL: add warning to output
+4. **Feasibility Check** (STANDARD+): Verify recommendations against `constraints_used` environment
+5. **Dynamic Expansion** (THOROUGH only): Dispatch `audit-reviewer` agent for gap detection and expansion
 
 **Auto-escalation** (upward only):
 - 2+ agents with confidence < 0.50 → LIGHT→STANDARD
@@ -275,13 +295,16 @@ before constraint resolution.
 
 > **Resource**: Read [resources/constraint-propagation.md](./resources/constraint-propagation.md) when entering this phase.
 
-1. Collect all constraint declarations from agents
-2. Run `scripts/resolve-constraints.sh` to detect conflicts
+1. Collect all constraint declarations from agents (including archetype-injected constraints)
+2. Run `scripts/resolve-constraints.sh` to detect conflicts:
+   - **Tier 1 (Structural)**: Same target, different values — existing detection
+   - **Tier 2 (Semantic)**: Known incompatible pairs (e.g., LSM + low read latency) — detected via `KNOWN_CONFLICT_PAIRS` in `_common.sh`
 3. If no conflicts: merge constraints into unified set
 4. If conflicts detected:
    - For intra-system conflicts: orchestrator resolves using domain priority rules
    - For cross-system conflicts: escalate to synthesizer (Phase 4)
-5. Store resolved constraints in `~/.claude/cache/engineering-workflow/constraints.json`
+5. Orchestrators include `all_declared_constraints` (pre-resolution snapshot) for synthesizer transparency
+6. Store resolved constraints in `~/.claude/cache/engineering-workflow/constraints.json`
 
 ### Phase 3.5: Contract Enforcement Gate
 
@@ -298,7 +321,7 @@ STANDARD+ tier only. Validates orchestrator output contracts before synthesis.
 
 ### Phase 4: Synthesis (Cross-System Only)
 
-Only activated for Pattern 3 (cross-system) queries.
+Only activated for Pattern "cross" (cross-system) queries.
 
 1. Run `scripts/enforce-budget.sh <pattern> synthesis <output>` to verify token budget before synthesis
 2. Read `agents/synthesizer.md`
@@ -383,6 +406,7 @@ Resources are loaded on-demand per phase. MUST NOT pre-load all resources.
 | Phase 1 | `resources/orchestration-protocol.md` | Always at Phase 1 entry |
 | Phase 1 (DB) | `resources/db-orchestration-protocol.md` | When DB system detected |
 | Phase 1 (BE) | `resources/be-orchestration-protocol.md` | When BE system detected |
+| Phase 1 (IF) | _(stub — no dedicated protocol; uses general orchestration-protocol.md)_ | When IF system detected |
 | Phase 1 (SE) | `resources/se-orchestration-protocol.md` | When SE system detected |
 | Phase 2 | `resources/confidence-calibration.md` | Loaded by orchestrators for agent confidence scoring |
 | Phase 2.5 | `resources/analysis-audit-protocol.md` | Always at Phase 2.5 entry (reused in 3.5, 4.5) |
@@ -550,6 +574,7 @@ Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [co
 | [priority-matrix.md](./resources/priority-matrix.md) | Universal priority hierarchy for conflict resolution across all systems |
 | [synthesis-protocol.md](./resources/synthesis-protocol.md) | Cross-system synthesis procedure and dependency graph construction |
 | [confidence-calibration.md](./resources/confidence-calibration.md) | 5-factor confidence scoring rubric for micro agents |
+| [constraints-archetypes.json](./resources/constraints-archetypes.json) | Archetype library — preset constraint sets for common architecture patterns |
 
 ### Scripts
 
@@ -559,7 +584,7 @@ Session pattern caching: `~/.claude/cache/engineering-workflow/` (details in [co
 | [resolve-constraints.sh](./scripts/resolve-constraints.sh) | Constraint conflict detection and auto-resolution |
 | [validate-agent-output.sh](./scripts/validate-agent-output.sh) | Agent output JSON schema + quality indicator validation |
 | [audit-analysis.sh](./scripts/audit-analysis.sh) | Deterministic audit checks (confidence, schema, synthesis, tier) |
-| [format-output.sh](./scripts/format-output.sh) | Output formatting for display (supports `--summary` for compact output) |
+| [format-output.sh](./scripts/format-output.sh) | Output formatting for display (supports `--summary` for compact output, `--graph` for Mermaid constraint graph) |
 | [enforce-budget.sh](./scripts/enforce-budget.sh) | Token budget enforcement — exits non-zero if output exceeds 120% of budget |
 | [_common.sh](./scripts/_common.sh) | Shared utilities — imported by all other scripts (not called directly) |
 
