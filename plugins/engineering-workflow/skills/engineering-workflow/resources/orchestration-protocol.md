@@ -223,7 +223,7 @@ Provide your analysis as a JSON object:
       "recommended_when": "scenario description"
     }
   ],
-  "confidence": 0.0-1.0
+  "confidence": 0.0-1.0  // see resources/confidence-calibration.md for 5-factor scoring rubric
 }
 ```
 
