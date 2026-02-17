@@ -1,72 +1,72 @@
 # Confidence Calibration Rubric
 
-> 마이크로 에이전트가 `confidence` 값을 산정할 때 사용하는 공유 루브릭.
-> Phase 2 에이전트 실행 시 오케스트레이터가 이 문서를 참조 지시한다.
+> A shared rubric that micro-agents use when computing `confidence` scores.
+> The orchestrator references this document when executing Phase 2 agents.
 
 ---
 
-## 5-Factor 산정 모델
+## 5-Factor Scoring Model
 
-모든 에이전트는 아래 5개 축을 평가하여 confidence를 결정한다.
+All agents determine confidence by evaluating the following 5 axes.
 
-| # | Factor | 설명 | 감점 기준 |
-|---|--------|------|----------|
-| 1 | **Input Completeness** | 필수 constraints 중 제공된 비율 | 50% 미만 제공 → −0.20 |
-| 2 | **Specificity** | 분석이 generic이 아닌 쿼리 맥락에 특화된 정도 | 구체적 엔진/버전/수치 없이 일반론 → −0.15 |
-| 3 | **Evidence Grounding** | 추천이 레퍼런스/수치/벤치마크에 근거한 정도 | 근거 없는 추천 → −0.15 |
-| 4 | **Trade-off Coverage** | 대안과 트레이드오프가 문서화된 정도 | trade_offs 비어있거나 1개 → −0.10 |
-| 5 | **Assumption Count** | 명시적으로 가정한 항목 수 | 가정 3개 이상 → −0.10 |
+| # | Factor | Description | Deduction Criteria |
+|---|--------|-------------|-------------------|
+| 1 | **Input Completeness** | Ratio of required constraints provided | Less than 50% provided → −0.20 |
+| 2 | **Specificity** | Degree to which analysis is specialized to query context rather than generic | General statements without specific engine/version/metrics → −0.15 |
+| 3 | **Evidence Grounding** | Degree to which recommendations are grounded in references/metrics/benchmarks | Recommendations without evidence → −0.15 |
+| 4 | **Trade-off Coverage** | Degree to which alternatives and trade-offs are documented | trade_offs empty or contains only 1 item → −0.10 |
+| 5 | **Assumption Count** | Number of explicitly stated assumptions | 3 or more assumptions → −0.10 |
 
 ---
 
-## 산정 절차
+## Scoring Procedure
 
 ```
-base = 0.90  (모든 factor가 충족되면)
+base = 0.90  (when all factors are met)
 confidence = max(0.0, base - Σ(applicable deductions))
 ```
 
-### 하한 규칙
+### Floor Rules
 
-| 조건 | 상한 |
-|------|------|
-| `missing_info` 있음 | 반드시 < 0.50 |
-| 가정(assumption) 1~2개 | 최대 0.80 |
-| 가정 3개 이상 | 최대 0.70 |
+| Condition | Upper Bound |
+|-----------|------------|
+| `missing_info` present | must be < 0.50 |
+| 1–2 assumptions | maximum 0.80 |
+| 3 or more assumptions | maximum 0.70 |
 
-### 산정 예시
+### Scoring Examples
 
 ```
-예시 1: 모든 입력 충분, 벤치마크 근거 있음, 트레이드오프 3개, 가정 0개
+Example 1: All inputs sufficient, benchmark evidence present, 3 trade-offs, 0 assumptions
   → 0.90 - 0 = 0.90
 
-예시 2: 입력 80% 확보, 일반론 일부 포함(-0.15), 가정 2개
-  → 0.90 - 0.15 = 0.75, 가정 상한 적용 → min(0.75, 0.80) = 0.75
+Example 2: 80% of inputs obtained, some generic statements included (-0.15), 2 assumptions
+  → 0.90 - 0.15 = 0.75, apply assumption floor → min(0.75, 0.80) = 0.75
 
-예시 3: 입력 40% 미만(-0.20), 근거 부족(-0.15), missing_info 있음
-  → 0.90 - 0.20 - 0.15 = 0.55, missing_info 상한 적용 → min(0.55, 0.49) = 0.49
+Example 3: Less than 40% of inputs (-0.20), insufficient evidence (-0.15), missing_info present
+  → 0.90 - 0.20 - 0.15 = 0.55, apply missing_info floor → min(0.55, 0.49) = 0.49
 ```
 
 ---
 
-## 점수 범위 해석표
+## Score Range Interpretation
 
-`audit-analysis.sh` 게이팅 임계값과 정렬된다.
+Aligned with `audit-analysis.sh` gating thresholds.
 
-| 범위 | 의미 | 하류 처리 |
-|------|------|----------|
-| **0.85–0.90** | 충분한 입력, 구체적 분석, 근거 확보 | PASS |
-| **0.70–0.84** | 입력 대부분 확보, 일부 가정 존재 | PASS |
-| **0.50–0.69** | 주요 입력 부족하나 합리적 추론 가능 | WARN — 경고와 함께 통과 |
-| **0.30–0.49** | 핵심 정보 부재, `missing_info` 필수 | RETRY — 1회 재디스패치 |
-| **< 0.30** | 분석 불가 수준, fallback만 가능 | REJECT — 오케스트레이터 폴백 |
+| Range | Meaning | Downstream Handling |
+|-------|---------|-------------------|
+| **0.85–0.90** | Sufficient inputs, specific analysis, evidence grounded | PASS |
+| **0.70–0.84** | Most inputs obtained, some assumptions present | PASS |
+| **0.50–0.69** | Major inputs missing but reasonable inference possible | WARN — pass with warning |
+| **0.30–0.49** | Critical information absent, `missing_info` required | RETRY — redispatch once |
+| **< 0.30** | Analysis not feasible, fallback only | REJECT — orchestrator fallback |
 
 ---
 
-## 보정 규칙
+## Adjustment Rules
 
-| 규칙 | 설명 |
-|------|------|
-| **> 0.90 허용 조건** | `constraints`, `trade_offs`, `rationale`이 모두 실질적(비어있지 않고 구체적)이어야 함 |
-| **== 1.0 금지** | 캐시 히트 전용 — 에이전트가 직접 1.0을 산출해서는 안 됨 |
-| **≥ 0.90 + 낮은 시그널** | `audit-analysis.sh`가 CALIBRATION 경고 발행 (기존 동작) |
+| Rule | Description |
+|------|------------|
+| **> 0.90 Permission Conditions** | `constraints`, `trade_offs`, `rationale` must all be substantive (non-empty and specific) |
+| **== 1.0 Forbidden** | Cache hits only — agents must not directly compute 1.0 |
+| **≥ 0.90 + Low Signal** | `audit-analysis.sh` issues CALIBRATION warning (existing behavior) |
