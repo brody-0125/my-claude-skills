@@ -1,0 +1,49 @@
+{
+  "name": "claude-autopilot",
+  "description": "Time-bounded autonomous Claude Code orchestration — executes user-defined directives until deadline",
+  "version": "1.0.0",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qiE '(application-prod|secrets|credentials|private-key|\\.env$|\\.env\\.)'; then echo '{\"decision\":\"block\",\"reason\":\"Production secret file edit blocked by claude-autopilot\"}'; exit 2; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then deadline=$(jq -r '.deadline_epoch // empty' \"$state_file\" 2>/dev/null); if [ -n \"$deadline\" ]; then now=$(date +%s); if [ \"$now\" -ge \"$deadline\" ]; then echo '[claude-autopilot] Deadline reached. Wrapping up current work.'; fi; fi; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then now=$(date +%s); completed=$(jq -r '.completed_tasks // 0' \"$state_file\" 2>/dev/null); jq --argjson c $((completed + 0)) --arg t \"$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")\" '.last_activity=$t' \"$state_file\" > \"$state_file.tmp\" 2>/dev/null && mv \"$state_file.tmp\" \"$state_file\"; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cache_dir=\"$HOME/.claude/cache/claude-autopilot\"; state=\"$cache_dir/session-state.json\"; if [ -f \"$state\" ]; then ts=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\"); jq --arg s completed --arg t \"$ts\" '.status=$s|.completed_at=$t' \"$state\" > \"$state.tmp\" 2>/dev/null && mv \"$state.tmp\" \"$state\"; mkdir -p \"$cache_dir/history\" && session_id=$(jq -r '.session_id // \"unknown\"' \"$state\" 2>/dev/null); cp \"$state\" \"$cache_dir/history/${session_id}-state.json\" 2>/dev/null; ls -1t \"$cache_dir/history\"/*-state.json 2>/dev/null | tail -n +21 | xargs rm -f 2>/dev/null; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
