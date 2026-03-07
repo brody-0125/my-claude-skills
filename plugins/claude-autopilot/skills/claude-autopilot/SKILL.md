@@ -38,6 +38,176 @@ allowed-tools:
 3. **자율적 판단**: 명시적 지시가 없는 세부사항은 베스트 프랙티스에 따라 자율 결정
 4. **안전한 마무리**: 마감 시간 전에 작업 중인 파일을 일관된 상태로 완료
 5. **투명한 진행 보고**: 현재 상태와 남은 시간을 지속적으로 표시
+6. **항상 전체 파일 읽기**: 파일 수정 전에 반드시 해당 파일의 **전체** 내용을 Read로 확인 (§ Mandatory Read Protocol)
+7. **기억에 의존 금지**: 이전에 읽은 파일이라도 수정 직전에 반드시 다시 읽기 — 컨텍스트의 파일 기억은 stale할 수 있음
+
+---
+
+## ⚠️ Mandatory Read Protocol (CRITICAL — 모든 Phase에서 준수)
+
+**이 규칙은 autopilot 실행 전반에 걸쳐 예외 없이 적용된다.**
+
+### Rule 1: Read-Before-Edit (편집 전 필수 읽기)
+
+파일을 Edit 또는 Write로 수정하기 **직전에** 반드시 해당 파일을 Read로 **전체** 읽어야 한다.
+
+```
+❌ FORBIDDEN:
+  이전에 파일을 읽었으므로 기억에 의존하여 Edit 실행
+
+✅ MANDATORY:
+  Read(file_path) → 전체 내용 확인 → Edit(file_path, old_string, new_string)
+```
+
+**위반 시**: Edit/Write가 실패하거나 의도치 않은 변경이 발생할 수 있다.
+이 프로토콜을 건너뛰는 것은 "시간 절약"이 아니라 "디버깅 시간 폭증"이다.
+
+### Rule 2: Full-File Read (전체 파일 읽기)
+
+파일을 읽을 때 **offset/limit 없이 전체를 읽는 것이 기본**이다.
+
+```
+✅ 기본: Read(file_path)  — 전체 읽기
+⚠️ 예외: 500줄 이상 파일만 offset/limit 허용 — 단, 수정 대상 영역 ±50줄 이상 포함
+❌ 금지: 200줄 이하 파일에 offset/limit 사용
+```
+
+### Rule 3: Post-Edit Verify (편집 후 필수 검증)
+
+Edit/Write 실행 후 반드시 다음 중 하나로 변경 결과를 확인한다:
+
+```
+1. Read(file_path) — 수정된 파일 전체 재확인 (기본)
+2. Bash("compile/lint check") — 문법 유효성 검증 (코드 파일)
+3. Bash("test run") — 관련 테스트 실행 (테스트 영향 있는 변경)
+```
+
+**Edit 후 즉시 다음 Edit으로 넘어가는 것은 금지.** 반드시 중간 검증 수행.
+
+### Rule 4: No Stale Context (stale 컨텍스트 금지)
+
+```
+다음 상황에서는 이전에 읽은 파일 내용을 신뢰하지 않고 반드시 재읽기:
+1. 해당 파일을 마지막으로 읽은 후 다른 파일에 Edit/Write가 발생한 경우
+2. 컨텍스트 압축(/compact)이 발생한 후
+3. 다른 Task/sub-agent의 실행이 완료된 후
+4. 10분 이상 경과한 경우
+```
+
+### Rule 5: File Inventory Tracking (파일 인벤토리 추적)
+
+모든 작업에서 읽은/수정한 파일을 세션 상태에 기록한다:
+
+```json
+{
+  "file_inventory": {
+    "read": [
+      {"path": "src/api/Handler.kt", "at": "2026-03-07T14:32:00Z", "lines": 145}
+    ],
+    "modified": [
+      {"path": "src/api/Handler.kt", "at": "2026-03-07T14:33:15Z", "verified": true}
+    ]
+  }
+}
+```
+
+**verified 필드**: Post-Edit Verify를 수행했으면 `true`, 아니면 `false`.
+`false`인 파일이 존재하면 Wind-down 시 경고 출력.
+
+---
+
+## ⚠️ Directive Drift Guard (지침 이탈 감지)
+
+autopilot이 원래 지침에서 벗어나는 것을 방지하는 메커니즘.
+
+### 매 작업 시작 전 Drift Check
+
+```
+BEFORE starting any task:
+  1. session-state.json에서 원본 directive 재확인
+  2. 현재 작업이 directive의 어떤 부분에 해당하는지 명시적으로 매핑
+  3. 매핑 불가능하면 → 작업 skip + "directive 범위 초과" 기록
+```
+
+### Drift 감지 지표
+
+| 지표 | 임계값 | 대응 |
+|------|--------|------|
+| directive에 언급되지 않은 파일 수정 | 전체 수정 파일의 30% 이상 | WARNING + 보고서 기록 |
+| 원본 scope 밖 파일 접근 | 1건이라도 | BLOCK (hook 레벨 차단) |
+| 연속 3개 작업이 directive 키워드와 무관 | 3개 작업 연속 | HALT + 사용자 확인 요청 |
+
+---
+
+## ⚠️ Git Checkpoint Protocol (안전한 롤백 보장)
+
+### Phase 2 진입 전 Baseline 생성
+
+```bash
+# 작업 시작 전 현재 상태를 태그로 저장
+git stash push -m "autopilot-baseline-${session_id}" --include-untracked 2>/dev/null
+git stash pop 2>/dev/null
+# 또는 가벼운 방법:
+git add -A && git stash push -m "autopilot-checkpoint-${session_id}"
+git stash pop
+```
+
+### 매 작업 완료 시 Checkpoint
+
+```
+작업 N 완료 후:
+  1. git add -A (변경 사항 스테이징)
+  2. git stash push -m "autopilot-task-${N}-done"
+  3. git stash pop
+  → 이렇게 하면 git stash list에 복구 지점 기록
+  → 또는 더 안전하게: git commit --no-verify -m "autopilot-checkpoint: task ${N}"
+  → Wind-down 시 squash 또는 amend로 정리
+```
+
+### 작업 실패 시 Rollback
+
+```
+IF task 실패 AND 코드 일관성 훼손:
+  git checkout -- <affected_files>    # 작업에서 변경한 파일만 복원
+  # 전체 롤백이 필요한 경우:
+  git stash list | grep "autopilot-task-$((N-1))-done"  # 이전 체크포인트 확인
+```
+
+---
+
+## ⚠️ Pre-Execution Test Baseline (테스트 기준선 수집)
+
+Phase 2 시작 전, 기존 테스트 상태를 baseline으로 수집한다.
+
+```
+1. 프로젝트에 테스트 명령이 존재하는지 확인:
+   - gradlew test / npm test / pytest / cargo test 등
+2. 존재하면: 테스트 실행 → 결과(통과 수/실패 수) 기록
+   baseline = { total: N, passed: P, failed: F, skipped: S }
+3. 각 작업 완료 후 테스트 재실행 → baseline 대비 비교:
+   IF new_failed > baseline.failed + 2:
+     "기존 테스트가 추가로 깨졌습니다" 경고
+     해당 작업 변경 사항 재검토
+   IF new_failed > baseline.failed * 5:
+     긴급 중단 (Emergency Stop)
+```
+
+---
+
+## Phase Transition Gate Checks (Phase 전환 필수 검증)
+
+각 Phase 전환 시 산출물 완전성을 검증한다. **검증 실패 시 다음 Phase 진입 불가.**
+
+| 전환 | 필수 산출물 | 검증 기준 | 미충족 시 |
+|------|-----------|----------|----------|
+| **Phase 0 → 1** | session-state.json 생성, deadline 유효 | `jq '.deadline_epoch' state.json` 결과가 미래 시점 | Phase 0 재실행 |
+| **Phase 1 → 2** | tasks 배열 1개 이상, 시간 예산 할당 완료 | `jq '.tasks \| length > 0' state.json` | Phase 1 재실행 |
+| **Phase 2 → 3** | 최소 1개 작업 시도(completed/blocked/skip) | `jq '[.tasks[] \| select(.status != "ready")] \| length > 0'` | Phase 2 계속 |
+| **Phase 3 → 4** | 모든 in_progress 작업이 완료 또는 안전 중단 | `jq '[.tasks[] \| select(.status == "in_progress")] \| length == 0'` | Phase 3 계속 |
+
+**Gate Check 실행**: `scripts/check-phase-gate.sh <from_phase> <to_phase>`
+
+---
 
 ### Quick Start
 
@@ -396,17 +566,21 @@ Phase 진입 시 이미 읽은 문서는 재로드하지 않는다.
 
 ## Context Documents (Lazy Load)
 
-| Document | Phases | Load Condition | Load Frequency |
-|----------|--------|----------------|----------------|
-| **session-state.json** (auto-created) | 0, 2, 3, 4 | Every phase entry | Every Phase |
-| [parse-init-protocol.md](./resources/parse-init-protocol.md) | 0 | Always at Phase 0 | Load Once |
-| [decompose-protocol.md](./resources/decompose-protocol.md) | 1 | Always at Phase 1 | Load Once |
-| [execute-protocol.md](./resources/execute-protocol.md) | 2 | Always at Phase 2 | Load Once |
-| [winddown-protocol.md](./resources/winddown-protocol.md) | 3 | Always at Phase 3 | Load Once |
-| [report-protocol.md](./resources/report-protocol.md) | 4 | Always at Phase 4 | Load Once |
-| [time-management.md](./resources/time-management.md) | 0, 1, 2 | Always | Load Once |
-| [safety-rules.md](./resources/safety-rules.md) | 0 | Always | Load Once |
-| [error-playbook.md](./resources/error-playbook.md) | Any | On error occurrence | Load Once |
+**Stale Context Recovery**: 컨텍스트 압축(/compact) 발생 시, "Load Once" 문서라도
+해당 Phase에서 필요한 문서는 **반드시 재로드**한다. "Load Once"는 "같은 Phase 내 중복 로드 방지"이며,
+"컨텍스트 소실 후에도 재로드 불필요"를 의미하지 **않는다**.
+
+| Document | Phases | Load Condition | Load Frequency | 압축 후 재로드 |
+|----------|--------|----------------|----------------|---------------|
+| **session-state.json** (auto-created) | 0, 2, 3, 4 | Every phase entry | Every Phase | ✅ 항상 |
+| [parse-init-protocol.md](./resources/parse-init-protocol.md) | 0 | Always at Phase 0 | Load Once | ✅ Phase 0 진행 중이면 |
+| [decompose-protocol.md](./resources/decompose-protocol.md) | 1 | Always at Phase 1 | Load Once | ✅ Phase 1 진행 중이면 |
+| [execute-protocol.md](./resources/execute-protocol.md) | 2 | Always at Phase 2 | Load Once | ✅ Phase 2 진행 중이면 |
+| [winddown-protocol.md](./resources/winddown-protocol.md) | 3 | Always at Phase 3 | Load Once | ✅ Phase 3 진행 중이면 |
+| [report-protocol.md](./resources/report-protocol.md) | 4 | Always at Phase 4 | Load Once | ✅ Phase 4 진행 중이면 |
+| [time-management.md](./resources/time-management.md) | 0, 1, 2 | Always | Load Once | ✅ Phase 0-2 진행 중이면 |
+| [safety-rules.md](./resources/safety-rules.md) | 0 | Always | Load Once | ✅ 항상 (안전 규칙) |
+| [error-playbook.md](./resources/error-playbook.md) | Any | On error occurrence | Load Once | ✅ 에러 발생 시 |
 
 ---
 

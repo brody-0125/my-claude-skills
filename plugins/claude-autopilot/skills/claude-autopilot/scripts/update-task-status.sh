@@ -41,7 +41,7 @@ case "$new_status" in
 
     jq --argjson id "$task_id" --arg ts "$now_ts" --argjson files "$files_json" \
       '(.tasks[] | select(.id == $id)) |= . + {status: "completed", completed_at: $ts, files_changed: $files} |
-       .completed_tasks = [.tasks[] | select(.status == "completed")] | length |
+       .completed_tasks = ([.tasks[] | select(.status == "completed")] | length) |
        .last_activity = $ts' \
       "$AUTOPILOT_STATE_FILE" > "${AUTOPILOT_STATE_FILE}.tmp" && \
       mv "${AUTOPILOT_STATE_FILE}.tmp" "$AUTOPILOT_STATE_FILE"

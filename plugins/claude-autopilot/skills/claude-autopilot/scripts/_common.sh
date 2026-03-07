@@ -70,10 +70,16 @@ write_state() {
 # ── 프로그레스 바 생성 ──────────────────────────────────────────────────
 progress_bar() {
   local pct="$1" width="${2:-10}"
+  if [ "$pct" -lt 0 ] 2>/dev/null; then pct=0; fi
+  if [ "$pct" -gt 100 ] 2>/dev/null; then pct=100; fi
   local filled=$(( pct * width / 100 ))
   local empty=$(( width - filled ))
-  printf '%0.s▓' $(seq 1 $filled 2>/dev/null) || true
-  printf '%0.s░' $(seq 1 $empty 2>/dev/null) || true
+  if [ "$filled" -gt 0 ]; then
+    printf '%0.s▓' $(seq 1 $filled)
+  fi
+  if [ "$empty" -gt 0 ]; then
+    printf '%0.s░' $(seq 1 $empty)
+  fi
 }
 
 # ── 로그 ──────────────────────────────────────────────────────────────

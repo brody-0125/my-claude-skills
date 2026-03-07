@@ -21,6 +21,15 @@
             "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then deadline=$(jq -r '.deadline_epoch // empty' \"$state_file\" 2>/dev/null); if [ -n \"$deadline\" ]; then now=$(date +%s); if [ \"$now\" -ge \"$deadline\" ]; then echo '[claude-autopilot] Deadline reached. Wrapping up current work.'; fi; fi; fi"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then scope=$(jq -r '.scope // \"project\"' \"$state_file\" 2>/dev/null); project_root=$(jq -r '.project_root // empty' \"$state_file\" 2>/dev/null); if [ \"$scope\" = \"project\" ] && [ -n \"$project_root\" ]; then file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ]; then case \"$file\" in \"$project_root\"*) ;; *) echo '{\"decision\":\"block\",\"reason\":\"File outside project scope: '\"$file\"'\"}'; exit 2;; esac; fi; fi; fi"
+          }
+        ]
       }
     ],
     "PostToolUse": [
