@@ -11,6 +11,7 @@ This repository includes implementation guidance, type-driven test generation, c
 | [engineering-workflow](#engineering-workflow) | `/engineering-workflow` | Engineering architecture routing across DB/BE/IF/SE |
 | [plugin-introspector](#plugin-introspector) | `/plugin-introspector` | Plugin monitoring and self-improvement |
 | [numerical](#numerical) | `/numerical` | Numerical computing verification and optimization |
+| [claude-autopilot](#claude-autopilot) | `/claude-autopilot` | Time-bounded autonomous task orchestration |
 
 ## Install
 
@@ -273,6 +274,84 @@ numpy broadcasting 검증. loop 2
 
 ---
 
+## claude-autopilot
+
+Time-bounded autonomous orchestration agent. Accepts a user directive and a deadline, then executes tasks autonomously until the specified time. Manages task decomposition, prioritization, progress tracking, and graceful wind-down near deadline.
+
+```
+/claude-autopilot
+API 엔드포인트 리팩토링하고 테스트 추가해줘. --until 15:30
+```
+
+### Modes
+
+| Mode | Example | Behavior |
+|------|---------|----------|
+| Standard | `"리팩토링해줘. 15:30까지"` | Full pipeline: Parse → Decompose → Execute → Wind-down → Report |
+| Priority | `"버그 수정 --until 14:00 --priority high"` | High-impact tasks first, skip low priority if time runs out |
+| Quick | `"TODO 정리 --until 13:00 --priority quick"` | Many small tasks, fast completion |
+| Dry-run | `"리팩토링 분석. dry-run --until 16:00"` | Decompose only, outputs task plan without executing |
+| Resume | `"autopilot resume"` | Continues a previously interrupted session |
+
+### Workflow
+
+**Phase 0: Parse & Init.** Parses directive and deadline from user input. Initializes session state at `~/.claude/cache/claude-autopilot/session-state.json`. Detects project structure.
+
+**Phase 1: Decompose.** Breaks the directive into concrete tasks with dependency analysis (DAG). Estimates size (S/M/L/XL) and allocates time budget per task. Skips low-priority tasks that won't fit.
+
+**Phase 2: Execute Loop.** Iterates: check remaining time → pick next task → execute → verify result → update state. Monitors time level (NORMAL → AWARE → CAUTION → WIND_DOWN → CRITICAL) and transitions to wind-down when deadline approaches.
+
+**Phase 3: Wind-down.** Safely completes or rolls back in-progress work. Ensures code consistency, cleans up temp files, commits checkpoint.
+
+**Phase 4: Report.** Outputs a session summary: completed/incomplete tasks, changed files, time spent, and recommendations for the next session.
+
+### Time management
+
+| Remaining | Level | Action |
+|-----------|-------|--------|
+| > 50% | NORMAL | Normal execution |
+| 30-50% | AWARE | Avoid starting large tasks |
+| 15-30% | CAUTION | No new tasks, finish current |
+| 5-15% | WIND_DOWN | Enter Phase 3 |
+| < 5% | CRITICAL | Save immediately, output report |
+
+### Safety guardrails
+
+- No destructive operations without backup (`rm -rf`, `git reset --hard`)
+- Secret file edits blocked (`.env`, credentials, private keys)
+- Scope enforcement — no edits outside user-specified scope
+- Force push forbidden
+- Auto-halt on 3 consecutive identical errors or mass test failure
+
+### Hooks
+
+| Hook | Trigger | Action |
+|------|---------|--------|
+| PreToolUse | Edit/Write | Blocks secret file modification |
+| PreToolUse | Edit/Write/Bash | Blocks actions after deadline |
+| PreToolUse | Edit/Write | Blocks edits outside scope |
+| PostToolUse | Edit/Write | Records last activity timestamp |
+| Stop | Session end | Archives session state to history |
+
+### Sister-skill integration
+
+Delegates specialized work to other plugins when detected:
+
+| Task type | Delegated to |
+|-----------|-------------|
+| Kotlin/Java code | sub-kopring-engineer |
+| Test generation | sub-test-engineer |
+| Numerical verification | numerical |
+| Architecture analysis | engineering-workflow |
+
+### Gran Maestro integration
+
+When [gran-maestro](https://github.com/myrtlepn/gran-maestro) is installed, autopilot can read PLN plans and execute REQ batches autonomously within the time budget.
+
+> [SKILL.md](./plugins/claude-autopilot/skills/claude-autopilot/SKILL.md)
+
+---
+
 ## Project layout
 
 ```
@@ -314,6 +393,13 @@ plugins/
       resources/                        # 6 per-phase protocol docs
       scripts/                          # 3 shell scripts
       templates/                        # 4 report/config templates
+  claude-autopilot/
+    .claude-plugin/plugin.json
+    skills/claude-autopilot/
+      SKILL.md                          # orchestration workflow definition
+      resources/                        # 8 phase protocol docs
+      scripts/                          # 8 shell scripts (deadline, session, gate checks)
+      templates/                        # 3 report/hooks templates
 ```
 
 ### File stats (sub-kopring-engineer)
