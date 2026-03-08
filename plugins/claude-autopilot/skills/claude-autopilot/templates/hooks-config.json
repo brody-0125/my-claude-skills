@@ -1,0 +1,55 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qiE '(application-prod|secrets|credentials|private-key|\\.env$|\\.env\\.)'; then echo '{\"decision\":\"block\",\"reason\":\"Production secret file edit blocked by claude-autopilot\"}'; exit 2; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then deadline=$(jq -r '.deadline_epoch // empty' \"$state_file\" 2>/dev/null); if [ -n \"$deadline\" ]; then now=$(date +%s); if [ \"$now\" -ge \"$deadline\" ]; then echo '{\"decision\":\"block\",\"reason\":\"Deadline reached. Transition to Phase 3 Wind-down.\"}'; exit 2; fi; fi; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then scope=$(jq -r '.scope // \"project\"' \"$state_file\" 2>/dev/null); project_root=$(jq -r '.project_root // empty' \"$state_file\" 2>/dev/null); file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && [ -n \"$project_root\" ]; then case \"$scope\" in project) case \"$file\" in \"$project_root\"*) ;; *) echo '{\"decision\":\"block\",\"reason\":\"File outside project scope\"}'; exit 2;; esac;; module) scope_dir=$(jq -r '.scope_dir // empty' \"$state_file\" 2>/dev/null); if [ -n \"$scope_dir\" ]; then case \"$file\" in \"$scope_dir\"*) ;; *) echo '{\"decision\":\"block\",\"reason\":\"File outside module scope\"}'; exit 2;; esac; fi;; file) allowed=$(jq -r '.scope_files[]? // empty' \"$state_file\" 2>/dev/null); matched=false; for a in $allowed; do [ \"$file\" = \"$a\" ] && matched=true; done; if [ \"$matched\" = false ]; then echo '{\"decision\":\"block\",\"reason\":\"File not in allowed scope_files\"}'; exit 2; fi;; esac; fi; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then jq --arg t \"$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")\" '.last_activity=$t' \"$state_file\" > \"$state_file.tmp\" 2>/dev/null && mv \"$state_file.tmp\" \"$state_file\"; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cache_dir=\"$HOME/.claude/cache/claude-autopilot\"; state=\"$cache_dir/session-state.json\"; if [ -f \"$state\" ]; then ts=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\"); jq --arg s completed --arg t \"$ts\" '.status=$s|.completed_at=$t' \"$state\" > \"$state.tmp\" 2>/dev/null && mv \"$state.tmp\" \"$state\"; mkdir -p \"$cache_dir/history\" && session_id=$(jq -r '.session_id // \"unknown\"' \"$state\" 2>/dev/null); cp \"$state\" \"$cache_dir/history/${session_id}-state.json\" 2>/dev/null; ls -1t \"$cache_dir/history\"/*-state.json 2>/dev/null | tail -n +21 | xargs rm -f 2>/dev/null; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
