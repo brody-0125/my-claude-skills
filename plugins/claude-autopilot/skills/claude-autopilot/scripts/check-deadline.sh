@@ -35,7 +35,19 @@ if [ "$total_minutes" -le 0 ]; then
   total_minutes=60
 fi
 
-elapsed_seconds=$(( now - (deadline_epoch - total_minutes * 60) ))
+# started_at 기반으로 계산 (deadline 역산보다 정확)
+started_epoch=$(json_read "$AUTOPILOT_STATE_FILE" ".started_at")
+if [ -n "$started_epoch" ] && [ "$started_epoch" != "null" ]; then
+  # ISO 8601 → epoch 변환
+  started_epoch_s=$(date -d "$started_epoch" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$started_epoch" +%s 2>/dev/null || echo "0")
+  if [ "$started_epoch_s" -gt 0 ] 2>/dev/null; then
+    elapsed_seconds=$(( now - started_epoch_s ))
+  else
+    elapsed_seconds=$(( now - (deadline_epoch - total_minutes * 60) ))
+  fi
+else
+  elapsed_seconds=$(( now - (deadline_epoch - total_minutes * 60) ))
+fi
 elapsed_minutes=$(( elapsed_seconds / 60 ))
 
 # 진행률

@@ -90,6 +90,7 @@ jq -n \
     completed_tasks: 0,
     total_tasks: 0,
     errors: [],
+    file_inventory: { read: [], modified: [] },
     last_activity: $started_at,
     time_level: "NORMAL"
   }' > "$AUTOPILOT_STATE_FILE"

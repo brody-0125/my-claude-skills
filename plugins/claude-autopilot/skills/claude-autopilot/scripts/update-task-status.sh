@@ -10,7 +10,7 @@ source "${SCRIPT_DIR}/_common.sh"
 task_id="${1:-}"
 new_status="${2:-}"
 shift 2 2>/dev/null || true
-files_changed=("$@")
+files_changed=("${@+$@}")
 
 if [ -z "$task_id" ] || [ -z "$new_status" ]; then
   log_error "Usage: update-task-status.sh <task_id> <status> [files...]"

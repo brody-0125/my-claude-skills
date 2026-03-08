@@ -2,6 +2,16 @@
 
 > autopilot 실행 시 준수해야 할 안전 규칙.
 
+## ⚠️ Mandatory Read Protocol (SKILL.md 참조)
+
+**모든 Phase에서 반드시 준수해야 할 최우선 규칙**:
+- Edit/Write 전 반드시 Read로 전체 파일 읽기
+- Edit/Write 후 반드시 Read로 검증
+- 이전에 읽은 파일 내용에 의존 금지 (항상 재읽기)
+- 상세 규칙은 SKILL.md의 "Mandatory Read Protocol" 섹션 참조
+
+이 규칙을 위반하면 파일 손상, 의도치 않은 변경, stale context 기반 오류가 발생한다.
+
 ## 파일 시스템 안전
 
 ### 편집 금지 패턴

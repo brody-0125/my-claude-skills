@@ -80,12 +80,24 @@ jq -n \
 # 시간 추정 통계 업데이트
 if [ -f "$AUTOPILOT_STATS_FILE" ]; then
   # 기존 통계에 현재 세션 추가
-  session_stats=$(jq '[.tasks[] | select(.status == "completed" and .started_at != null and .completed_at != null) | {
-    size: .size,
-    estimated_minutes: .allocated_minutes,
-    actual_minutes: ((.completed_at | sub("\\.[0-9]+"; "") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime) -
-                     (.started_at | sub("\\.[0-9]+"; "") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime)) / 60 | floor
-  }]' "$AUTOPILOT_STATE_FILE" 2>/dev/null || echo "[]")
+  # strptime은 이식성 문제가 있으므로 date 명령으로 epoch 변환 후 계산
+  session_stats="[]"
+  while IFS= read -r tid; do
+    [ -z "$tid" ] && continue
+    t_start=$(jq -r --argjson id "$tid" '.tasks[] | select(.id == $id) | .started_at' "$AUTOPILOT_STATE_FILE")
+    t_end=$(jq -r --argjson id "$tid" '.tasks[] | select(.id == $id) | .completed_at' "$AUTOPILOT_STATE_FILE")
+    t_size=$(jq -r --argjson id "$tid" '.tasks[] | select(.id == $id) | .size' "$AUTOPILOT_STATE_FILE")
+    t_est=$(jq -r --argjson id "$tid" '.tasks[] | select(.id == $id) | .allocated_minutes // 0' "$AUTOPILOT_STATE_FILE")
+    start_epoch=$(date -d "$t_start" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$t_start" +%s 2>/dev/null || echo "0")
+    end_epoch=$(date -d "$t_end" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$t_end" +%s 2>/dev/null || echo "0")
+    if [ "$start_epoch" -gt 0 ] && [ "$end_epoch" -gt 0 ]; then
+      actual_min=$(( (end_epoch - start_epoch) / 60 ))
+    else
+      actual_min=0
+    fi
+    session_stats=$(echo "$session_stats" | jq --arg s "$t_size" --argjson e "$t_est" --argjson a "$actual_min" \
+      '. + [{size: $s, estimated_minutes: $e, actual_minutes: $a}]')
+  done <<< "$(jq -r '.tasks[] | select(.status == "completed" and .started_at != null and .completed_at != null) | .id' "$AUTOPILOT_STATE_FILE" 2>/dev/null)"
 
   jq --argjson new_session "$session_stats" --arg sid "$session_id" \
     '.sessions += [{session_id: $sid, tasks: $new_session}] | .sessions = .sessions[-5:]' \

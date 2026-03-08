@@ -37,12 +37,17 @@ IF 현재 작업 진행 중:
 
 ## Step 3-2: 코드 일관성 확보
 
+**⚠️ Wind-down 중에도 Mandatory Read Protocol을 준수한다.**
+시간이 부족하더라도 Edit 전 Read, Edit 후 Verify는 생략 불가.
+
 ```
-1. 편집 중인 모든 파일이 문법적으로 유효한지 확인
-2. 불완전한 수정이 있으면:
-   a. 완성 가능하면 빠르게 완성
-   b. 완성 불가능하면 변경 전 상태로 되돌림 (git checkout)
-3. import 문, 중괄호, 들여쓰기 등 기본 문법 확인
+1. 편집 중인 모든 파일을 Read로 전체 재읽기
+2. 문법적으로 유효한지 확인 (lint/compile)
+3. 불완전한 수정이 있으면:
+   a. 완성 가능하면: Read → Edit → Read(Verify) 수행
+   b. 완성 불가능하면 변경 전 상태로 되돌림 (git checkout -- <file>)
+4. import 문, 중괄호, 들여쓰기 등 기본 문법 확인
+5. file_inventory에서 verified=false인 파일이 있으면 경고 출력
 ```
 
 ## Step 3-3: 미완료 작업 기록

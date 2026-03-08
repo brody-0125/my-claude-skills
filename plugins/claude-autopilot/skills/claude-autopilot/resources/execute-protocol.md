@@ -191,7 +191,8 @@ scripts/update-task-status.sh $task_id "completed" [files...]
 
 ```
 IF task.status == "completed":
-  git add -A && git commit -m "autopilot: task-{id} {summary}"
+  git add <task.files_changed 파일 목록>  # 변경된 파일만 명시적으로 지정 (git add -A 금지)
+  git commit -m "autopilot: task-{id} {summary}"
   → 실패해도 다음 작업 진행 (커밋 실패는 non-blocking)
 ```
 

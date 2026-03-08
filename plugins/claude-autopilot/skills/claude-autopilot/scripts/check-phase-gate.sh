@@ -35,11 +35,15 @@ if [ "$from_phase" = "0" ] && [ "$to_phase" = "1" ]; then
 
   # deadline 설정 확인
   deadline=$(json_read "$AUTOPILOT_STATE_FILE" ".deadline_epoch")
-  [ -z "$deadline" ] || [ "$deadline" = "null" ] && failures+=("deadline_not_set")
+  if [ -z "$deadline" ] || [ "$deadline" = "null" ]; then
+    failures+=("deadline_not_set")
+  fi
 
   # time_budget 확인
   exec_avail=$(json_read "$AUTOPILOT_STATE_FILE" ".time_budget.execution_available")
-  [ -z "$exec_avail" ] || [ "$exec_avail" = "0" ] && failures+=("no_execution_time")
+  if [ -z "$exec_avail" ] || [ "$exec_avail" = "0" ]; then
+    failures+=("no_execution_time")
+  fi
 fi
 
 # ── Phase 1 → Phase 2 (Decompose → Execute) ──────────────────────────────

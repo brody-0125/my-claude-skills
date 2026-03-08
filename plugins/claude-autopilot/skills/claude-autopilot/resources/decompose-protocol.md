@@ -96,6 +96,48 @@ ELSE:
   Estimated completion: {pct}% within deadline
 ```
 
+## Step 5.5: 작업 완료 기준 정의 (Acceptance Criteria)
+
+각 task에 **반드시** 완료 기준을 명시한다. 기준 없이 task를 "completed"로 표시할 수 없다.
+
+```json
+{
+  "id": 1,
+  "description": "OrderController 리팩토링",
+  "acceptance_criteria": [
+    "메서드 추출 완료 (3개 이상 private method)",
+    "기존 테스트 전부 통과",
+    "lint 에러 없음"
+  ],
+  "size": "M",
+  "status": "ready"
+}
+```
+
+### 자동 완료 기준 (기본값)
+
+작업 유형에 따라 자동으로 부여되는 기본 기준:
+
+| 작업 유형 | 자동 완료 기준 |
+|----------|-------------|
+| 코드 수정 | 수정된 파일이 문법적으로 유효 + 기존 테스트 통과 |
+| 테스트 작성 | 테스트 파일 생성됨 + 테스트 실행 통과 |
+| 리팩토링 | 기존 테스트 전부 통과 + 코드 구조 개선 확인 |
+| TODO 제거 | 대상 TODO 주석 삭제됨 + 해당 코드 기능 구현됨 |
+| Gran-Maestro REQ | spec.md의 모든 task 완료 |
+
+### 완료 판정 절차
+
+```
+FOR each criterion in task.acceptance_criteria:
+  IF criterion is verifiable by test/lint/compile:
+    자동 검증 실행
+  ELSE:
+    git diff로 변경 사항 확인 → 기준 충족 여부 판단
+  IF any criterion not met:
+    task는 completed가 아닌 in_progress 유지
+```
+
 ## Step 6: 작업 목록 저장
 
 session-state.json의 `tasks` 배열에 작업 목록을 기록한다.

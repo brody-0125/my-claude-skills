@@ -16,7 +16,7 @@ allowed-tools:
   - Bash
   - Write
   - Edit
-  - Task
+  - Agent
 ---
 
 # Claude Autopilot — 시간 기반 자율 실행 오케스트레이션 에이전트
@@ -90,8 +90,8 @@ Edit/Write 실행 후 반드시 다음 중 하나로 변경 결과를 확인한�
 다음 상황에서는 이전에 읽은 파일 내용을 신뢰하지 않고 반드시 재읽기:
 1. 해당 파일을 마지막으로 읽은 후 다른 파일에 Edit/Write가 발생한 경우
 2. 컨텍스트 압축(/compact)이 발생한 후
-3. 다른 Task/sub-agent의 실행이 완료된 후
-4. 10분 이상 경과한 경우
+3. 다른 Agent/sub-agent의 실행이 완료된 후
+4. 3분 이상 경과한 경우 (빠른 루프에서도 stale 방지)
 ```
 
 ### Rule 5: File Inventory Tracking (파일 인벤토리 추적)
@@ -144,25 +144,22 @@ BEFORE starting any task:
 ### Phase 2 진입 전 Baseline 생성
 
 ```bash
-# 작업 시작 전 현재 상태를 태그로 저장
-git stash push -m "autopilot-baseline-${session_id}" --include-untracked 2>/dev/null
-git stash pop 2>/dev/null
-# 또는 가벼운 방법:
-git add -A && git stash push -m "autopilot-checkpoint-${session_id}"
-git stash pop
+# 작업 시작 전 현재 상태를 커밋으로 저장 (롤백 가능한 확실한 방법)
+git add -A && git commit -m "autopilot-baseline: session ${session_id}"
+# baseline commit hash를 session-state.json에 기록
 ```
 
 ### 매 작업 완료 시 Checkpoint
 
 ```
 작업 N 완료 후:
-  1. git add -A (변경 사항 스테이징)
-  2. git stash push -m "autopilot-task-${N}-done"
-  3. git stash pop
-  → 이렇게 하면 git stash list에 복구 지점 기록
-  → 또는 더 안전하게: git commit --no-verify -m "autopilot-checkpoint: task ${N}"
-  → Wind-down 시 squash 또는 amend로 정리
+  1. 변경된 파일만 지정하여 스테이징: git add <changed_files>
+  2. 체크포인트 커밋: git commit -m "autopilot: task-${N} ${task_summary}"
+  3. commit hash를 session-state.json의 task.checkpoint_commit에 기록
+  → Wind-down 시 git rebase -i 또는 squash로 정리 가능
 ```
+
+**주의**: `git add -A` 대신 변경된 파일만 명시적으로 add할 것 (민감 파일 방지).
 
 ### 작업 실패 시 Rollback
 
@@ -170,7 +167,8 @@ git stash pop
 IF task 실패 AND 코드 일관성 훼손:
   git checkout -- <affected_files>    # 작업에서 변경한 파일만 복원
   # 전체 롤백이 필요한 경우:
-  git stash list | grep "autopilot-task-$((N-1))-done"  # 이전 체크포인트 확인
+  git log --oneline -5 | grep "autopilot: task-$((N-1))"  # 이전 체크포인트 확인
+  git revert HEAD  # 마지막 체크포인트 커밋 되돌리기
 ```
 
 ---

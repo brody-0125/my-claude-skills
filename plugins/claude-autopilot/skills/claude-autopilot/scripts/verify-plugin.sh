@@ -68,6 +68,8 @@ required_scripts=(
   "check-deadline.sh"
   "update-task-status.sh"
   "generate-report.sh"
+  "check-phase-gate.sh"
+  "verify-plugin.sh"
 )
 
 for script in "${required_scripts[@]}"; do
