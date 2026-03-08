@@ -15,7 +15,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then deadline=$(jq -r '.deadline_epoch // empty' \"$state_file\" 2>/dev/null); if [ -n \"$deadline\" ]; then now=$(date +%s); if [ \"$now\" -ge \"$deadline\" ]; then echo '[claude-autopilot] Deadline reached. Wrapping up current work.'; fi; fi; fi"
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then deadline=$(jq -r '.deadline_epoch // empty' \"$state_file\" 2>/dev/null); if [ -n \"$deadline\" ]; then now=$(date +%s); if [ \"$now\" -ge \"$deadline\" ]; then echo '{\"decision\":\"block\",\"reason\":\"Deadline reached. Transition to Phase 3 Wind-down.\"}'; exit 2; fi; fi; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then scope=$(jq -r '.scope // \"project\"' \"$state_file\" 2>/dev/null); project_root=$(jq -r '.project_root // empty' \"$state_file\" 2>/dev/null); file=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // .path // empty' 2>/dev/null); if [ -n \"$file\" ] && [ -n \"$project_root\" ]; then case \"$scope\" in project) case \"$file\" in \"$project_root\"*) ;; *) echo '{\"decision\":\"block\",\"reason\":\"File outside project scope\"}'; exit 2;; esac;; module) scope_dir=$(jq -r '.scope_dir // empty' \"$state_file\" 2>/dev/null); if [ -n \"$scope_dir\" ]; then case \"$file\" in \"$scope_dir\"*) ;; *) echo '{\"decision\":\"block\",\"reason\":\"File outside module scope\"}'; exit 2;; esac; fi;; file) allowed=$(jq -r '.scope_files[]? // empty' \"$state_file\" 2>/dev/null); matched=false; for a in $allowed; do [ \"$file\" = \"$a\" ] && matched=true; done; if [ \"$matched\" = false ]; then echo '{\"decision\":\"block\",\"reason\":\"File not in allowed scope_files\"}'; exit 2; fi;; esac; fi; fi"
           }
         ]
       }

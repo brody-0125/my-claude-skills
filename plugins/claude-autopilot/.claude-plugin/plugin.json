@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then now=$(date +%s); completed=$(jq -r '.completed_tasks // 0' \"$state_file\" 2>/dev/null); jq --argjson c $((completed + 0)) --arg t \"$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")\" '.last_activity=$t' \"$state_file\" > \"$state_file.tmp\" 2>/dev/null && mv \"$state_file.tmp\" \"$state_file\"; fi"
+            "command": "state_file=\"$HOME/.claude/cache/claude-autopilot/session-state.json\"; if [ -f \"$state_file\" ]; then jq --arg t \"$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")\" '.last_activity=$t' \"$state_file\" > \"$state_file.tmp\" 2>/dev/null && mv \"$state_file.tmp\" \"$state_file\"; fi"
           }
         ]
       }

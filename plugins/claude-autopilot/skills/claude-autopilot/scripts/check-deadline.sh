@@ -16,7 +16,7 @@ if [ ! -f "$AUTOPILOT_STATE_FILE" ]; then
 fi
 
 deadline_epoch=$(json_read "$AUTOPILOT_STATE_FILE" ".deadline_epoch")
-started_at_str=$(json_read "$AUTOPILOT_STATE_FILE" ".started_at")
+started_at_iso=$(json_read "$AUTOPILOT_STATE_FILE" ".started_at")
 total_minutes_stored=$(json_read "$AUTOPILOT_STATE_FILE" ".time_budget.total_minutes")
 
 if [ -z "$deadline_epoch" ] || [ "$deadline_epoch" = "null" ]; then
@@ -35,13 +35,12 @@ if [ "$total_minutes" -le 0 ]; then
   total_minutes=60
 fi
 
-# started_at 기반으로 계산 (deadline 역산보다 정확)
-started_epoch=$(json_read "$AUTOPILOT_STATE_FILE" ".started_at")
-if [ -n "$started_epoch" ] && [ "$started_epoch" != "null" ]; then
+# started_at 기반으로 경과 시간 계산 (deadline 역산보다 정확)
+if [ -n "$started_at_iso" ] && [ "$started_at_iso" != "null" ]; then
   # ISO 8601 → epoch 변환
-  started_epoch_s=$(date -d "$started_epoch" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$started_epoch" +%s 2>/dev/null || echo "0")
-  if [ "$started_epoch_s" -gt 0 ] 2>/dev/null; then
-    elapsed_seconds=$(( now - started_epoch_s ))
+  started_at_epoch=$(date -d "$started_at_iso" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$started_at_iso" +%s 2>/dev/null || echo "0")
+  if [ "$started_at_epoch" -gt 0 ] 2>/dev/null; then
+    elapsed_seconds=$(( now - started_at_epoch ))
   else
     elapsed_seconds=$(( now - (deadline_epoch - total_minutes * 60) ))
   fi

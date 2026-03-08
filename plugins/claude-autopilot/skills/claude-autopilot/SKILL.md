@@ -145,7 +145,8 @@ BEFORE starting any task:
 
 ```bash
 # 작업 시작 전 현재 상태를 커밋으로 저장 (롤백 가능한 확실한 방법)
-git add -A && git commit -m "autopilot-baseline: session ${session_id}"
+# git add -A 대신 변경된 파일만 명시적으로 스테이징 (민감 파일 방지)
+git diff --name-only --diff-filter=ACMR | xargs git add && git commit -m "autopilot-baseline: session ${session_id}"
 # baseline commit hash를 session-state.json에 기록
 ```
 
@@ -577,7 +578,7 @@ Phase 진입 시 이미 읽은 문서는 재로드하지 않는다.
 | [winddown-protocol.md](./resources/winddown-protocol.md) | 3 | Always at Phase 3 | Load Once | ✅ Phase 3 진행 중이면 |
 | [report-protocol.md](./resources/report-protocol.md) | 4 | Always at Phase 4 | Load Once | ✅ Phase 4 진행 중이면 |
 | [time-management.md](./resources/time-management.md) | 0, 1, 2 | Always | Load Once | ✅ Phase 0-2 진행 중이면 |
-| [safety-rules.md](./resources/safety-rules.md) | 0 | Always | Load Once | ✅ 항상 (안전 규칙) |
+| [safety-rules.md](./resources/safety-rules.md) | All | Always | Load Once | ✅ 항상 (안전 규칙) |
 | [error-playbook.md](./resources/error-playbook.md) | Any | On error occurrence | Load Once | ✅ 에러 발생 시 |
 
 ---
@@ -604,6 +605,8 @@ Phase 진입 시 이미 읽은 문서는 재로드하지 않는다.
 | `init-session.sh` | 세션 상태 파일 초기화 | `./init-session.sh <deadline_epoch> <directive>` |
 | `update-task-status.sh` | 작업 상태 갱신 | `./update-task-status.sh <task_id> <status>` |
 | `generate-report.sh` | 최종 보고서 JSON 생성 | `./generate-report.sh` |
+| `check-phase-gate.sh` | Phase 전환 Gate Check | `./check-phase-gate.sh <from> <to>` |
+| `verify-plugin.sh` | 플러그인 무결성 검증 하네스 | `./verify-plugin.sh [--verbose]` |
 | `_common.sh` | 공유 유틸리티 (다른 스크립트에서 source) | 직접 실행 불가 |
 
 **스크립트 실행 요구사항:**
@@ -617,7 +620,8 @@ Phase 진입 시 이미 읽은 문서는 재로드하지 않는다.
 | Hook | Trigger | Action |
 |------|---------|--------|
 | **PreToolUse** (secret guard) | Edit/Write | 시크릿 파일 편집 차단 |
-| **PreToolUse** (deadline check) | Edit/Write/Bash | 마감 시간 초과 시 경고 |
+| **PreToolUse** (deadline check) | Edit/Write/Bash | 마감 시간 초과 시 차단 (exit 2) |
+| **PreToolUse** (scope enforcement) | Edit/Write | scope 밖 파일 편집 차단 (project/module/file) |
 | **PostToolUse** (activity tracker) | Edit/Write | 마지막 활동 시간 기록 |
 | **Stop** (session archive) | Session end | 세션 상태 아카이브 |
 
@@ -680,11 +684,24 @@ Phase 진입 시 이미 읽은 문서는 재로드하지 않는다.
       "allocated_minutes": 10,
       "status": "in_progress",
       "started_at": "2026-03-07T14:40:30Z",
-      "depends_on": [1]
+      "depends_on": [1],
+      "acceptance_criteria": [
+        "테스트 파일 생성됨",
+        "테스트 실행 통과"
+      ]
     }
   ],
   "completed_tasks": 1,
   "total_tasks": 4,
+  "errors": [],
+  "file_inventory": {
+    "read": [
+      {"path": "src/api/OrderController.kt", "at": "2026-03-07T14:32:00Z", "lines": 145}
+    ],
+    "modified": [
+      {"path": "src/api/OrderController.kt", "at": "2026-03-07T14:33:15Z", "verified": true}
+    ]
+  },
   "last_activity": "2026-03-07T14:45:12Z",
   "time_level": "NORMAL"
 }
